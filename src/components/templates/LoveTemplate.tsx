@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Heart, Calendar, Image as ImageIcon, Mail, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X } from "lucide-react";
+import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X } from "lucide-react";
 import { GameSection } from "@/components/features/GameSection";
 import { LetterBox } from "@/components/features/LetterBox";
 
@@ -107,9 +107,11 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                         <div className="flex flex-col items-center flex-1 min-w-0 max-w-[120px] sm:max-w-[140px]">
                             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg mb-2 flex-shrink-0">
                                 {boyAvatar ? (
-                                    <img
+                                    <Image
                                         src={boyAvatar}
                                         alt={boyName}
+                                        width={96}
+                                        height={96}
                                         className="w-full h-full rounded-full object-cover"
                                     />
                                 ) : (
@@ -130,9 +132,11 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                         <div className="flex flex-col items-center flex-1 min-w-0 max-w-[120px] sm:max-w-[140px]">
                             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg mb-2 flex-shrink-0">
                                 {girlAvatar ? (
-                                    <img
+                                    <Image
                                         src={girlAvatar}
                                         alt={girlName}
+                                        width={96}
+                                        height={96}
                                         className="w-full h-full rounded-full object-cover"
                                     />
                                 ) : (
@@ -148,7 +152,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                     {/* Title with cute font */}
                     <h1
                         className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 bg-clip-text text-transparent leading-relaxed pb-2"
-                        style={{ fontFamily: "'Dancing Script', 'Pacifico', cursive" }}
+                        style={{ fontFamily: "var(--font-dancing-script), var(--font-pacifico), cursive" }}
                     >
                         {title}
                     </h1>

@@ -287,6 +287,7 @@ function LoveProfileForm({
                     <div className="relative group">
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg">
                             {boyAvatar ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={boyAvatar}
                                     alt="His avatar"
@@ -326,6 +327,7 @@ function LoveProfileForm({
                     <div className="relative group">
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg">
                             {girlAvatar ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={girlAvatar}
                                     alt="Her avatar"

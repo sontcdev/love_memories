@@ -1,8 +1,21 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Dancing_Script, Pacifico } from "next/font/google";
 import { Suspense } from "react";
 import { LoadingProvider, NavigationProgress } from "@/components/providers";
 import "./globals.css";
+
+const dancingScript = Dancing_Script({
+  subsets: ["latin"],
+  variable: "--font-dancing-script",
+  display: "swap",
+});
+const pacifico = Pacifico({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-pacifico",
+  display: "swap",
+});
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -49,13 +62,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Pacifico&display=swap" rel="stylesheet" />
-      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${dancingScript.variable} ${pacifico.variable} antialiased`}
       >
         <LoadingProvider>
           <Suspense fallback={null}>
