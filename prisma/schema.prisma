@@ -1,0 +1,212 @@
+// Prisma Schema for Personalized Anniversary Platform
+// Database: PostgreSQL (Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Enable for Supabase connection pooling in production
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum LinkType {
+  LOVE
+  EVERY
+  IDOL
+}
+
+enum GameLevel {
+  EASY
+  MEDIUM
+  HARD
+}
+
+// ============================================================================
+// ADMIN MODEL
+// ============================================================================
+
+model Admin {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// ============================================================================
+// USER MODEL
+// ============================================================================
+
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  password_hash String   @db.VarChar(6) // 6-digit PIN
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  link Link?
+
+  @@map("users")
+}
+
+// ============================================================================
+// LINK MODEL (Core entity - 1-to-1 with User)
+// ============================================================================
+
+model Link {
+  id          String   @id @default(cuid())
+  user_id     String   @unique
+  slug        String   @unique
+  type        LinkType @default(LOVE)
+  is_active   Boolean  @default(true)
+  qr_code_url String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // ProfileData - Dynamic JSON field based on template type
+  // LOVE: { boy_name, girl_name, anniversary_date, ... }
+  // IDOL: { idol_name, fan_name, ... }
+  // EVERY: { owner_name, ... }
+  profile_data Json?
+
+  // Relations
+  user      User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  config    LinkConfig?
+  galleries Gallery[]
+  timelines Timeline[]
+  letters   Letter[]
+
+  @@index([slug])
+  @@map("links")
+}
+
+// ============================================================================
+// LINK CONFIG MODEL (Visual settings - 1-to-1 with Link)
+// ============================================================================
+
+model LinkConfig {
+  id               String  @id @default(cuid())
+  link_id          String  @unique
+  background_color String? @default("#ffffff")
+  font_family      String? @default("Inter")
+  music_url        String?
+  auto_play        Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  link Link @relation(fields: [link_id], references: [id], onDelete: Cascade)
+
+  @@map("link_configs")
+}
+
+// ============================================================================
+// GALLERY MODEL (Many-to-1 with Link)
+// ============================================================================
+
+model Gallery {
+  id         String   @id @default(cuid())
+  link_id    String
+  image_url  String
+  caption    String?
+  sort_order Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  link Link @relation(fields: [link_id], references: [id], onDelete: Cascade)
+
+  @@index([link_id])
+  @@index([link_id, sort_order])
+  @@map("galleries")
+}
+
+// ============================================================================
+// TIMELINE MODEL (Many-to-1 with Link)
+// ============================================================================
+
+model Timeline {
+  id          String   @id @default(cuid())
+  link_id     String
+  date        DateTime
+  title       String
+  description String?
+  image_url   String?
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  link Link @relation(fields: [link_id], references: [id], onDelete: Cascade)
+
+  @@index([link_id])
+  @@index([link_id, date])
+  @@map("timelines")
+}
+
+// ============================================================================
+// LETTER MODEL (Many-to-1 with Link)
+// ============================================================================
+
+model Letter {
+  id         String   @id @default(cuid())
+  link_id    String
+  title      String
+  content    String   @db.Text
+  image_url  String?
+  is_read    Boolean  @default(false)
+  sort_order Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  link    Link          @relation(fields: [link_id], references: [id], onDelete: Cascade)
+  replies LetterReply[]
+
+  @@index([link_id])
+  @@map("letters")
+}
+
+// ============================================================================
+// LETTER REPLY MODEL (Many-to-1 with Letter)
+// ============================================================================
+
+model LetterReply {
+  id         String   @id @default(cuid())
+  letter_id  String
+  content    String   @db.Text
+  created_at DateTime @default(now())
+
+  // Relations
+  letter Letter @relation(fields: [letter_id], references: [id], onDelete: Cascade)
+
+  @@index([letter_id])
+  @@map("letter_replies")
+}
+
+// ============================================================================
+// GAME CARD MODEL (Global - Managed by Admin)
+// ============================================================================
+
+model GameCard {
+  id         String    @id @default(cuid())
+  level      GameLevel @default(EASY)
+  content    String    @db.Text
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@index([level])
+  @@index([level, is_active])
+  @@map("game_cards")
+}
