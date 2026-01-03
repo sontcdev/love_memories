@@ -21,6 +21,7 @@ import {
     AlertCircle,
     GripVertical,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
     DndContext,
     closestCenter,
@@ -161,6 +162,7 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
     const [editingImage, setEditingImage] = useState<Gallery | null>(null);
     const [editCaption, setEditCaption] = useState("");
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     // Loading states
     const [isLoading, setIsLoading] = useState(false);
@@ -198,8 +200,7 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
 
     // Handle delete
     const handleDelete = async (imageId: string) => {
-        if (!confirm("Delete this photo?")) return;
-
+        setDeleteConfirmId(null);
         setDeletingId(imageId);
         setIsLoading(true);
         setLoadingMessage("Đang xóa ảnh...");
@@ -287,6 +288,19 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
         <div className="space-y-6">
             {/* Global Loading Overlay */}
             {isLoading && <LoadingOverlay message={loadingMessage} />}
+
+            {/* Delete Confirm Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirmId !== null}
+                title="Xóa ảnh"
+                message="Bạn có chắc muốn xóa ảnh này khỏi bộ sưu tập?"
+                confirmText="Xóa"
+                cancelText="Hủy"
+                variant="danger"
+                isLoading={deletingId !== null}
+                onConfirm={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+                onCancel={() => setDeleteConfirmId(null)}
+            />
 
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -377,7 +391,7 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
                                         isDeleting={deletingId === image.id}
                                         isLoading={isLoading}
                                         onEdit={() => startEdit(image)}
-                                        onDelete={() => handleDelete(image.id)}
+                                        onDelete={() => setDeleteConfirmId(image.id)}
                                     />
                                 ))}
                             </div>
@@ -413,15 +427,21 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
 
                         {/* Caption Input */}
                         <div className="space-y-2 mb-4">
-                            <label className="text-sm font-medium text-gray-700">Chú thích</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium text-gray-700">Chú thích</label>
+                                <span className={`text-xs ${editCaption.length > 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                                    {editCaption.length}/50
+                                </span>
+                            </div>
                             <input
                                 type="text"
                                 value={editCaption}
-                                onChange={(e) => setEditCaption(e.target.value)}
+                                onChange={(e) => setEditCaption(e.target.value.slice(0, 50))}
                                 placeholder="Nhập chú thích cho ảnh này..."
                                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                                 autoFocus
                                 disabled={savingCaption}
+                                maxLength={50}
                             />
                         </div>
 

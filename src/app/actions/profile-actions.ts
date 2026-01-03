@@ -40,6 +40,7 @@ export type ProfileData = LoveProfileData | EveryProfileData | IdolProfileData;
 
 export interface LinkConfigData {
     background_color?: string;
+    accent_color?: string;
     font_family?: string;
     music_url?: string;
     auto_play?: boolean;
@@ -140,12 +141,14 @@ export async function updateLinkConfig(
             create: {
                 link_id: link.id,
                 background_color: config.background_color,
+                accent_color: config.accent_color,
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play ?? false,
             },
             update: {
                 background_color: config.background_color,
+                accent_color: config.accent_color,
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play,

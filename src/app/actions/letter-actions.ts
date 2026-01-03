@@ -84,10 +84,16 @@ export async function createLetter(
 // Reply to a letter
 export async function replyToLetter(letterId: string, content: string, slug: string) {
     try {
+        // Validate content length
+        const trimmedContent = content.trim().slice(0, 300);
+        if (!trimmedContent) {
+            return { success: false, error: "Reply content is required" };
+        }
+
         const reply = await prisma.letterReply.create({
             data: {
                 letter_id: letterId,
-                content,
+                content: trimmedContent,
             },
         });
 

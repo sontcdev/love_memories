@@ -85,35 +85,41 @@ export function VideoPlayer({ url, className = "" }: VideoPlayerProps) {
         );
     }
 
-    // TikTok Player
+    // Parse TikTok URL and extract video ID
+    function parseTikTokUrl(url: string): string | null {
+        const patterns = [
+            /tiktok\.com\/@[\w.-]+\/video\/(\d+)/,
+            /tiktok\.com\/.*\/video\/(\d+)/,
+            /vm\.tiktok\.com\/(\w+)/,
+        ];
+
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+        return null;
+    }
+
+    // TikTok Player - Simple card link (embed is unreliable)
     if (platform === "tiktok") {
         return (
-            <div className={`relative ${className}`}>
-                <div
-                    ref={tiktokContainerRef}
-                    className="rounded-xl overflow-hidden bg-gray-100"
-                >
-                    <blockquote
-                        className="tiktok-embed"
-                        cite={url}
-                        data-video-id=""
-                        style={{ maxWidth: "100%" }}
-                    >
-                        <section>
-                            <a
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                href={url}
-                                className="flex items-center justify-center gap-2 py-8 text-gray-500 hover:text-gray-700"
-                            >
-                                <Music2 className="w-5 h-5" />
-                                <span>Loading TikTok...</span>
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </section>
-                    </blockquote>
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-3 p-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl hover:from-gray-800 hover:to-gray-700 transition-all group ${className}`}
+            >
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-500 via-pink-500 to-violet-500 flex items-center justify-center flex-shrink-0">
+                    <Music2 className="w-6 h-6 text-white" />
                 </div>
-            </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm">Video TikTok</p>
+                    <p className="text-gray-400 text-xs truncate">{url}</p>
+                </div>
+                <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0" />
+            </a>
         );
     }
 

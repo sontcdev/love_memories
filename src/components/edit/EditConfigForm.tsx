@@ -13,6 +13,7 @@ import { Save, Loader2, Palette, Music, Type } from "lucide-react";
 
 const configSchema = z.object({
     background_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
+    accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
     font_family: z.string().optional(),
     music_url: z.string().url("Invalid URL").optional().or(z.literal("")),
     auto_play: z.boolean().optional(),
@@ -49,6 +50,17 @@ const PRESET_COLORS = [
     "#1f2937", // Gray 800
 ];
 
+const ACCENT_COLORS = [
+    "#ec4899", // Pink 500
+    "#f43f5e", // Rose 500
+    "#8b5cf6", // Violet 500
+    "#3b82f6", // Blue 500
+    "#10b981", // Emerald 500
+    "#f59e0b", // Amber 500
+    "#ef4444", // Red 500
+    "#6366f1", // Indigo 500
+];
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -73,6 +85,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
         resolver: zodResolver(configSchema),
         defaultValues: {
             background_color: initialConfig?.background_color || "#ffffff",
+            accent_color: initialConfig?.accent_color || "#ec4899",
             font_family: initialConfig?.font_family || "Inter",
             music_url: initialConfig?.music_url || "",
             auto_play: initialConfig?.auto_play || false,
@@ -80,6 +93,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
     });
 
     const selectedColor = watch("background_color");
+    const selectedAccentColor = watch("accent_color");
 
     const onSubmit = async (data: ConfigFormData) => {
         setIsSubmitting(true);
@@ -87,6 +101,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
 
         const result = await updateLinkConfig(slug, {
             background_color: data.background_color || undefined,
+            accent_color: data.accent_color || undefined,
             font_family: data.font_family || undefined,
             music_url: data.music_url || undefined,
             auto_play: data.auto_play,
@@ -146,7 +161,47 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                 )}
             </div>
 
-            {/* Font Family */}
+            {/* Accent Color */}
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <Palette className="w-5 h-5 text-pink-500" />
+                    <h3 className="text-lg font-semibold text-gray-800">Màu nhấn (Button)</h3>
+                </div>
+
+                {/* Preset Accent Colors */}
+                <div className="flex flex-wrap gap-3 mb-4">
+                    {ACCENT_COLORS.map((color) => (
+                        <button
+                            key={color}
+                            type="button"
+                            onClick={() => setValue("accent_color", color)}
+                            className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedAccentColor === color
+                                ? "border-gray-800 ring-2 ring-gray-300 scale-110"
+                                : "border-gray-200 hover:border-gray-300"
+                                }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                        />
+                    ))}
+                </div>
+
+                {/* Custom Accent Color Input */}
+                <div className="flex items-center gap-3">
+                    <input
+                        type="color"
+                        {...register("accent_color")}
+                        className="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                    />
+                    <input
+                        {...register("accent_color")}
+                        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all font-mono text-sm"
+                        placeholder="#ec4899"
+                    />
+                </div>
+                {errors.accent_color && (
+                    <p className="mt-1 text-sm text-red-500">{errors.accent_color.message}</p>
+                )}
+            </div>
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Type className="w-5 h-5 text-blue-500" />
@@ -210,7 +265,8 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-400 to-pink-500 text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
+                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
             >
                 {isSubmitting ? (
                     <>

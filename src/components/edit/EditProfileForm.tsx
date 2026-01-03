@@ -446,7 +446,8 @@ function LoveProfileForm({
             <button
                 type="submit"
                 disabled={isSubmitting || uploadingBoy || uploadingGirl}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
+                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
             >
                 {isSubmitting ? (
                     <>
@@ -576,7 +577,8 @@ function EveryProfileForm({
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
+                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
             >
                 {isSubmitting ? (
                     <>
@@ -706,7 +708,8 @@ function IdolProfileForm({
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
+                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
             >
                 {isSubmitting ? (
                     <>

@@ -45,7 +45,11 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
 
     // Show lock screen if not authenticated
     if (!authenticated) {
-        return <LockScreen slug={slug} onSuccess={handleUnlock} />;
+        return (
+            <ThemeWrapper config={linkData?.config || null}>
+                <LockScreen slug={slug} onSuccess={handleUnlock} />
+            </ThemeWrapper>
+        );
     }
 
     // No data available (should have data after reload)

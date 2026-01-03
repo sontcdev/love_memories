@@ -54,7 +54,6 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                         </Link>
                         <div>
                             <h1 className="text-xl font-bold text-gray-800">Chỉnh sửa trang</h1>
-                            <p className="text-sm text-gray-500">/{slug}</p>
                         </div>
                     </div>
                     <Link

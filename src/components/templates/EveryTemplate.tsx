@@ -60,7 +60,7 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
     const members = profileData?.members || [];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="min-h-screen" style={{ backgroundColor: 'var(--theme-bg, #eff6ff)' }}>
             {/* Edit Button */}
             <Link
                 href={`/${slug}/edit`}

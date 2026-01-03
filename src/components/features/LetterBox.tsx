@@ -24,6 +24,7 @@ import {
     Video,
     Mic,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -100,9 +101,10 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
 
     async function handleReply(letterId: string) {
         if (!replyContent.trim()) return;
+        if (replyContent.length > 300) return;
 
         setIsSendingReply(true);
-        const result = await replyToLetter(letterId, replyContent.trim(), slug);
+        const result = await replyToLetter(letterId, replyContent.trim().slice(0, 300), slug);
 
         if (result.success && result.data) {
             setLetters(
@@ -192,14 +194,14 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Nội dung <span className="text-gray-400 text-xs">({newContent.length}/500)</span>
+                                    Nội dung <span className="text-gray-400 text-xs">({newContent.length}/300)</span>
                                 </label>
                                 <textarea
                                     value={newContent}
-                                    onChange={(e) => setNewContent(e.target.value.slice(0, 500))}
+                                    onChange={(e) => setNewContent(e.target.value.slice(0, 300))}
                                     placeholder="Viết những lời yêu thương..."
                                     rows={6}
-                                    maxLength={500}
+                                    maxLength={300}
                                     className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none resize-none`}
                                 />
                             </div>
@@ -274,49 +276,26 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className={`bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden`}>
-                        <div className={`bg-gradient-to-r ${colors.primary} p-4 text-white`}>
-                            <h3 className="text-lg font-semibold text-center">Xác nhận xóa</h3>
-                        </div>
-                        <div className="p-6 text-center">
-                            <Trash2 className={`w-12 h-12 mx-auto mb-4 ${colors.text} opacity-50`} />
-                            <p className="text-gray-600 mb-6">
-                                {deleteConfirm.type === "letter"
-                                    ? "Bạn có chắc muốn xóa bức thư này?"
-                                    : "Bạn có chắc muốn xóa câu trả lời này?"}
-                            </p>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setDeleteConfirm(null)}
-                                    className="flex-1 py-2 px-4 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        if (deleteConfirm.type === "letter") {
-                                            handleDelete(deleteConfirm.id);
-                                        } else {
-                                            handleDeleteReply(deleteConfirm.id, deleteConfirm.letterId!);
-                                        }
-                                    }}
-                                    disabled={deletingId !== null}
-                                    className={`flex-1 py-2 px-4 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 transition-colors flex items-center justify-center gap-2`}
-                                >
-                                    {deletingId !== null ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <>Xóa</>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm !== null}
+                title={deleteConfirm?.type === "letter" ? "Xóa thư" : "Xóa trả lời"}
+                message={deleteConfirm?.type === "letter"
+                    ? "Bạn có chắc muốn xóa bức thư này?"
+                    : "Bạn có chắc muốn xóa câu trả lời này?"}
+                confirmText="Xóa"
+                cancelText="Hủy"
+                variant="danger"
+                isLoading={deletingId !== null}
+                onConfirm={() => {
+                    if (deleteConfirm?.type === "letter") {
+                        handleDelete(deleteConfirm.id);
+                    } else if (deleteConfirm) {
+                        handleDeleteReply(deleteConfirm.id, deleteConfirm.letterId!);
+                    }
+                }}
+                onCancel={() => setDeleteConfirm(null)}
+            />
 
             {/* Letters List */}
             {letters.length === 0 ? (
@@ -465,29 +444,38 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                     )}
 
                                     {/* Reply Input */}
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={replyingTo === letter.id ? replyContent : ""}
-                                            onChange={(e) => {
-                                                setReplyingTo(letter.id);
-                                                setReplyContent(e.target.value);
-                                            }}
-                                            onFocus={() => setReplyingTo(letter.id)}
-                                            placeholder="Viết câu trả lời..."
-                                            className={`flex-1 px-4 py-2 rounded-full border ${colors.border} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
-                                        />
-                                        <button
-                                            onClick={() => handleReply(letter.id)}
-                                            disabled={isSendingReply || !replyContent.trim()}
-                                            className={`p-2 rounded-full bg-gradient-to-r ${colors.primary} text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50`}
-                                        >
-                                            {isSendingReply ? (
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                            ) : (
-                                                <Send className="w-5 h-5" />
-                                            )}
-                                        </button>
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={replyingTo === letter.id ? replyContent : ""}
+                                                onChange={(e) => {
+                                                    setReplyingTo(letter.id);
+                                                    const value = e.target.value;
+                                                    setReplyContent(value.length > 300 ? value.slice(0, 300) : value);
+                                                }}
+                                                onFocus={() => setReplyingTo(letter.id)}
+                                                placeholder="Viết câu trả lời..."
+                                                className={`flex-1 px-4 py-2 rounded-full border ${colors.border} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
+                                            />
+                                            <button
+                                                onClick={() => handleReply(letter.id)}
+                                                disabled={isSendingReply || !replyContent.trim() || replyContent.length > 300}
+                                                className="p-2 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 hover:brightness-110"
+                                                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
+                                            >
+                                                {isSendingReply ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                ) : (
+                                                    <Send className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                        </div>
+                                        {replyingTo === letter.id && replyContent.length > 0 && (
+                                            <span className={`text-xs text-right ${replyContent.length >= 280 ? 'text-red-500' : 'text-gray-400'}`}>
+                                                {replyContent.length}/300
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             )}

@@ -34,12 +34,26 @@ export default async function SlugPage({ params }: PageProps) {
 
     // Always require PIN on page load - pass isAuthenticated=false
     // After PIN verification, user can navigate to edit page
+    const bgColor = linkResult.data.config?.background_color || '#ffffff';
+    const accentColor = linkResult.data.config?.accent_color || '#ec4899';
+
     return (
-        <SlugPageClient
-            slug={slug}
-            isAuthenticated={false}
-            linkData={linkResult.data}
-        />
+        <>
+            {/* Inject theme CSS variables immediately */}
+            <script
+                dangerouslySetInnerHTML={{
+                    __html: `
+                        document.documentElement.style.setProperty('--theme-bg', '${bgColor}');
+                        document.documentElement.style.setProperty('--theme-accent', '${accentColor}');
+                    `,
+                }}
+            />
+            <SlugPageClient
+                slug={slug}
+                isAuthenticated={false}
+                linkData={linkResult.data}
+            />
+        </>
     );
 }
 

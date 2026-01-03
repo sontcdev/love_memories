@@ -20,15 +20,15 @@ const DEFAULT_THEME = {
     accent_color: "#ec4899", // pink-500
 };
 
-// Font family mapping
+// Font family mapping - use CSS variables from layout.tsx
 const FONT_FAMILIES: Record<string, string> = {
-    "Inter": "Inter, sans-serif",
-    "Roboto": "Roboto, sans-serif",
-    "Poppins": "Poppins, sans-serif",
-    "Playfair Display": "'Playfair Display', serif",
-    "Dancing Script": "'Dancing Script', cursive",
-    "Quicksand": "Quicksand, sans-serif",
-    "Nunito": "Nunito, sans-serif",
+    "Inter": "var(--font-inter), sans-serif",
+    "Roboto": "var(--font-roboto), sans-serif",
+    "Poppins": "var(--font-poppins), sans-serif",
+    "Playfair Display": "var(--font-playfair), serif",
+    "Dancing Script": "var(--font-dancing-script), cursive",
+    "Quicksand": "var(--font-quicksand), sans-serif",
+    "Nunito": "var(--font-nunito), sans-serif",
 };
 
 export function ThemeWrapper({ config, children }: ThemeWrapperProps) {

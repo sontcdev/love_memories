@@ -96,7 +96,7 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-100 via-pink-50 to-purple-100 p-4">
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--theme-bg, #fdf2f8)' }}>
             <div className="w-full max-w-sm">
                 {/* Header */}
                 <div className="text-center mb-8">
@@ -173,7 +173,8 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
                     <button
                         onClick={() => handleSubmit()}
                         disabled={isLoading || pin.some((p) => !p)}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-semibold shadow-lg shadow-rose-300/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-xl text-white font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:brightness-110"
+                        style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
                     >
                         {isLoading ? (
                             <>

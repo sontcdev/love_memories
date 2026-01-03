@@ -1,13 +1,54 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Dancing_Script, Pacifico } from "next/font/google";
+import {
+  Inter,
+  Roboto,
+  Poppins,
+  Playfair_Display,
+  Dancing_Script,
+  Quicksand,
+  Nunito,
+  Pacifico
+} from "next/font/google";
 import { Suspense } from "react";
 import { LoadingProvider, NavigationProgress } from "@/components/providers";
 import "./globals.css";
 
-const dancingScript = Dancing_Script({
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-inter",
+  display: "swap",
+});
+const roboto = Roboto({
+  weight: ["400", "500", "700"],
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-roboto",
+  display: "swap",
+});
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+const dancingScript = Dancing_Script({
+  subsets: ["latin", "vietnamese"],
   variable: "--font-dancing-script",
+  display: "swap",
+});
+const quicksand = Quicksand({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-quicksand",
+  display: "swap",
+});
+const nunito = Nunito({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-nunito",
   display: "swap",
 });
 const pacifico = Pacifico({
@@ -63,7 +104,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${dancingScript.variable} ${pacifico.variable} antialiased`}
+        className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <LoadingProvider>
           <Suspense fallback={null}>

@@ -97,6 +97,7 @@ model LinkConfig {
   id               String  @id @default(cuid())
   link_id          String  @unique
   background_color String? @default("#ffffff")
+  accent_color     String? @default("#ec4899")
   font_family      String? @default("Inter")
   music_url        String?
   auto_play        Boolean @default(false)

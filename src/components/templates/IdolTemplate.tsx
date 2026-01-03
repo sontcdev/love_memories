@@ -56,7 +56,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
     const debutInfo = debutDate ? getDaysSinceDebut(debutDate) : null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50">
+        <div className="min-h-screen" style={{ backgroundColor: 'var(--theme-bg, #fffbeb)' }}>
             {/* Edit Button */}
             <Link
                 href={`/${slug}/edit`}

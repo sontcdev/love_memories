@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
     Plus,
     Trash2,
@@ -87,6 +88,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
     const [formData, setFormData] = useState<FormData>(emptyForm);
     const [isSaving, setIsSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [showImageUpload, setShowImageUpload] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -200,8 +202,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
     // Delete event
     const handleDelete = async (eventId: string) => {
-        if (!confirm("Delete this event?")) return;
-
+        setDeleteConfirmId(null);
         setDeletingId(eventId);
         setIsLoading(true);
         setLoadingMessage("Đang xóa...");
@@ -242,6 +243,19 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirm Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirmId !== null}
+                title="Xóa sự kiện"
+                message="Bạn có chắc muốn xóa sự kiện này? Hành động này không thể hoàn tác."
+                confirmText="Xóa"
+                cancelText="Hủy"
+                variant="danger"
+                isLoading={deletingId !== null}
+                onConfirm={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+                onCancel={() => setDeleteConfirmId(null)}
+            />
 
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -288,14 +302,20 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
                         {/* Title Input */}
                         <div className="space-y-2">
-                            <Label htmlFor="title">Tiêu đề *</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="title">Tiêu đề *</Label>
+                                <span className={`text-xs ${formData.title.length > 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                                    {formData.title.length}/50
+                                </span>
+                            </div>
                             <Input
                                 id="title"
                                 value={formData.title}
                                 onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                                    setFormData((prev) => ({ ...prev, title: e.target.value.slice(0, 50) }))
                                 }
                                 placeholder="Lần hẹn đầu tiên, Kỷ niệm, ..."
+                                maxLength={50}
                             />
                         </div>
 
@@ -314,15 +334,21 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
                         {/* Description */}
                         <div className="space-y-2">
-                            <Label htmlFor="description">Mô tả (tùy chọn)</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="description">Mô tả (tùy chọn)</Label>
+                                <span className={`text-xs ${formData.description.length > 300 ? 'text-red-500' : 'text-gray-400'}`}>
+                                    {formData.description.length}/300
+                                </span>
+                            </div>
                             <Textarea
                                 id="description"
                                 value={formData.description}
                                 onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, description: e.target.value }))
+                                    setFormData((prev) => ({ ...prev, description: e.target.value.slice(0, 300) }))
                                 }
                                 placeholder="Chuyện gì đã xảy ra vào ngày này..."
                                 rows={3}
+                                maxLength={300}
                             />
                         </div>
 
@@ -471,8 +497,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 min-w-0 overflow-hidden">
-                                    <h3 className="font-semibold text-gray-800 truncate">{event.title}</h3>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-gray-800 break-words">{event.title}</h3>
                                     <p className="text-xs text-gray-400">
                                         {new Date(event.date).toLocaleDateString("vi-VN", {
                                             year: "numeric",
@@ -495,7 +521,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                             alt={event.title}
                                             width={56}
                                             height={56}
-                                            className="w-full h-full object-cover"
+                                            className="object-cover"
+                                            style={{ width: '100%', height: '100%' }}
                                         />
                                     </div>
                                 )}
@@ -512,7 +539,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                     <span className="sm:hidden">Sửa</span>
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(event.id)}
+                                    onClick={() => setDeleteConfirmId(event.id)}
                                     disabled={deletingId === event.id}
                                     className="p-2 hover:bg-red-50 rounded-lg text-sm text-red-500 flex items-center gap-1"
                                     title="Xóa"

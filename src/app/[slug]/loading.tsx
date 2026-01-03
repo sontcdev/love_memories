@@ -4,7 +4,7 @@ import { Heart } from "lucide-react";
 
 export default function SlugLoading() {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 flex flex-col items-center justify-center">
+        <div className="min-h-screen flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--theme-bg, #f5f5f5)' }}>
             {/* Beating Heart */}
             <div className="relative mb-8">
                 <Heart className="w-16 h-16 text-rose-400 fill-rose-400 animate-pulse" />

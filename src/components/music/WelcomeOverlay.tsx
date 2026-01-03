@@ -114,14 +114,13 @@ export function WelcomeOverlay({
                 {/* Enter Button */}
                 <button
                     onClick={handleOpen}
-                    className={`group relative px-10 py-4 rounded-full bg-gradient-to-r ${styles.buttonGradient} text-white font-semibold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-95`}
+                    className="group relative px-10 py-4 rounded-full text-white font-semibold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-95 hover:brightness-110"
+                    style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
                 >
                     <span className="relative z-10 flex items-center gap-2">
                         <Sparkles className="w-5 h-5" />
                         {buttonText}
                     </span>
-                    {/* Glow effect */}
-                    <div className={`absolute inset-0 rounded-full bg-gradient-to-r ${styles.buttonGradient} blur-xl opacity-50 group-hover:opacity-70 transition-opacity -z-10`} />
                 </button>
 
                 {/* Hint */}

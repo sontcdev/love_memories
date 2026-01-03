@@ -88,7 +88,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
     const daysTogether = getDaysTogether();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 relative">
+        <div className="min-h-screen relative" style={{ backgroundColor: 'var(--theme-bg, #fff0f5)' }}>
             {/* Edit Button - Fixed */}
             <Link
                 href={`/${slug}/edit`}
@@ -342,13 +342,13 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                                     <p className="text-gray-500 text-sm">{event.description}</p>
                                                 )}
                                                 {event.image_url && (
-                                                    <div className="mt-4 rounded-xl overflow-hidden">
+                                                    <div className="mt-4 w-48 h-48 rounded-xl overflow-hidden bg-gray-100">
                                                         <Image
                                                             src={event.image_url}
                                                             alt={event.title}
-                                                            width={500}
-                                                            height={300}
-                                                            className="w-full object-cover"
+                                                            width={192}
+                                                            height={192}
+                                                            className="w-full h-full object-contain"
                                                         />
                                                     </div>
                                                 )}
@@ -403,7 +403,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {showScrollTop && (
                     <button
                         onClick={scrollToTop}
-                        className="fixed bottom-6 right-24 z-40 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-rose-100 hover:bg-rose-50 transition-all hover:scale-110"
+                        className="fixed bottom-24 right-6 z-40 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-rose-100 hover:bg-rose-50 transition-all hover:scale-110"
                         aria-label="Scroll to top"
                     >
                         <ChevronUp className="w-5 h-5 text-rose-500" />
