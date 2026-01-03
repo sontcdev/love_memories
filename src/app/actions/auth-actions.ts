@@ -41,19 +41,8 @@ export async function verifyLinkPassword(slug: string, pin: string) {
             return { success: false, error: "Invalid PIN" };
         }
 
-        // Set access cookie for this specific slug
-        const cookieStore = await cookies();
-        const cookieName = `access_token_${slug}`;
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + COOKIE_EXPIRY_DAYS);
-
-        cookieStore.set(cookieName, link.id, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            expires: expiresAt,
-            path: "/",
-        });
+        // No cookie storage - require PIN every time
+        // User must enter PIN each time they open the page
 
         return { success: true };
     } catch (error) {

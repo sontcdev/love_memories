@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { checkLinkAccess, getLinkData } from "@/app/actions/auth-actions";
 import { SlugPageClient } from "./page-client";
 
+// Disable caching to always check cookies fresh
+export const dynamic = "force-dynamic";
+
 interface PageProps {
     params: Promise<{ slug: string }>;
 }
@@ -25,19 +28,20 @@ export default async function SlugPage({ params }: PageProps) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center px-4">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Link Unavailable</h1>
-                    <p className="text-gray-500">This memory page is currently unavailable.</p>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Trang không khả dụng</h1>
+                    <p className="text-gray-500">Trang kỷ niệm này hiện không khả dụng.</p>
                 </div>
             </div>
         );
     }
 
     // Pass data to client component for rendering
+    // Always pass linkData so client can render after PIN verification without reload
     return (
         <SlugPageClient
             slug={slug}
             isAuthenticated={hasAccess}
-            linkData={hasAccess ? linkResult.data : null}
+            linkData={linkResult.data}
         />
     );
 }

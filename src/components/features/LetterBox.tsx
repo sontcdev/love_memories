@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Letter, LetterReply } from "@prisma/client";
+import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
 import {
     createLetter,
     replyToLetter,
@@ -20,6 +21,8 @@ import {
     ChevronDown,
     ChevronUp,
     MessageCircle,
+    Video,
+    Mic,
 } from "lucide-react";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -39,10 +42,13 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
     const [replyContent, setReplyContent] = useState("");
     const [isSendingReply, setIsSendingReply] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: "letter" | "reply"; id: string; letterId?: string } | null>(null);
 
     // Form state
     const [newTitle, setNewTitle] = useState("");
     const [newContent, setNewContent] = useState("");
+    const [newVideoUrl, setNewVideoUrl] = useState("");
+    const [newAudioUrl, setNewAudioUrl] = useState("");
 
     const themeColors = {
         love: {
@@ -77,12 +83,16 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
         const result = await createLetter(slug, {
             title: newTitle.trim(),
             content: newContent.trim(),
+            video_url: newVideoUrl || undefined,
+            audio_url: newAudioUrl || undefined,
         });
 
         if (result.success && result.data) {
             setLetters([result.data, ...letters]);
             setNewTitle("");
             setNewContent("");
+            setNewVideoUrl("");
+            setNewAudioUrl("");
             setShowCreateForm(false);
         }
         setIsCreating(false);
@@ -109,8 +119,6 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
     }
 
     async function handleDelete(letterId: string) {
-        if (!confirm("Delete this letter?")) return;
-
         setDeletingId(letterId);
         const result = await deleteLetter(letterId, slug);
 
@@ -118,11 +126,11 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             setLetters(letters.filter((l) => l.id !== letterId));
         }
         setDeletingId(null);
+        setDeleteConfirm(null);
     }
 
     async function handleDeleteReply(replyId: string, letterId: string) {
-        if (!confirm("Delete this reply?")) return;
-
+        setDeletingId(replyId);
         const result = await deleteReply(replyId, slug);
 
         if (result.success) {
@@ -134,6 +142,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                 )
             );
         }
+        setDeletingId(null);
+        setDeleteConfirm(null);
     }
 
     return (
@@ -142,7 +152,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Mail className={`w-6 h-6 ${colors.text}`} />
-                    <h2 className="text-xl font-bold text-gray-800">Love Letters</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Thư Tình</h2>
                     <span className="text-sm text-gray-400">({letters.length})</span>
                 </div>
                 <button
@@ -150,7 +160,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                     className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${colors.primary} text-white font-medium shadow-md hover:shadow-lg transition-all`}
                 >
                     <Plus className="w-4 h-4" />
-                    Write Letter
+                    Viết thư
                 </button>
             </div>
 
@@ -160,7 +170,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                     <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
                         <div className={`bg-gradient-to-r ${colors.primary} p-4 text-white`}>
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold">Write a Love Letter</h3>
+                                <h3 className="text-lg font-semibold">Viết thư tình</h3>
                                 <button onClick={() => setShowCreateForm(false)}>
                                     <X className="w-5 h-5" />
                                 </button>
@@ -169,28 +179,82 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                         <div className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Title
+                                    Tiêu đề <span className="text-gray-400 text-xs">({newTitle.length}/50)</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={newTitle}
-                                    onChange={(e) => setNewTitle(e.target.value)}
-                                    placeholder="Subject of your letter..."
+                                    onChange={(e) => setNewTitle(e.target.value.slice(0, 50))}
+                                    placeholder="Tiêu đề bức thư..."
+                                    maxLength={50}
                                     className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Content
+                                    Nội dung <span className="text-gray-400 text-xs">({newContent.length}/500)</span>
                                 </label>
                                 <textarea
                                     value={newContent}
-                                    onChange={(e) => setNewContent(e.target.value)}
-                                    placeholder="Write your heartfelt message..."
+                                    onChange={(e) => setNewContent(e.target.value.slice(0, 500))}
+                                    placeholder="Viết những lời yêu thương..."
                                     rows={6}
+                                    maxLength={500}
                                     className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none resize-none`}
                                 />
                             </div>
+
+                            {/* Video URL */}
+                            <div>
+                                <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                                    <Video className="w-4 h-4" />
+                                    Video (tùy chọn)
+                                </label>
+                                {newVideoUrl ? (
+                                    <div className="space-y-2">
+                                        <VideoPlayer url={newVideoUrl} className="rounded-lg" />
+                                        <button
+                                            onClick={() => setNewVideoUrl("")}
+                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            Xóa video
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <VideoInput
+                                        value={newVideoUrl}
+                                        onChange={setNewVideoUrl}
+                                        placeholder="Dán link YouTube hoặc TikTok..."
+                                    />
+                                )}
+                            </div>
+
+                            {/* Voice Recording */}
+                            <div>
+                                <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                                    <Mic className="w-4 h-4" />
+                                    Ghi âm (tùy chọn)
+                                </label>
+                                {newAudioUrl ? (
+                                    <div className="space-y-2">
+                                        <audio src={newAudioUrl} controls className="w-full h-10" />
+                                        <button
+                                            onClick={() => setNewAudioUrl("")}
+                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            Xóa ghi âm
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <VoiceRecorder
+                                        slug={slug}
+                                        onUploadComplete={setNewAudioUrl}
+                                    />
+                                )}
+                            </div>
+
                             <button
                                 onClick={handleCreate}
                                 disabled={isCreating || !newTitle.trim() || !newContent.trim()}
@@ -201,10 +265,54 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                 ) : (
                                     <>
                                         <Send className="w-5 h-5" />
-                                        Send Letter
+                                        Gửi thư
                                     </>
                                 )}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className={`bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden`}>
+                        <div className={`bg-gradient-to-r ${colors.primary} p-4 text-white`}>
+                            <h3 className="text-lg font-semibold text-center">Xác nhận xóa</h3>
+                        </div>
+                        <div className="p-6 text-center">
+                            <Trash2 className={`w-12 h-12 mx-auto mb-4 ${colors.text} opacity-50`} />
+                            <p className="text-gray-600 mb-6">
+                                {deleteConfirm.type === "letter"
+                                    ? "Bạn có chắc muốn xóa bức thư này?"
+                                    : "Bạn có chắc muốn xóa câu trả lời này?"}
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 py-2 px-4 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (deleteConfirm.type === "letter") {
+                                            handleDelete(deleteConfirm.id);
+                                        } else {
+                                            handleDeleteReply(deleteConfirm.id, deleteConfirm.letterId!);
+                                        }
+                                    }}
+                                    disabled={deletingId !== null}
+                                    className={`flex-1 py-2 px-4 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 transition-colors flex items-center justify-center gap-2`}
+                                >
+                                    {deletingId !== null ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <>Xóa</>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -214,8 +322,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             {letters.length === 0 ? (
                 <div className={`text-center py-16 ${colors.bg} rounded-2xl`}>
                     <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-400">No letters yet...</p>
-                    <p className="text-gray-400 text-sm">Write your first love letter!</p>
+                    <p className="text-gray-400">Chưa có thư nào...</p>
+                    <p className="text-gray-400 text-sm">Hãy viết bức thư tình đầu tiên!</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -235,11 +343,11 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
                                             {!letter.is_read && (
-                                                <span className={`w-2 h-2 rounded-full bg-${colors.secondary}-500`} />
+                                                <span className={`w-2 h-2 rounded-full bg-${colors.secondary}-500 flex-shrink-0`} />
                                             )}
-                                            <h3 className="font-semibold text-gray-800">{letter.title}</h3>
+                                            <h3 className="font-semibold text-gray-800 truncate max-w-[250px]" title={letter.title}>{letter.title}</h3>
                                         </div>
-                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2 break-words overflow-hidden">
                                             {letter.content}
                                         </p>
                                         <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
@@ -249,16 +357,16 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                             {letter.replies.length > 0 && (
                                                 <span className="flex items-center gap-1">
                                                     <MessageCircle className="w-3 h-3" />
-                                                    {letter.replies.length} replies
+                                                    {letter.replies.length} trả lời
                                                 </span>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-shrink-0">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDelete(letter.id);
+                                                setDeleteConfirm({ type: "letter", id: letter.id });
                                             }}
                                             disabled={deletingId === letter.id}
                                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -282,8 +390,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                             {expandedId === letter.id && (
                                 <div className="p-4 border-t border-gray-100">
                                     {/* Letter Content */}
-                                    <div className="prose prose-sm max-w-none mb-4">
-                                        <p className="whitespace-pre-wrap text-gray-700">{letter.content}</p>
+                                    <div className="prose prose-sm max-w-none mb-4 overflow-hidden">
+                                        <p className="whitespace-pre-wrap break-words text-gray-700">{letter.content}</p>
                                     </div>
 
                                     {/* Image */}
@@ -299,31 +407,58 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                         </div>
                                     )}
 
+                                    {/* Video */}
+                                    {letter.video_url && (
+                                        <div className="mb-4">
+                                            <VideoPlayer url={letter.video_url} className="rounded-xl" />
+                                        </div>
+                                    )}
+
+                                    {/* Audio */}
+                                    {letter.audio_url && (
+                                        <div className="mb-4">
+                                            <div className={`${colors.bg} p-3 rounded-xl`}>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Mic className={`w-4 h-4 ${colors.text}`} />
+                                                    <span className="text-sm font-medium text-gray-700">Ghi âm đính kèm</span>
+                                                </div>
+                                                <audio
+                                                    src={letter.audio_url}
+                                                    controls
+                                                    className="w-full h-10"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Replies Thread */}
                                     {letter.replies.length > 0 && (
                                         <div className="space-y-3 mb-4">
                                             <h4 className="text-sm font-medium text-gray-600 flex items-center gap-2">
                                                 <MessageCircle className="w-4 h-4" />
-                                                Replies
+                                                Câu trả lời
                                             </h4>
                                             {letter.replies.map((reply) => (
                                                 <div
                                                     key={reply.id}
                                                     className={`${colors.bg} rounded-xl p-3 relative group`}
                                                 >
-                                                    <p className="text-sm text-gray-700">{reply.content}</p>
-                                                    <span className="text-xs text-gray-400 mt-1 block">
-                                                        {new Date(reply.created_at).toLocaleDateString("vi-VN", {
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        })}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => handleDeleteReply(reply.id, letter.id)}
-                                                        className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <X className="w-3 h-3" />
-                                                    </button>
+                                                    <p className="text-sm text-gray-700 pr-10 break-words overflow-hidden">{reply.content}</p>
+                                                    <div className="flex items-center justify-between mt-1">
+                                                        <span className="text-xs text-gray-400">
+                                                            {new Date(reply.created_at).toLocaleDateString("vi-VN", {
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                            })}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => setDeleteConfirm({ type: "reply", id: reply.id, letterId: letter.id })}
+                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-xs"
+                                                            title="Xóa trả lời"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -339,7 +474,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                                 setReplyContent(e.target.value);
                                             }}
                                             onFocus={() => setReplyingTo(letter.id)}
-                                            placeholder="Write a reply..."
+                                            placeholder="Viết câu trả lời..."
                                             className={`flex-1 px-4 py-2 rounded-full border ${colors.border} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
                                         />
                                         <button

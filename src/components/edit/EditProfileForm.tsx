@@ -238,11 +238,11 @@ function LoveProfileForm({
             if (result.success && result.url) {
                 setAvatar(result.url);
             } else {
-                setMessage({ type: "error", text: result.error || "Upload failed" });
+                setMessage({ type: "error", text: result.error || "Tải ảnh thất bại" });
             }
         } catch (error) {
             console.error("Upload error:", error);
-            setMessage({ type: "error", text: "Failed to upload avatar" });
+            setMessage({ type: "error", text: "Không thể tải ảnh đại diện" });
         }
         setUploading(false);
     };
@@ -261,10 +261,10 @@ function LoveProfileForm({
         const result = await updateLinkProfile(slug, fullData);
 
         if (result.success) {
-            setMessage({ type: "success", text: "Profile updated successfully!" });
+            setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
             onSuccess?.();
         } else {
-            setMessage({ type: "error", text: result.error || "Failed to update" });
+            setMessage({ type: "error", text: result.error || "Không thể cập nhật" });
         }
 
         setIsSubmitting(false);
@@ -274,7 +274,7 @@ function LoveProfileForm({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
                 <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-                <h3 className="text-lg font-semibold text-gray-800">Love Profile</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ tình yêu</h3>
             </div>
 
             {/* Avatars Row */}
@@ -282,7 +282,7 @@ function LoveProfileForm({
                 {/* His Avatar */}
                 <div className="flex flex-col items-center">
                     <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                        His Photo
+                        Ảnh của anh
                     </label>
                     <div className="relative group">
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg">
@@ -322,7 +322,7 @@ function LoveProfileForm({
                 {/* Her Avatar */}
                 <div className="flex flex-col items-center">
                     <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                        Her Photo
+                        Ảnh của em
                     </label>
                     <div className="relative group">
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg">
@@ -364,12 +364,12 @@ function LoveProfileForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        His Name <span className="text-red-500">*</span>
+                        Tên anh <span className="text-red-500">*</span>
                     </label>
                     <input
                         {...register("boy_name")}
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all"
-                        placeholder="His name"
+                        placeholder="Tên của anh"
                     />
                     {errors.boy_name && (
                         <p className="mt-1 text-sm text-red-500">{errors.boy_name.message}</p>
@@ -377,12 +377,12 @@ function LoveProfileForm({
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Her Name <span className="text-red-500">*</span>
+                        Tên em <span className="text-red-500">*</span>
                     </label>
                     <input
                         {...register("girl_name")}
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all"
-                        placeholder="Her name"
+                        placeholder="Tên của em"
                     />
                     {errors.girl_name && (
                         <p className="mt-1 text-sm text-red-500">{errors.girl_name.message}</p>
@@ -393,7 +393,7 @@ function LoveProfileForm({
             {/* Anniversary Date */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Anniversary Date
+                    Ngày kỷ niệm
                 </label>
                 <input
                     {...register("anniversary_date")}
@@ -405,25 +405,25 @@ function LoveProfileForm({
             {/* Title */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Page Title
+                    Tiêu đề trang
                 </label>
                 <input
                     {...register("title")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all"
-                    placeholder="Our Love Story"
+                    placeholder="Câu Chuyện Tình Yêu"
                 />
             </div>
 
             {/* Short Note */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Short Note
+                    Ghi chú ngắn
                 </label>
                 <textarea
                     {...register("short_note")}
                     rows={3}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all resize-none"
-                    placeholder="A sweet message for your page..."
+                    placeholder="Lời nhắn ngọt ngào cho trang của bạn..."
                 />
                 {errors.short_note && (
                     <p className="mt-1 text-sm text-red-500">{errors.short_note.message}</p>
@@ -451,12 +451,12 @@ function LoveProfileForm({
                 {isSubmitting ? (
                     <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Saving...
+                        Đang lưu...
                     </>
                 ) : (
                     <>
                         <Save className="w-5 h-5" />
-                        Save Changes
+                        Lưu thay đổi
                     </>
                 )}
             </button>
@@ -498,10 +498,10 @@ function EveryProfileForm({
         const result = await updateLinkProfile(slug, data);
 
         if (result.success) {
-            setMessage({ type: "success", text: "Profile updated successfully!" });
+            setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
             onSuccess?.();
         } else {
-            setMessage({ type: "error", text: result.error || "Failed to update" });
+            setMessage({ type: "error", text: result.error || "Không thể cập nhật" });
         }
 
         setIsSubmitting(false);
@@ -511,17 +511,17 @@ function EveryProfileForm({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
                 <Users className="w-5 h-5 text-blue-500" />
-                <h3 className="text-lg font-semibold text-gray-800">Group Profile</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ nhóm</h3>
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Group/Album Name <span className="text-red-500">*</span>
+                    Tên nhóm/Album <span className="text-red-500">*</span>
                 </label>
                 <input
                     {...register("group_name")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all"
-                    placeholder="Our Memories"
+                    placeholder="Kỷ Niệm Của Chúng Ta"
                 />
                 {errors.group_name && (
                     <p className="mt-1 text-sm text-red-500">{errors.group_name.message}</p>
@@ -530,35 +530,35 @@ function EveryProfileForm({
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Owner Name
+                    Tên chủ sở hữu
                 </label>
                 <input
                     {...register("owner_name")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all"
-                    placeholder="Your name"
+                    placeholder="Tên của bạn"
                 />
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Page Title
+                    Tiêu đề trang
                 </label>
                 <input
                     {...register("title")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all"
-                    placeholder="Our Journey"
+                    placeholder="Hành Trình Của Chúng Ta"
                 />
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Short Note
+                    Ghi chú ngắn
                 </label>
                 <textarea
                     {...register("short_note")}
                     rows={3}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all resize-none"
-                    placeholder="A description for your page..."
+                    placeholder="Mô tả cho trang của bạn..."
                 />
             </div>
 
@@ -628,10 +628,10 @@ function IdolProfileForm({
         const result = await updateLinkProfile(slug, data);
 
         if (result.success) {
-            setMessage({ type: "success", text: "Profile updated successfully!" });
+            setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
             onSuccess?.();
         } else {
-            setMessage({ type: "error", text: result.error || "Failed to update" });
+            setMessage({ type: "error", text: result.error || "Không thể cập nhật" });
         }
 
         setIsSubmitting(false);
@@ -641,17 +641,17 @@ function IdolProfileForm({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
                 <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                <h3 className="text-lg font-semibold text-gray-800">Idol Profile</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ Idol</h3>
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Idol Name <span className="text-red-500">*</span>
+                    Tên Idol <span className="text-red-500">*</span>
                 </label>
                 <input
                     {...register("idol_name")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
-                    placeholder="Idol's name"
+                    placeholder="Tên của idol"
                 />
                 {errors.idol_name && (
                     <p className="mt-1 text-sm text-red-500">{errors.idol_name.message}</p>
@@ -660,35 +660,35 @@ function IdolProfileForm({
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Fan Name
+                    Tên fan của bạn
                 </label>
                 <input
                     {...register("fan_name")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
-                    placeholder="A devoted fan"
+                    placeholder="Một người hâm mộ"
                 />
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Page Title
+                    Tiêu đề trang
                 </label>
                 <input
                     {...register("title")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
-                    placeholder="Forever a Fan"
+                    placeholder="Mãi Là Fan"
                 />
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fan Message
+                    Lời nhắn fan
                 </label>
                 <textarea
                     {...register("short_note")}
                     rows={3}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all resize-none"
-                    placeholder="Your message to your idol..."
+                    placeholder="Lời nhắn của bạn gửi idol..."
                 />
             </div>
 
@@ -711,12 +711,12 @@ function IdolProfileForm({
                 {isSubmitting ? (
                     <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Saving...
+                        Đang lưu...
                     </>
                 ) : (
                     <>
                         <Save className="w-5 h-5" />
-                        Save Changes
+                        Lưu thay đổi
                     </>
                 )}
             </button>

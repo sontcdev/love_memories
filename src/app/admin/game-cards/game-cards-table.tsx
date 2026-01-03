@@ -26,7 +26,7 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
     const [filter, setFilter] = useState<GameLevel | "ALL">("ALL");
 
     async function handleDelete(cardId: string) {
-        if (!confirm("Delete this card?")) return;
+        if (!confirm("Xóa thẻ này?")) return;
 
         setDeletingId(cardId);
         const result = await deleteGameCard(cardId);
@@ -84,8 +84,8 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                             key={level}
                             onClick={() => setFilter(level)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === level
-                                    ? "bg-violet-600 text-white"
-                                    : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                ? "bg-violet-600 text-white"
+                                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                                 }`}
                         >
                             {level}
@@ -99,7 +99,7 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                     className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
                 >
                     <Plus className="w-4 h-4" />
-                    Add Card
+                    Thêm thẻ
                 </button>
             </div>
 
@@ -111,7 +111,7 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                             type="text"
                             value={newContent}
                             onChange={(e) => setNewContent(e.target.value)}
-                            placeholder="Enter question content..."
+                            placeholder="Nhập nội dung câu hỏi..."
                             className="flex-1 px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-violet-500"
                         />
                         <select
@@ -119,9 +119,9 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                             onChange={(e) => setNewLevel(e.target.value as GameLevel)}
                             className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-violet-500"
                         >
-                            <option value="EASY">EASY</option>
-                            <option value="MEDIUM">MEDIUM</option>
-                            <option value="HARD">HARD</option>
+                            <option value="EASY">DỄ</option>
+                            <option value="MEDIUM">TRUNG BÌNH</option>
+                            <option value="HARD">KHÓ</option>
                         </select>
                         <button
                             onClick={handleAdd}
@@ -131,7 +131,7 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                             {isAdding ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                                "Add"
+                                "Thêm"
                             )}
                         </button>
                     </div>
@@ -143,10 +143,10 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                 <table className="w-full">
                     <thead className="bg-slate-700/30">
                         <tr>
-                            <th className="text-left p-4 text-sm font-semibold text-slate-300">Content</th>
-                            <th className="text-center p-4 text-sm font-semibold text-slate-300 w-32">Level</th>
-                            <th className="text-center p-4 text-sm font-semibold text-slate-300 w-24">Status</th>
-                            <th className="text-center p-4 text-sm font-semibold text-slate-300 w-24">Actions</th>
+                            <th className="text-left p-4 text-sm font-semibold text-slate-300">Nội dung</th>
+                            <th className="text-center p-4 text-sm font-semibold text-slate-300 w-32">Mức độ</th>
+                            <th className="text-center p-4 text-sm font-semibold text-slate-300 w-24">Trạng thái</th>
+                            <th className="text-center p-4 text-sm font-semibold text-slate-300 w-24">Hành động</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-700/50">
@@ -170,10 +170,10 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                                         onClick={() => handleToggle(card.id)}
                                         disabled={togglingId === card.id}
                                         className={`p-2 rounded-lg transition-colors ${card.is_active
-                                                ? "text-green-400 hover:bg-green-500/10"
-                                                : "text-slate-500 hover:bg-slate-700"
+                                            ? "text-green-400 hover:bg-green-500/10"
+                                            : "text-slate-500 hover:bg-slate-700"
                                             }`}
-                                        title={card.is_active ? "Active - Click to disable" : "Disabled - Click to enable"}
+                                        title={card.is_active ? "Hoạt động - Nhấp để tắt" : "Đã tắt - Nhấp để bật"}
                                     >
                                         {togglingId === card.id ? (
                                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -189,7 +189,7 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                                         onClick={() => handleDelete(card.id)}
                                         disabled={deletingId === card.id}
                                         className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                        title="Delete"
+                                        title="Xóa"
                                     >
                                         {deletingId === card.id ? (
                                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -205,14 +205,14 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
 
                 {filteredCards.length === 0 && (
                     <div className="text-center py-12 text-slate-400">
-                        No cards found
+                        Không tìm thấy thẻ nào
                     </div>
                 )}
             </div>
 
             {/* Footer */}
             <div className="p-4 border-t border-slate-700/50 text-sm text-slate-400">
-                Showing {filteredCards.length} of {cards.length} cards
+                Hiển thị {filteredCards.length} / {cards.length} thẻ
             </div>
         </div>
     );

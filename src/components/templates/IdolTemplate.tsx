@@ -127,23 +127,23 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                             <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-lg">
                                 <Clock className="w-6 h-6 text-amber-500" />
                                 <div className="text-left">
-                                    <p className="text-xs text-gray-500 uppercase tracking-wider">Fandom Age</p>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wider">Thời gian làm fan</p>
                                     <div className="flex items-baseline gap-2">
                                         {debutInfo.years > 0 && (
                                             <>
                                                 <span className="text-2xl font-bold text-amber-500">{debutInfo.years}</span>
-                                                <span className="text-gray-500 text-sm">years</span>
+                                                <span className="text-gray-500 text-sm">năm</span>
                                             </>
                                         )}
                                         {debutInfo.months > 0 && (
                                             <>
                                                 <span className="text-2xl font-bold text-amber-500">{debutInfo.months}</span>
-                                                <span className="text-gray-500 text-sm">months</span>
+                                                <span className="text-gray-500 text-sm">tháng</span>
                                             </>
                                         )}
                                     </div>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        {debutInfo.days.toLocaleString()} days since debut
+                                        {debutInfo.days.toLocaleString()} ngày kể từ ngày debut
                                     </p>
                                 </div>
                             </div>
@@ -164,9 +164,9 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                 <div className="max-w-4xl mx-auto px-4">
                     <div className="flex justify-center gap-2 py-3">
                         {[
-                            { id: "gallery", icon: ImageIcon, label: "Gallery" },
-                            { id: "timeline", icon: Calendar, label: "Moments" },
-                            { id: "fanletters", icon: Heart, label: "Fan Letters" },
+                            { id: "gallery", icon: ImageIcon, label: "Bộ sưu tập" },
+                            { id: "timeline", icon: Calendar, label: "Khoảnh khắc" },
+                            { id: "fanletters", icon: Heart, label: "Thư fan" },
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -190,12 +190,12 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                     <>
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                             <Sparkles className="w-6 h-6 inline-block mr-2 text-amber-400" />
-                            Photo Collection
+                            Bộ Sưu Tập Ảnh
                         </h2>
                         {data.galleries.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No photos collected yet</p>
+                                <p>Chưa có ảnh nào</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -237,12 +237,12 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                     <>
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                             <Star className="w-6 h-6 inline-block mr-2 text-amber-400 fill-amber-400" />
-                            Special Moments
+                            Khoảnh Khắc Đặc Biệt
                         </h2>
                         {data.timelines.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No moments recorded yet</p>
+                                <p>Chưa có khoảnh khắc nào</p>
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -286,12 +286,12 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                     <>
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                             <Heart className="w-6 h-6 inline-block mr-2 text-amber-400 fill-amber-400" />
-                            Fan Letters
+                            Thư Fan
                         </h2>
                         {data.letters.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <Heart className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No fan letters yet</p>
+                                <p>Chưa có thư fan nào</p>
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -310,7 +310,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                             {letter.content}
                                         </p>
                                         <div className="mt-4 text-right text-sm text-amber-500">
-                                            — with love ❤️
+                                            — với tình yêu ❤️
                                         </div>
                                     </div>
                                 ))}
@@ -323,7 +323,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
             {/* Footer */}
             <footer className="text-center py-8 text-gray-400 text-sm">
                 <Star className="w-4 h-4 inline-block mr-1 text-amber-300 fill-amber-300" />
-                Forever a fan
+                Mãi là fan
             </footer>
         </div>
     );

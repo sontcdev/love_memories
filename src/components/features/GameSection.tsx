@@ -44,9 +44,9 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
     const colors = themeColors[theme];
 
     const difficulties: { level: Difficulty; label: string; icon: typeof Heart; gradient: string }[] = [
-        { level: "EASY", label: "Easy", icon: Heart, gradient: colors.easy },
-        { level: "MEDIUM", label: "Medium", icon: Flame, gradient: colors.medium },
-        { level: "HARD", label: "Hard", icon: Star, gradient: colors.hard },
+        { level: "EASY", label: "Dễ", icon: Heart, gradient: colors.easy },
+        { level: "MEDIUM", label: "Trung bình", icon: Flame, gradient: colors.medium },
+        { level: "HARD", label: "Khó", icon: Star, gradient: colors.hard },
     ];
 
     const handleDrawCard = async (difficulty: Difficulty, excludeId?: string) => {
@@ -90,10 +90,10 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 mb-2">
                     <Sparkles className="w-6 h-6 text-amber-400" />
-                    <h2 className="text-2xl font-bold text-gray-800">Love Challenge</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Thử Thách Tình Yêu</h2>
                     <Sparkles className="w-6 h-6 text-amber-400" />
                 </div>
-                <p className="text-gray-500 text-sm">Choose a difficulty and discover your challenge!</p>
+                <p className="text-gray-500 text-sm">Chọn độ khó và khám phá thử thách của bạn!</p>
             </div>
 
             {/* Difficulty Buttons */}
@@ -207,7 +207,7 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
                             className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition-colors"
                         >
                             <RotateCcw className="w-4 h-4" />
-                            Draw Again
+                            Rút lại
                         </button>
                     </div>
                 </div>

@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X } from "lucide-react";
+import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic } from "lucide-react";
 import { GameSection } from "@/components/features/GameSection";
 import { LetterBox } from "@/components/features/LetterBox";
+import { VideoPlayer } from "@/components/media";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -178,10 +179,10 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                     <div className="mt-8">
                         <div className="inline-flex flex-wrap justify-center gap-2">
                             {[
-                                { id: "gallery", icon: ImageIcon, label: "Gallery" },
-                                { id: "timeline", icon: Calendar, label: "Timeline" },
-                                { id: "game", icon: Sparkles, label: "Game" },
-                                { id: "letters", icon: Mail, label: "Letters" },
+                                { id: "gallery", icon: ImageIcon, label: "Ảnh" },
+                                { id: "timeline", icon: Calendar, label: "Dòng thời gian" },
+                                { id: "game", icon: Sparkles, label: "Trò chơi" },
+                                { id: "letters", icon: Mail, label: "Thư" },
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
@@ -210,12 +211,12 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {activeSection === "gallery" && (
                     <section className="max-w-4xl mx-auto px-4 py-6">
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
-                            Our Moments 📸
+                            Khoảnh Khắc Của Chúng Mình 📸
                         </h2>
                         {data.galleries.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No photos yet...</p>
+                                <p>Chưa có ảnh nào...</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -308,12 +309,12 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {activeSection === "timeline" && (
                     <section className="max-w-2xl mx-auto px-4 py-12">
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
-                            Our Story 💕
+                            Câu Chuyện Của Chúng Mình 💕
                         </h2>
                         {data.timelines.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No timeline events yet...</p>
+                                <p>Chưa có sự kiện nào...</p>
                             </div>
                         ) : (
                             <div className="relative">
@@ -351,6 +352,24 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                                         />
                                                     </div>
                                                 )}
+                                                {event.video_url && (
+                                                    <div className="mt-4">
+                                                        <VideoPlayer url={event.video_url} className="rounded-xl" />
+                                                    </div>
+                                                )}
+                                                {event.audio_url && (
+                                                    <div className="mt-4 bg-rose-50 p-3 rounded-xl">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Mic className="w-4 h-4 text-rose-500" />
+                                                            <span className="text-sm font-medium text-gray-700">Ghi âm</span>
+                                                        </div>
+                                                        <audio
+                                                            src={event.audio_url}
+                                                            controls
+                                                            className="w-full h-10"
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -377,7 +396,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {/* Footer */}
                 <footer className="text-center py-8 text-gray-400 text-sm">
                     <Heart className="w-4 h-4 inline-block mr-1 text-rose-300 fill-rose-300" />
-                    Made with love
+                    Được tạo với tình yêu
                 </footer>
 
                 {/* Scroll to Top Button */}

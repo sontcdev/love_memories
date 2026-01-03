@@ -46,7 +46,7 @@ export default function AdminLoginPage() {
 
         // Show loading immediately
         setIsLoading(true);
-        setLoadingMessage("Signing in...");
+        setLoadingMessage("Đang đăng nhập...");
         setError(null);
 
         // Minimum loading time for UX
@@ -59,18 +59,18 @@ export default function AdminLoginPage() {
             ]);
 
             if (result.success) {
-                setLoadingMessage("Redirecting to dashboard...");
+                setLoadingMessage("Đang chuyển đến trang quản trị...");
                 // Small delay before redirect
                 await new Promise(resolve => setTimeout(resolve, 500));
                 router.push("/admin/links");
             } else {
-                setError(result.error || "Login failed");
+                setError(result.error || "Đăng nhập thất bại");
                 setIsLoading(false);
                 setLoadingMessage("");
             }
         } catch (err) {
             console.error("Login error:", err);
-            setError("An error occurred");
+            setError("Đã xảy ra lỗi");
             setIsLoading(false);
             setLoadingMessage("");
         }
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
 
     // Show initial page loading
     if (isPageLoading) {
-        return <LoadingOverlay message="Loading..." />;
+        return <LoadingOverlay message="Đang tải..." />;
     }
 
     return (
@@ -92,8 +92,8 @@ export default function AdminLoginPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 mb-4 shadow-lg shadow-violet-500/25">
                         <Lock className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Admin Portal</h1>
-                    <p className="text-slate-400">Sign in to manage your platform</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Cổng Quản Trị</h1>
+                    <p className="text-slate-400">Đăng nhập để quản lý nền tảng</p>
                 </div>
 
                 {/* Login Card */}
@@ -109,7 +109,7 @@ export default function AdminLoginPage() {
                         {/* Username */}
                         <div className="space-y-2">
                             <Label htmlFor="username" className="text-slate-300">
-                                Username
+                                Tên đăng nhập
                             </Label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
@@ -117,7 +117,7 @@ export default function AdminLoginPage() {
                                     id="username"
                                     name="username"
                                     type="text"
-                                    placeholder="Enter your username"
+                                    placeholder="Nhập tên đăng nhập"
                                     required
                                     disabled={isLoading}
                                     className="pl-10 bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-violet-500 focus:ring-violet-500/20 disabled:opacity-50"
@@ -128,7 +128,7 @@ export default function AdminLoginPage() {
                         {/* Password */}
                         <div className="space-y-2">
                             <Label htmlFor="password" className="text-slate-300">
-                                Password
+                                Mật khẩu
                             </Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
@@ -136,7 +136,7 @@ export default function AdminLoginPage() {
                                     id="password"
                                     name="password"
                                     type="password"
-                                    placeholder="Enter your password"
+                                    placeholder="Nhập mật khẩu"
                                     required
                                     disabled={isLoading}
                                     className="pl-10 bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-violet-500 focus:ring-violet-500/20 disabled:opacity-50"
@@ -153,10 +153,10 @@ export default function AdminLoginPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                    Signing in...
+                                    Đang đăng nhập...
                                 </>
                             ) : (
-                                "Sign In"
+                                "Đăng Nhập"
                             )}
                         </Button>
                     </form>
@@ -164,7 +164,7 @@ export default function AdminLoginPage() {
 
                 {/* Footer */}
                 <p className="text-center text-slate-500 text-sm mt-6">
-                    Personalized Anniversary Platform
+                    Nền tảng Lưu giữ Kỷ niệm Cá nhân
                 </p>
             </div>
         </div>

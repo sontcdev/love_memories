@@ -24,20 +24,20 @@ export default async function LinksPage() {
                                 <span className="text-white font-bold text-lg">M</span>
                             </div>
                             <div>
-                                <h1 className="text-lg font-semibold text-white">Admin Dashboard</h1>
-                                <p className="text-xs text-slate-400">Managing {links?.length || 0} links</p>
+                                <h1 className="text-lg font-semibold text-white">Trang Quản Trị</h1>
+                                <p className="text-xs text-slate-400">Quản lý {links?.length || 0} liên kết</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <span className="text-sm text-slate-400">
-                                Welcome, <span className="text-white font-medium">{session.username}</span>
+                                Xin chào, <span className="text-white font-medium">{session.username}</span>
                             </span>
                             <form action="/admin/logout" method="POST">
                                 <button
                                     type="submit"
                                     className="text-sm text-slate-400 hover:text-white transition-colors"
                                 >
-                                    Logout
+                                    Đăng xuất
                                 </button>
                             </form>
                         </div>
@@ -49,13 +49,13 @@ export default async function LinksPage() {
                             href="/admin/links"
                             className="px-4 py-3 text-sm font-medium text-white border-b-2 border-violet-500"
                         >
-                            📋 Links
+                            📋 Liên kết
                         </Link>
                         <Link
                             href="/admin/game-cards"
                             className="px-4 py-3 text-sm font-medium text-slate-400 hover:text-white border-b-2 border-transparent hover:border-slate-600 transition-colors"
                         >
-                            🎴 Game Cards
+                            🀴 Thẻ trò chơi
                         </Link>
                     </div>
                 </div>

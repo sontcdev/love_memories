@@ -68,6 +68,8 @@ interface TimelineEventData {
     date: string; // ISO date string
     description?: string;
     image_url?: string;
+    video_url?: string;
+    audio_url?: string;
 }
 
 export async function upsertTimelineEvent(slug: string, data: TimelineEventData) {
@@ -118,6 +120,8 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
                     date: new Date(data.date),
                     description: data.description?.trim() || null,
                     image_url: data.image_url || null,
+                    video_url: data.video_url || null,
+                    audio_url: data.audio_url || null,
                 },
             });
 
@@ -134,6 +138,8 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
                     date: new Date(data.date),
                     description: data.description?.trim() || null,
                     image_url: data.image_url || null,
+                    video_url: data.video_url || null,
+                    audio_url: data.audio_url || null,
                 },
             });
 

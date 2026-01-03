@@ -93,10 +93,10 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
         });
 
         if (result.success) {
-            setMessage({ type: "success", text: "Settings saved successfully!" });
+            setMessage({ type: "success", text: "Đã lưu cài đặt!" });
             onSuccess?.();
         } else {
-            setMessage({ type: "error", text: result.error || "Failed to save" });
+            setMessage({ type: "error", text: result.error || "Không thể lưu" });
         }
 
         setIsSubmitting(false);
@@ -108,7 +108,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Palette className="w-5 h-5 text-purple-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Background Color</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">Màu nền</h3>
                 </div>
 
                 {/* Preset Colors */}
@@ -119,8 +119,8 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                             type="button"
                             onClick={() => setValue("background_color", color)}
                             className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedColor === color
-                                    ? "border-purple-500 ring-2 ring-purple-200 scale-110"
-                                    : "border-gray-200 hover:border-gray-300"
+                                ? "border-purple-500 ring-2 ring-purple-200 scale-110"
+                                : "border-gray-200 hover:border-gray-300"
                                 }`}
                             style={{ backgroundColor: color }}
                             title={color}
@@ -150,7 +150,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Type className="w-5 h-5 text-blue-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Font Family</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">Phông chữ</h3>
                 </div>
 
                 <select
@@ -169,7 +169,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Music className="w-5 h-5 text-pink-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Background Music</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
                 </div>
 
                 <input
@@ -189,7 +189,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                         className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-300"
                     />
                     <span className="text-sm text-gray-600">
-                        Auto-play music when page loads
+                        Tự động phát nhạc khi tải trang
                     </span>
                 </label>
             </div>
@@ -198,8 +198,8 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             {message && (
                 <div
                     className={`p-3 rounded-lg text-sm ${message.type === "success"
-                            ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-red-50 text-red-700 border border-red-200"
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
                         }`}
                 >
                     {message.text}
@@ -215,12 +215,12 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                 {isSubmitting ? (
                     <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Saving...
+                        Đang lưu...
                     </>
                 ) : (
                     <>
                         <Save className="w-5 h-5" />
-                        Save Settings
+                        Lưu cài đặt
                     </>
                 )}
             </button>

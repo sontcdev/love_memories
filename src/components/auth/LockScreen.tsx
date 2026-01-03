@@ -75,7 +75,7 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
     const handleSubmit = async (pinValue?: string) => {
         const fullPin = pinValue || pin.join("");
         if (fullPin.length !== 6) {
-            setError("Please enter all 6 digits");
+            setError("Vui lòng nhập đủ 6 chữ số");
             return;
         }
 
@@ -87,7 +87,7 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
         if (result.success) {
             onSuccess();
         } else {
-            setError(result.error || "Invalid PIN");
+            setError(result.error || "Mã PIN không đúng");
             setPin(["", "", "", "", "", ""]);
             inputRefs.current[0]?.focus();
         }
@@ -103,8 +103,8 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 mb-4 shadow-lg shadow-rose-300/50">
                         <Heart className="w-10 h-10 text-white fill-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Private Memory</h1>
-                    <p className="text-gray-500 text-sm">Enter 6-digit PIN to unlock</p>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Kỷ Niệm Riêng Tư</h1>
+                    <p className="text-gray-500 text-sm">Mật mã kỷ niệm của chúng mình là gì nhỉ?</p>
                 </div>
 
                 {/* PIN Card */}
@@ -151,7 +151,7 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
                             disabled={isLoading}
                             className="h-14 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-sm font-medium text-gray-500 transition-all disabled:opacity-50"
                         >
-                            Clear
+                            Xóa
                         </button>
                         <button
                             onClick={() => handleNumberPad("0")}
@@ -178,12 +178,12 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
                         {isLoading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                Unlocking...
+                                Đang mở khóa...
                             </>
                         ) : (
                             <>
                                 <Lock className="w-5 h-5" />
-                                Unlock
+                                Mở khóa
                             </>
                         )}
                     </button>
@@ -191,7 +191,7 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
 
                 {/* Footer */}
                 <p className="text-center text-gray-400 text-xs mt-6">
-                    Your memories are protected 💕
+                    Kỷ niệm của bạn được bảo vệ 💕
                 </p>
             </div>
         </div>

@@ -29,9 +29,8 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
     const musicPlayerRef = useRef<MusicPlayerRef>(null);
 
     const handleUnlock = () => {
-        // Full page reload to get updated data with new auth cookie
+        // Just set authenticated state - no reload needed since linkData is already available
         setAuthenticated(true);
-        window.location.reload();
     };
 
     // Callback for when user opens the welcome overlay
@@ -54,8 +53,8 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Content Not Available</h1>
-                    <p className="text-gray-500">This page is being prepared...</p>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Nội dung chưa sẵn sàng</h1>
+                    <p className="text-gray-500">Trang này đang được chuẩn bị...</p>
                 </div>
             </div>
         );
@@ -107,7 +106,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
             {/* Welcome Overlay - shows on first visit */}
             <WelcomeOverlay
                 title={getWelcomeTitle()}
-                subtitle={profileData?.short_note || "A special place for memories"}
                 buttonText="Enter ✨"
                 theme={getTheme()}
                 onOpen={handleWelcomeOpen}

@@ -4,6 +4,7 @@ import { useState, useOptimistic, useTransition } from "react";
 import Image from "next/image";
 import { Timeline } from "@prisma/client";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
 import {
     upsertTimelineEvent,
     deleteTimelineEvent,
@@ -27,6 +28,8 @@ import {
     Calendar,
     Image as ImageIcon,
     AlertCircle,
+    Video,
+    Mic,
 } from "lucide-react";
 
 interface TimelineManagerProps {
@@ -40,6 +43,8 @@ interface FormData {
     date: string;
     description: string;
     image_url: string;
+    video_url: string;
+    audio_url: string;
 }
 
 const MAX_EVENTS = 10;
@@ -49,6 +54,8 @@ const emptyForm: FormData = {
     date: new Date().toISOString().split("T")[0],
     description: "",
     image_url: "",
+    video_url: "",
+    audio_url: "",
 };
 
 export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps) {
@@ -108,6 +115,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
             date: new Date(event.date).toISOString().split("T")[0],
             description: event.description || "",
             image_url: event.image_url || "",
+            video_url: event.video_url || "",
+            audio_url: event.audio_url || "",
         });
         setError(null);
         setShowImageUpload(false);
@@ -128,7 +137,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
         setIsSaving(true);
         setIsLoading(true);
-        setLoadingMessage(isEditing ? "Updating event..." : "Adding event...");
+        setLoadingMessage(isEditing ? "Đang cập nhật..." : "Đang thêm...");
         setError(null);
 
         // Create optimistic event for immediate UI update
@@ -158,6 +167,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
             date: formData.date,
             description: formData.description || undefined,
             image_url: formData.image_url || undefined,
+            video_url: formData.video_url || undefined,
+            audio_url: formData.audio_url || undefined,
         });
 
         if (result.success && result.data) {
@@ -191,7 +202,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
         setDeletingId(eventId);
         setIsLoading(true);
-        setLoadingMessage("Deleting event...");
+        setLoadingMessage("Đang xóa...");
 
         startTransition(() => {
             addOptimistic({ type: "delete", payload: eventId });
@@ -233,9 +244,9 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-800">Timeline</h2>
+                    <h2 className="text-xl font-semibold text-gray-800">Dòng thời gian</h2>
                     <p className="text-sm text-gray-500">
-                        {timeline.length} / {MAX_EVENTS} events
+                        {timeline.length} / {MAX_EVENTS} sự kiện
                     </p>
                 </div>
                 <Button
@@ -244,7 +255,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                     className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
                 >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Event
+                    Thêm sự kiện
                 </Button>
             </div>
 
@@ -252,7 +263,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
             {isLimitReached && (
                 <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    Maximum {MAX_EVENTS} events reached
+                    Đã đạt giới hạn {MAX_EVENTS} sự kiện
                 </div>
             )}
 
@@ -261,7 +272,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                 <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>
-                            {isEditing ? "Edit Event" : "Add New Event"}
+                            {isEditing ? "Sửa sự kiện" : "Thêm sự kiện mới"}
                         </DialogTitle>
                     </DialogHeader>
 
@@ -275,20 +286,20 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
                         {/* Title Input */}
                         <div className="space-y-2">
-                            <Label htmlFor="title">Title *</Label>
+                            <Label htmlFor="title">Tiêu đề *</Label>
                             <Input
                                 id="title"
                                 value={formData.title}
                                 onChange={(e) =>
                                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                                 }
-                                placeholder="First Date, Anniversary, etc."
+                                placeholder="Lần hẹn đầu tiên, Kỷ niệm, ..."
                             />
                         </div>
 
                         {/* Date Input */}
                         <div className="space-y-2">
-                            <Label htmlFor="date">Date *</Label>
+                            <Label htmlFor="date">Ngày *</Label>
                             <Input
                                 id="date"
                                 type="date"
@@ -301,21 +312,21 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
                         {/* Description */}
                         <div className="space-y-2">
-                            <Label htmlFor="description">Description (optional)</Label>
+                            <Label htmlFor="description">Mô tả (tùy chọn)</Label>
                             <Textarea
                                 id="description"
                                 value={formData.description}
                                 onChange={(e) =>
                                     setFormData((prev) => ({ ...prev, description: e.target.value }))
                                 }
-                                placeholder="What happened on this day..."
+                                placeholder="Chuyện gì đã xảy ra vào ngày này..."
                                 rows={3}
                             />
                         </div>
 
                         {/* Image Upload */}
                         <div className="space-y-2">
-                            <Label>Photo (optional)</Label>
+                            <Label>Ảnh (tùy chọn)</Label>
                             {formData.image_url ? (
                                 <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
                                     <Image
@@ -343,8 +354,63 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                     className="w-full py-6 border-2 border-dashed rounded-lg text-gray-400 hover:text-gray-500 hover:border-gray-400 transition-colors"
                                 >
                                     <ImageIcon className="w-6 h-6 mx-auto mb-1" />
-                                    <span className="text-sm">Add photo</span>
+                                    <span className="text-sm">Thêm ảnh</span>
                                 </button>
+                            )}
+                        </div>
+
+                        {/* Video URL Input */}
+                        <div className="space-y-2">
+                            <Label className="flex items-center gap-1">
+                                <Video className="w-4 h-4" />
+                                Video (YouTube/TikTok)
+                            </Label>
+                            {formData.video_url ? (
+                                <div className="space-y-2">
+                                    <VideoPlayer url={formData.video_url} className="rounded-lg" />
+                                    <button
+                                        onClick={() => setFormData((prev) => ({ ...prev, video_url: "" }))}
+                                        className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        Xóa video
+                                    </button>
+                                </div>
+                            ) : (
+                                <VideoInput
+                                    value={formData.video_url}
+                                    onChange={(url) => setFormData((prev) => ({ ...prev, video_url: url }))}
+                                    placeholder="Dán link YouTube hoặc TikTok..."
+                                />
+                            )}
+                        </div>
+
+                        {/* Voice Recording */}
+                        <div className="space-y-2">
+                            <Label className="flex items-center gap-1">
+                                <Mic className="w-4 h-4" />
+                                Ghi âm (tùy chọn)
+                            </Label>
+                            {formData.audio_url ? (
+                                <div className="space-y-2">
+                                    <audio
+                                        src={formData.audio_url}
+                                        controls
+                                        className="w-full h-10"
+                                    />
+                                    <button
+                                        onClick={() => setFormData((prev) => ({ ...prev, audio_url: "" }))}
+                                        className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        Xóa ghi âm
+                                    </button>
+                                </div>
+                            ) : (
+                                <VoiceRecorder
+                                    slug={slug}
+                                    onUploadComplete={(url) => setFormData((prev) => ({ ...prev, audio_url: url }))}
+                                />
                             )}
                         </div>
 
@@ -358,14 +424,14 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                 {isSaving ? (
                                     <>
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Saving...
+                                        Đang lưu...
                                     </>
                                 ) : (
-                                    isEditing ? "Update Event" : "Add Event"
+                                    isEditing ? "Cập nhật" : "Thêm sự kiện"
                                 )}
                             </Button>
                             <Button variant="outline" onClick={handleCloseDialog}>
-                                Cancel
+                                Hủy
                             </Button>
                         </div>
                     </div>
@@ -376,12 +442,12 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
             {timeline.length === 0 ? (
                 <div className="text-center py-16 bg-gray-50 rounded-2xl">
                     <Calendar className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500 mb-4">No events yet</p>
+                    <p className="text-gray-500 mb-4">Chưa có sự kiện nào</p>
                     <button
                         onClick={handleAddNew}
                         className="text-indigo-500 hover:text-indigo-600 font-medium"
                     >
-                        Add your first event
+                        Thêm sự kiện đầu tiên
                     </button>
                 </div>
             ) : (
@@ -438,23 +504,23 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                 <button
                                     onClick={() => handleEdit(event)}
                                     className="p-2 hover:bg-gray-100 rounded-lg text-sm text-indigo-500 flex items-center gap-1"
-                                    title="Edit"
+                                    title="Sửa"
                                 >
                                     <Edit3 className="w-4 h-4" />
-                                    <span className="sm:hidden">Edit</span>
+                                    <span className="sm:hidden">Sửa</span>
                                 </button>
                                 <button
                                     onClick={() => handleDelete(event.id)}
                                     disabled={deletingId === event.id}
                                     className="p-2 hover:bg-red-50 rounded-lg text-sm text-red-500 flex items-center gap-1"
-                                    title="Delete"
+                                    title="Xóa"
                                 >
                                     {deletingId === event.id ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <>
                                             <Trash2 className="w-4 h-4" />
-                                            <span className="sm:hidden">Delete</span>
+                                            <span className="sm:hidden">Xóa</span>
                                         </>
                                     )}
                                 </button>

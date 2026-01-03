@@ -126,14 +126,14 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                 router.refresh();
             }
         } else {
-            setCreateError(result.error || "Failed to create link");
+            setCreateError(result.error || "Không thể tạo liên kết");
         }
 
         setIsCreating(false);
     }
 
     async function handleDelete(linkId: string) {
-        if (!confirm("Are you sure you want to delete this link? This action cannot be undone.")) {
+        if (!confirm("Bạn có chắc muốn xóa liên kết này? Hành động này không thể hoàn tác.")) {
             return;
         }
 
@@ -143,7 +143,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
         if (result.success) {
             setLinks(links.filter((link) => link.id !== linkId));
         } else {
-            alert(result.error || "Failed to delete link");
+            alert(result.error || "Không thể xóa liên kết");
         }
 
         setDeletingId(null);
@@ -192,7 +192,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
 
         // Validate if custom PIN is provided
         if (resetPinInput && !/^\d{6}$/.test(resetPinInput)) {
-            setResetPinError("PIN must be exactly 6 digits");
+            setResetPinError("Mã PIN phải có đúng 6 chữ số");
             return;
         }
 
@@ -208,7 +208,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
             });
             closeResetPinDialog();
         } else {
-            setResetPinError(result.error || "Failed to reset PIN");
+            setResetPinError(result.error || "Không thể đặt lại PIN");
         }
 
         setResettingPinId(null);
@@ -225,15 +225,15 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
             {/* Actions Bar */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Links Management</h2>
-                    <p className="text-slate-400 mt-1">Create and manage user links</p>
+                    <h2 className="text-2xl font-bold text-white">Quản Lý Liên Kết</h2>
+                    <p className="text-slate-400 mt-1">Tạo và quản lý liên kết người dùng</p>
                 </div>
 
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <DialogTrigger asChild>
                         <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700">
                             <Plus className="w-4 h-4 mr-2" />
-                            Create New Link
+                            Tạo Liên Kết Mới
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="bg-slate-800 border-slate-700 text-white">
@@ -242,26 +242,26 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                 <DialogHeader>
                                     <DialogTitle className="text-green-400 flex items-center gap-2">
                                         <Check className="w-5 h-5" />
-                                        Link Created Successfully!
+                                        Đã Tạo Liên Kết Thành Công!
                                     </DialogTitle>
                                     <DialogDescription className="text-slate-400">
-                                        Save these credentials - they won&apos;t be shown again.
+                                        Lưu thông tin này - sẽ không hiển thị lại.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
                                     <div className="bg-slate-900/50 rounded-lg p-4 space-y-3">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-slate-400">Username:</span>
+                                            <span className="text-slate-400">Tên người dùng:</span>
                                             <span className="font-mono text-white">{createdCredentials.username}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-slate-400">PIN:</span>
+                                            <span className="text-slate-400">Mã PIN:</span>
                                             <span className="font-mono text-white text-lg tracking-wider">
                                                 {createdCredentials.password}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-slate-400">Link:</span>
+                                            <span className="text-slate-400">Liên kết:</span>
                                             <span className="font-mono text-violet-400">
                                                 /{createdCredentials.slug}
                                             </span>
@@ -270,16 +270,16 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                 </div>
                                 <DialogFooter>
                                     <Button onClick={handleDialogClose} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                                        Close
+                                        Đóng
                                     </Button>
                                 </DialogFooter>
                             </>
                         ) : (
                             <>
                                 <DialogHeader>
-                                    <DialogTitle>Create New Link</DialogTitle>
+                                    <DialogTitle>Tạo Liên Kết Mới</DialogTitle>
                                     <DialogDescription className="text-slate-400">
-                                        Create a new user with their personalized link.
+                                        Tạo người dùng mới với liên kết cá nhân hóa.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <form action={handleCreate}>
@@ -292,12 +292,12 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
 
                                         <div className="space-y-2">
                                             <Label htmlFor="create-username" className="text-slate-300">
-                                                Username
+                                                Tên người dùng
                                             </Label>
                                             <Input
                                                 id="create-username"
                                                 name="username"
-                                                placeholder="Enter username"
+                                                placeholder="Nhập tên người dùng"
                                                 required
                                                 className="bg-slate-900/50 border-slate-600 text-white"
                                             />
@@ -305,24 +305,24 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
 
                                         <div className="space-y-2">
                                             <Label htmlFor="create-password" className="text-slate-300">
-                                                PIN (6 digits) - Optional
+                                                Mã PIN (6 chữ số) - Tùy chọn
                                             </Label>
                                             <Input
                                                 id="create-password"
                                                 name="password"
-                                                placeholder="Auto-generate if empty"
+                                                placeholder="Tự động tạo nếu để trống"
                                                 maxLength={6}
                                                 pattern="[0-9]{6}"
                                                 className="bg-slate-900/50 border-slate-600 text-white"
                                             />
                                             <p className="text-xs text-slate-500">
-                                                Leave empty to auto-generate a 6-digit PIN
+                                                Để trống để tự động tạo mã PIN 6 chữ số
                                             </p>
                                         </div>
 
                                         <div className="space-y-2">
                                             <Label htmlFor="create-type" className="text-slate-300">
-                                                Template Type
+                                                Loại giao diện
                                             </Label>
                                             <Select name="linkType" defaultValue="LOVE">
                                                 <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
@@ -332,19 +332,19 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                     <SelectItem value="LOVE" className="text-white focus:bg-slate-700 focus:text-white">
                                                         <div className="flex items-center gap-2">
                                                             <Heart className="w-4 h-4 text-pink-400" />
-                                                            Love Template
+                                                            Tình yêu
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="IDOL" className="text-white focus:bg-slate-700 focus:text-white">
                                                         <div className="flex items-center gap-2">
                                                             <Star className="w-4 h-4 text-yellow-400" />
-                                                            Idol Template
+                                                            Idol
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="EVERY" className="text-white focus:bg-slate-700 focus:text-white">
                                                         <div className="flex items-center gap-2">
                                                             <Users className="w-4 h-4 text-blue-400" />
-                                                            Every Template
+                                                            Nhóm
                                                         </div>
                                                     </SelectItem>
                                                 </SelectContent>
@@ -359,7 +359,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                             onClick={handleDialogClose}
                                             className="border-slate-600 text-slate-300 hover:bg-slate-700"
                                         >
-                                            Cancel
+                                            Hủy
                                         </Button>
                                         <Button
                                             type="submit"
@@ -369,10 +369,10 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                             {isCreating ? (
                                                 <>
                                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                    Creating...
+                                                    Đang tạo...
                                                 </>
                                             ) : (
-                                                "Create Link"
+                                                "Tạo liên kết"
                                             )}
                                         </Button>
                                     </DialogFooter>
@@ -388,19 +388,19 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-slate-700/50 hover:bg-slate-700/20">
-                            <TableHead className="text-slate-400">Username</TableHead>
-                            <TableHead className="text-slate-400">Slug</TableHead>
-                            <TableHead className="text-slate-400">Template</TableHead>
-                            <TableHead className="text-slate-400">Status</TableHead>
-                            <TableHead className="text-slate-400">Created</TableHead>
-                            <TableHead className="text-slate-400 text-right">Actions</TableHead>
+                            <TableHead className="text-slate-400">Tên người dùng</TableHead>
+                            <TableHead className="text-slate-400">Liên kết</TableHead>
+                            <TableHead className="text-slate-400">Giao diện</TableHead>
+                            <TableHead className="text-slate-400">Trạng thái</TableHead>
+                            <TableHead className="text-slate-400">Ngày tạo</TableHead>
+                            <TableHead className="text-slate-400 text-right">Hành động</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {links.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                                    No links found. Create your first link to get started.
+                                    Chưa có liên kết nào. Tạo liên kết đầu tiên để bắt đầu.
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -455,7 +455,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                             ) : (
                                                 <Power className="w-3 h-3" />
                                             )}
-                                            {link.is_active ? "Active" : "Inactive"}
+                                            {link.is_active ? "Hoạt động" : "Tạm dừng"}
                                         </button>
                                     </TableCell>
                                     <TableCell className="text-slate-400 text-sm">
@@ -466,7 +466,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                             <button
                                                 onClick={() => setQrDialog({ slug: link.slug, username: link.user.username })}
                                                 className="p-2 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
-                                                title="Show QR Code"
+                                                title="Hiển thị mã QR"
                                             >
                                                 <QrCode className="w-4 h-4" />
                                             </button>
@@ -474,7 +474,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                 onClick={() => openResetPinDialog(link.id, link.user.username)}
                                                 disabled={resettingPinId === link.id}
                                                 className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
-                                                title="Reset PIN"
+                                                title="Đặt lại PIN"
                                             >
                                                 {resettingPinId === link.id ? (
                                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -524,10 +524,10 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <KeyRound className="w-5 h-5 text-amber-400" />
-                            Reset PIN
+                            Đặt lại PIN
                         </DialogTitle>
                         <DialogDescription className="text-slate-400">
-                            Enter a new 6-digit PIN for <span className="text-white font-medium">{resetPinDialog?.username}</span> or generate a random one.
+                            Nhập mã PIN 6 chữ số mới cho <span className="text-white font-medium">{resetPinDialog?.username}</span> hoặc tạo ngẫu nhiên.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -538,14 +538,14 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                         )}
                         <div className="space-y-2">
                             <Label htmlFor="reset-pin" className="text-slate-300">
-                                New PIN (6 digits)
+                                Mã PIN mới (6 chữ số)
                             </Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="reset-pin"
                                     value={resetPinInput}
                                     onChange={(e) => setResetPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    placeholder="Leave empty to auto-generate"
+                                    placeholder="Để trống để tự động tạo"
                                     maxLength={6}
                                     className="bg-slate-900/50 border-slate-600 text-white font-mono text-lg tracking-widest"
                                 />
@@ -554,13 +554,13 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                     variant="outline"
                                     onClick={generateRandomPin}
                                     className="border-slate-600 text-slate-300 hover:bg-slate-700 px-3"
-                                    title="Generate Random PIN"
+                                    title="Tạo PIN ngẫu nhiên"
                                 >
                                     <Shuffle className="w-4 h-4" />
                                 </Button>
                             </div>
                             <p className="text-xs text-slate-500">
-                                Leave empty to auto-generate a random 6-digit PIN
+                                Để trống để tự động tạo mã PIN 6 chữ số ngẫu nhiên
                             </p>
                         </div>
                     </div>
@@ -571,7 +571,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                             onClick={closeResetPinDialog}
                             className="border-slate-600 text-slate-300 hover:bg-slate-700"
                         >
-                            Cancel
+                            Hủy
                         </Button>
                         <Button
                             onClick={handleResetPin}
@@ -581,10 +581,10 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                             {resettingPinId ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Resetting...
+                                    Đang đặt lại...
                                 </>
                             ) : (
-                                "Reset PIN"
+                                "Đặt lại PIN"
                             )}
                         </Button>
                     </DialogFooter>
@@ -597,20 +597,20 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                     <DialogHeader>
                         <DialogTitle className="text-amber-400 flex items-center gap-2">
                             <KeyRound className="w-5 h-5" />
-                            PIN Reset Successfully!
+                            Đặt Lại PIN Thành Công!
                         </DialogTitle>
                         <DialogDescription className="text-slate-400">
-                            Save this new PIN - it won&apos;t be shown again.
+                            Lưu mã PIN mới này - sẽ không hiển thị lại.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="bg-slate-900/50 rounded-lg p-4 space-y-3">
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-400">Username:</span>
+                                <span className="text-slate-400">Tên người dùng:</span>
                                 <span className="font-mono text-white">{resetPinResult?.username}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-400">New PIN:</span>
+                                <span className="text-slate-400">Mã PIN mới:</span>
                                 <span className="font-mono text-amber-400 text-xl tracking-wider">
                                     {resetPinResult?.newPin}
                                 </span>
@@ -623,7 +623,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                             variant="outline"
                             className="border-slate-600 text-slate-300 hover:bg-slate-700"
                         >
-                            Close
+                            Đóng
                         </Button>
                     </DialogFooter>
                 </DialogContent>

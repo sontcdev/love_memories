@@ -106,14 +106,9 @@ export function WelcomeOverlay({
                 </div>
 
                 {/* Title */}
-                <h1 className={`text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r ${styles.gradient} bg-clip-text text-transparent`}>
+                <h1 className={`text-4xl md:text-5xl font-bold mb-10 bg-gradient-to-r ${styles.gradient} bg-clip-text text-transparent`}>
                     {title}
                 </h1>
-
-                {/* Subtitle */}
-                <p className="text-gray-500 text-lg mb-10 max-w-md mx-auto">
-                    {subtitle}
-                </p>
 
                 {/* Enter Button */}
                 <button
@@ -130,7 +125,7 @@ export function WelcomeOverlay({
 
                 {/* Hint */}
                 <p className="mt-6 text-sm text-gray-400">
-                    🎵 Music will play after entry
+                    🎵 Nhạc sẽ phát sau khi vào
                 </p>
             </div>
 

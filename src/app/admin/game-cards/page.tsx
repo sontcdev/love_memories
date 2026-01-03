@@ -45,20 +45,20 @@ export default async function GameCardsPage() {
                                 <span className="text-white font-bold text-lg">M</span>
                             </div>
                             <div>
-                                <h1 className="text-lg font-semibold text-white">Admin Dashboard</h1>
-                                <p className="text-xs text-slate-400">Managing {cards.length} game cards</p>
+                                <h1 className="text-lg font-semibold text-white">Trang Quản Trị</h1>
+                                <p className="text-xs text-slate-400">Quản lý {cards.length} thẻ trò chơi</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <span className="text-sm text-slate-400">
-                                Welcome, <span className="text-white font-medium">{admin?.username}</span>
+                                Xin chào, <span className="text-white font-medium">{admin?.username}</span>
                             </span>
                             <form action="/admin/logout" method="POST">
                                 <button
                                     type="submit"
                                     className="text-sm text-slate-400 hover:text-white transition-colors"
                                 >
-                                    Logout
+                                    Đăng xuất
                                 </button>
                             </form>
                         </div>
@@ -70,13 +70,13 @@ export default async function GameCardsPage() {
                             href="/admin/links"
                             className="px-4 py-3 text-sm font-medium text-slate-400 hover:text-white border-b-2 border-transparent hover:border-slate-600 transition-colors"
                         >
-                            📋 Links
+                            📋 Liên kết
                         </Link>
                         <Link
                             href="/admin/game-cards"
                             className="px-4 py-3 text-sm font-medium text-white border-b-2 border-violet-500"
                         >
-                            🎴 Game Cards
+                            🀴 Thẻ trò chơi
                         </Link>
                     </div>
                 </div>
@@ -87,15 +87,15 @@ export default async function GameCardsPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4 mb-8">
                     <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
-                        <p className="text-green-400 text-sm font-medium">EASY</p>
+                        <p className="text-green-400 text-sm font-medium">DỄ</p>
                         <p className="text-2xl font-bold text-white">{counts.EASY}</p>
                     </div>
                     <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-                        <p className="text-yellow-400 text-sm font-medium">MEDIUM</p>
+                        <p className="text-yellow-400 text-sm font-medium">TRUNG BÌNH</p>
                         <p className="text-2xl font-bold text-white">{counts.MEDIUM}</p>
                     </div>
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                        <p className="text-red-400 text-sm font-medium">HARD</p>
+                        <p className="text-red-400 text-sm font-medium">KHÓ</p>
                         <p className="text-2xl font-bold text-white">{counts.HARD}</p>
                     </div>
                 </div>

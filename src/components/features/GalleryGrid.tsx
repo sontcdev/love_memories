@@ -101,7 +101,7 @@ export function GalleryGrid({ images, columns = 3 }: GalleryGridProps) {
         return (
             <div className="text-center py-16 text-gray-400">
                 <ZoomIn className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>No photos yet</p>
+                <p>Chưa có ảnh nào</p>
             </div>
         );
     }

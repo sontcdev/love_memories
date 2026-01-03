@@ -213,7 +213,7 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
                         onClick={togglePlay}
                         className={`relative w-14 h-14 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl flex items-center justify-center transition-transform hover:scale-105 ${isPlaying ? "animate-spin-slow" : ""
                             }`}
-                        title={isPlaying ? "Pause Music" : "Play Music"}
+                        title={isPlaying ? "Tạm dừng" : "Phát nhạc"}
                     >
                         {/* Vinyl Grooves */}
                         <div className="absolute inset-1 rounded-full border border-gray-600 opacity-30" />
@@ -237,7 +237,7 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
                             ? "bg-gray-200 text-gray-500"
                             : "bg-white text-gray-700 hover:bg-gray-50"
                             }`}
-                        title={isMuted ? "Unmute" : "Mute"}
+                        title={isMuted ? "Bật âm" : "Tắt âm"}
                     >
                         {isMuted ? (
                             <VolumeX className="w-5 h-5" />

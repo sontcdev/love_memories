@@ -122,7 +122,7 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
                     {/* Member Count */}
                     {members.length > 0 && (
                         <p className="text-indigo-500 font-medium mb-4">
-                            {members.length} {members.length === 1 ? "member" : "members"}
+                            {members.length} thành viên
                         </p>
                     )}
 
@@ -140,10 +140,10 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
                 <div className="max-w-4xl mx-auto px-4">
                     <div className="flex justify-center gap-2 py-3">
                         {[
-                            { id: "members", icon: Users, label: "Members" },
-                            { id: "gallery", icon: ImageIcon, label: "Photos" },
-                            { id: "timeline", icon: Calendar, label: "Moments" },
-                            { id: "letters", icon: Mail, label: "Notes" },
+                            { id: "members", icon: Users, label: "Thành viên" },
+                            { id: "gallery", icon: ImageIcon, label: "Ảnh" },
+                            { id: "timeline", icon: Calendar, label: "Khoảnh khắc" },
+                            { id: "letters", icon: Mail, label: "Ghi chú" },
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -168,12 +168,12 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
                     <>
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                             <Users className="w-6 h-6 inline-block mr-2 text-blue-400" />
-                            Our Team
+                            Đội Của Chúng Mình
                         </h2>
                         {members.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <User className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No members added yet</p>
+                                <p>Chưa có thành viên nào</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -234,12 +234,12 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
                     <>
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                             <Sparkles className="w-6 h-6 inline-block mr-2 text-blue-400" />
-                            Photo Gallery
+                            Bộ Sưu Tập Ảnh
                         </h2>
                         {data.galleries.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No photos uploaded yet</p>
+                                <p>Chưa có ảnh nào</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -282,12 +282,12 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
                     <>
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                             <Calendar className="w-6 h-6 inline-block mr-2 text-blue-400" />
-                            Our Moments
+                            Khoảnh Khắc Đáng Nhớ
                         </h2>
                         {data.timelines.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No moments recorded yet</p>
+                                <p>Chưa có khoảnh khắc nào</p>
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -338,12 +338,12 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
                     <>
                         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
                             <Mail className="w-6 h-6 inline-block mr-2 text-blue-400" />
-                            Notes & Messages
+                            Ghi Chú & Tin Nhắn
                         </h2>
                         {data.letters.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
                                 <Mail className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                <p>No notes yet</p>
+                                <p>Chưa có ghi chú nào</p>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -369,7 +369,7 @@ export function EveryTemplate({ data, slug }: EveryTemplateProps) {
             {/* Footer */}
             <footer className="text-center py-8 text-gray-400 text-sm">
                 <Users className="w-4 h-4 inline-block mr-1 text-blue-300" />
-                Shared memories
+                Kỷ niệm được chia sẻ
             </footer>
         </div>
     );

@@ -31,10 +31,10 @@ interface EditPageClientProps {
 type TabId = "profile" | "gallery" | "timeline" | "settings";
 
 const TABS: { id: TabId; label: string; icon: typeof User; description: string }[] = [
-    { id: "profile", label: "General Info", icon: User, description: "Update your profile information" },
-    { id: "gallery", label: "Gallery", icon: ImageIcon, description: "Manage your photos" },
-    { id: "timeline", label: "Timeline", icon: Calendar, description: "Edit your story timeline" },
-    { id: "settings", label: "Settings", icon: Settings, description: "Customize colors and music" },
+    { id: "profile", label: "Thông tin chung", icon: User, description: "Cập nhật thông tin hồ sơ" },
+    { id: "gallery", label: "Thư viện ảnh", icon: ImageIcon, description: "Quản lý ảnh của bạn" },
+    { id: "timeline", label: "Dòng thời gian", icon: Calendar, description: "Chỉnh sửa câu chuyện" },
+    { id: "settings", label: "Cài đặt", icon: Settings, description: "Tùy chỉnh màu sắc và nhạc" },
 ];
 
 export function EditPageClient({ slug, linkData }: EditPageClientProps) {
@@ -53,7 +53,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
                         </Link>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-800">Edit Page</h1>
+                            <h1 className="text-xl font-bold text-gray-800">Chỉnh sửa trang</h1>
                             <p className="text-sm text-gray-500">/{slug}</p>
                         </div>
                     </div>
@@ -61,7 +61,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                         href={`/${slug}`}
                         className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
                     >
-                        View Page
+                        Xem trang
                     </Link>
                 </div>
             </header>
@@ -76,8 +76,8 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${activeTab === tab.id
-                                            ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md"
-                                            : "text-gray-600 hover:bg-gray-50"
+                                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md"
+                                        : "text-gray-600 hover:bg-gray-50"
                                         }`}
                                 >
                                     <tab.icon className="w-5 h-5" />

@@ -142,6 +142,8 @@ model Timeline {
   title       String
   description String?
   image_url   String?
+  video_url   String?  // YouTube/TikTok URL
+  audio_url   String?  // Uploaded voice recording URL
   sort_order  Int      @default(0)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -164,6 +166,8 @@ model Letter {
   title      String
   content    String   @db.Text
   image_url  String?
+  video_url  String?  // YouTube/TikTok URL
+  audio_url  String?  // Uploaded voice recording URL
   is_read    Boolean  @default(false)
   sort_order Int      @default(0)
   created_at DateTime @default(now())
