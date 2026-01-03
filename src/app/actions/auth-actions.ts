@@ -1,6 +1,5 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
@@ -50,21 +49,10 @@ export async function verifyLinkPassword(slug: string, pin: string) {
 }
 
 export async function checkLinkAccess(slug: string): Promise<boolean> {
-    const cookieStore = await cookies();
-    const cookieName = `access_token_${slug}`;
-    const accessToken = cookieStore.get(cookieName)?.value;
-
-    if (!accessToken) {
-        return false;
-    }
-
-    // Verify the token is still valid (link exists and matches)
-    const link = await prisma.link.findUnique({
-        where: { slug },
-        select: { id: true, is_active: true },
-    });
-
-    return link?.id === accessToken && link?.is_active === true;
+    // Always require PIN on every visit - no cookie/session persistence
+    // This ensures users must enter PIN each time they open the link
+    void slug; // Acknowledge parameter to avoid unused warning
+    return false;
 }
 
 // Cached version of getLinkData - prevents duplicate queries during same request

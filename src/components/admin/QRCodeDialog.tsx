@@ -77,26 +77,29 @@ export function QRCodeDialog({ slug, username, isOpen, onClose }: QRCodeDialogPr
                 </DialogHeader>
 
                 <div className="flex flex-col items-center py-4">
-                    {/* QR Code Container */}
+                    {/* QR Code Container - Wrapper with preview pattern */}
                     <div
-                        ref={qrRef}
-                        className={`p-6 rounded-2xl shadow-lg ${transparentBg ? "bg-transparent" : "bg-white"}`}
-                        style={{
-                            backgroundImage: transparentBg
-                                ? "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)"
-                                : undefined,
+                        className={`p-6 rounded-2xl shadow-lg relative ${transparentBg ? "" : "bg-white"}`}
+                        style={transparentBg ? {
+                            backgroundImage: "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)",
                             backgroundSize: "20px 20px",
                             backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-                        }}
+                        } : undefined}
                     >
-                        <QRCode
-                            value={fullUrl}
-                            size={180}
-                            level="H"
-                            fgColor={qrColor}
-                            bgColor={transparentBg ? "transparent" : "#ffffff"}
-                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                        />
+                        {/* Actual QR Code container for export - no pattern */}
+                        <div
+                            ref={qrRef}
+                            className={`${transparentBg ? "bg-transparent" : "bg-white"}`}
+                        >
+                            <QRCode
+                                value={fullUrl}
+                                size={180}
+                                level="H"
+                                fgColor={qrColor}
+                                bgColor={transparentBg ? "transparent" : "#ffffff"}
+                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                            />
+                        </div>
                     </div>
 
                     {/* Color Picker */}
@@ -108,8 +111,8 @@ export function QRCodeDialog({ slug, username, isOpen, onClose }: QRCodeDialogPr
                                     key={color.value}
                                     onClick={() => setQrColor(color.value)}
                                     className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${qrColor === color.value
-                                            ? "border-white scale-110"
-                                            : "border-transparent hover:border-slate-500"
+                                        ? "border-white scale-110"
+                                        : "border-transparent hover:border-slate-500"
                                         }`}
                                     style={{ backgroundColor: color.value }}
                                     title={color.name}
