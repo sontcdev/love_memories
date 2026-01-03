@@ -169,10 +169,7 @@ export function VoiceRecorder({
             timerRef.current = setInterval(() => {
                 setRecordingTime((prev) => {
                     const newTime = prev + 1;
-                    // Auto-stop at max duration
-                    if (newTime >= maxDurationSeconds) {
-                        stopRecording();
-                    }
+                    // Auto-stop at max duration - handled via effect
                     return newTime;
                 });
             }, 1000);
@@ -198,6 +195,13 @@ export function VoiceRecorder({
             mediaRecorderRef.current.stop();
         }
     }, []);
+
+    // Auto-stop at max duration
+    useEffect(() => {
+        if (recordingTime >= maxDurationSeconds && state === "recording") {
+            stopRecording();
+        }
+    }, [recordingTime, maxDurationSeconds, state, stopRecording]);
 
     const deleteRecording = useCallback(() => {
         if (audioUrl) {

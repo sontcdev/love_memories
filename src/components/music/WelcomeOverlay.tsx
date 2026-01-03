@@ -15,6 +15,7 @@ const SESSION_KEY = "welcome_shown";
 
 export function WelcomeOverlay({
     title = "Welcome",
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     subtitle = "A special place for memories",
     buttonText = "Enter",
     onOpen,

@@ -4,8 +4,6 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
-const COOKIE_EXPIRY_DAYS = 7;
-
 export async function verifyLinkPassword(slug: string, pin: string) {
     if (!slug || !pin) {
         return { success: false, error: "Slug and PIN are required" };

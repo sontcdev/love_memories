@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { Youtube, Music2, ExternalLink } from "lucide-react";
 
 interface VideoPlayerProps {
@@ -149,10 +150,12 @@ export function VideoThumbnail({ url, onClick }: { url: string; onClick?: () => 
             className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group"
         >
             {thumbnailUrl ? (
-                <img
+                <Image
                     src={thumbnailUrl}
                     alt="Video thumbnail"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                 />
             ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-800">

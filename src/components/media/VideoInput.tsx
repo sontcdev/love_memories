@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import { Link2, Check, X, AlertCircle, Youtube, Music2 } from "lucide-react";
 
 interface VideoInputProps {
@@ -150,10 +151,10 @@ export function VideoInput({ value, onChange, placeholder = "Paste YouTube or Ti
                     onBlur={handleBlur}
                     placeholder={placeholder}
                     className={`w-full pl-10 pr-10 py-3 border rounded-xl text-sm focus:ring-2 focus:border-transparent transition-all ${error
-                            ? "border-red-300 focus:ring-red-200"
-                            : isValid
-                                ? "border-green-300 focus:ring-green-200"
-                                : "border-gray-200 focus:ring-pink-200"
+                        ? "border-red-300 focus:ring-red-200"
+                        : isValid
+                            ? "border-green-300 focus:ring-green-200"
+                            : "border-gray-200 focus:ring-pink-200"
                         }`}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -183,10 +184,12 @@ export function VideoInput({ value, onChange, placeholder = "Paste YouTube or Ti
             {/* Preview Thumbnail */}
             {isValid && videoInfo.thumbnailUrl && (
                 <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                    <img
+                    <Image
                         src={videoInfo.thumbnailUrl}
                         alt="Video thumbnail"
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center">
