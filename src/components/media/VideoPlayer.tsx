@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { Youtube, Music2, ExternalLink } from "lucide-react";
 
@@ -43,30 +42,8 @@ function detectPlatform(url: string): Platform {
 }
 
 export function VideoPlayer({ url, className = "" }: VideoPlayerProps) {
-    const tiktokContainerRef = useRef<HTMLDivElement>(null);
     const platform = detectPlatform(url);
     const youtubeId = platform === "youtube" ? parseYouTubeUrl(url) : null;
-
-    // Load TikTok embed script when needed
-    useEffect(() => {
-        if (platform !== "tiktok") return;
-
-        // Check if script already exists
-        const existingScript = document.querySelector('script[src*="tiktok.com/embed.js"]');
-        if (!existingScript) {
-            const script = document.createElement("script");
-            script.src = "https://www.tiktok.com/embed.js";
-            script.async = true;
-            document.body.appendChild(script);
-        } else {
-            // If script exists, trigger re-render for TikTok embeds
-            // @ts-expect-error TikTok global
-            if (window.tiktokEmbed) {
-                // @ts-expect-error TikTok global
-                window.tiktokEmbed.lib.render();
-            }
-        }
-    }, [platform, url]);
 
     if (!url) return null;
 
@@ -83,23 +60,6 @@ export function VideoPlayer({ url, className = "" }: VideoPlayerProps) {
                 />
             </div>
         );
-    }
-
-    // Parse TikTok URL and extract video ID
-    function parseTikTokUrl(url: string): string | null {
-        const patterns = [
-            /tiktok\.com\/@[\w.-]+\/video\/(\d+)/,
-            /tiktok\.com\/.*\/video\/(\d+)/,
-            /vm\.tiktok\.com\/(\w+)/,
-        ];
-
-        for (const pattern of patterns) {
-            const match = url.match(pattern);
-            if (match && match[1]) {
-                return match[1];
-            }
-        }
-        return null;
     }
 
     // TikTok Player - Simple card link (embed is unreliable)
