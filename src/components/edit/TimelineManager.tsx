@@ -149,6 +149,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
             date: new Date(formData.date),
             description: formData.description || null,
             image_url: formData.image_url || null,
+            video_url: formData.video_url || null,
+            audio_url: formData.audio_url || null,
             sort_order: 0,
             created_at: new Date(),
             updated_at: new Date(),
