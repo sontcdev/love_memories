@@ -2,18 +2,22 @@
 
 import * as React from "react"
 
-interface SwitchProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface SwitchProps {
     checked?: boolean;
     onCheckedChange?: (checked: boolean) => void;
+    disabled?: boolean;
+    className?: string;
 }
 
-const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
-    ({ className, checked, onCheckedChange, ...props }, ref) => {
+const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
+    ({ className, checked, onCheckedChange, disabled }, ref) => {
         return (
             <button
+                ref={ref}
                 type="button"
                 role="switch"
                 aria-checked={checked}
+                disabled={disabled}
                 onClick={() => onCheckedChange?.(!checked)}
                 className={`
                     relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full 

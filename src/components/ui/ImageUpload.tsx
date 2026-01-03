@@ -187,7 +187,8 @@ export function ImageUpload({
                 setIsUploading(false);
             }
         },
-        [slug, onUploadComplete, currentImageUrl, maxSizeBytes, targetSizeKB, acceptedTypes]
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [slug, onUploadComplete, currentImageUrl, targetSizeKB]
     );
 
     const handleDrop = useCallback(
@@ -251,12 +252,12 @@ export function ImageUpload({
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition-all ${isDragging
-                        ? "border-purple-400 bg-purple-50"
-                        : error
-                            ? "border-red-300 bg-red-50"
-                            : preview
-                                ? "border-transparent"
-                                : "border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
+                    ? "border-purple-400 bg-purple-50"
+                    : error
+                        ? "border-red-300 bg-red-50"
+                        : preview
+                            ? "border-transparent"
+                            : "border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
                     }`}
             >
                 {preview ? (

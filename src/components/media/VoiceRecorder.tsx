@@ -181,7 +181,8 @@ export function VoiceRecorder({
                 setError("Failed to start recording. Please check your microphone.");
             }
         }
-    }, [maxDurationSeconds]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const stopRecording = useCallback(() => {
         if (timerRef.current) {
