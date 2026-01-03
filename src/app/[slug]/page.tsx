@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { checkLinkAccess, getLinkData } from "@/app/actions/auth-actions";
+import { getLinkData } from "@/app/actions/auth-actions";
 import { SlugPageClient } from "./page-client";
 
-// Disable caching to always check cookies fresh
+// Disable caching to always check fresh
 export const dynamic = "force-dynamic";
 
 interface PageProps {
@@ -12,10 +12,7 @@ interface PageProps {
 export default async function SlugPage({ params }: PageProps) {
     const { slug } = await params;
 
-    // Check if user has access to this link
-    const hasAccess = await checkLinkAccess(slug);
-
-    // Fetch link data regardless of auth status (needed for validation)
+    // Fetch link data
     const linkResult = await getLinkData(slug);
 
     // If link doesn't exist, show 404
@@ -35,12 +32,12 @@ export default async function SlugPage({ params }: PageProps) {
         );
     }
 
-    // Pass data to client component for rendering
-    // Always pass linkData so client can render after PIN verification without reload
+    // Always require PIN on page load - pass isAuthenticated=false
+    // After PIN verification, user can navigate to edit page
     return (
         <SlugPageClient
             slug={slug}
-            isAuthenticated={hasAccess}
+            isAuthenticated={false}
             linkData={linkResult.data}
         />
     );

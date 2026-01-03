@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
@@ -38,8 +39,15 @@ export async function verifyLinkPassword(slug: string, pin: string) {
             return { success: false, error: "Invalid PIN" };
         }
 
-        // No cookie storage - require PIN every time
-        // User must enter PIN each time they open the page
+        // Set session cookie (expires when browser closes)
+        const cookieStore = await cookies();
+        cookieStore.set(`session_${slug}`, link.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            // No maxAge = session cookie (expires when browser closes)
+        });
 
         return { success: true };
     } catch (error) {
@@ -49,10 +57,21 @@ export async function verifyLinkPassword(slug: string, pin: string) {
 }
 
 export async function checkLinkAccess(slug: string): Promise<boolean> {
-    // Always require PIN on every visit - no cookie/session persistence
-    // This ensures users must enter PIN each time they open the link
-    void slug; // Acknowledge parameter to avoid unused warning
-    return false;
+    // Check for session cookie (set after PIN verification)
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get(`session_${slug}`)?.value;
+
+    if (!sessionToken) {
+        return false;
+    }
+
+    // Verify the session is still valid (link exists and matches)
+    const link = await prisma.link.findUnique({
+        where: { slug },
+        select: { id: true, is_active: true },
+    });
+
+    return link?.id === sessionToken && link?.is_active === true;
 }
 
 // Cached version of getLinkData - prevents duplicate queries during same request
