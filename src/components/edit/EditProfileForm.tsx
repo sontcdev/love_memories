@@ -140,7 +140,7 @@ function LoveProfileForm({
     });
 
     // Compress image to target size
-    const compressImage = async (file: File, maxSizeKB: number = 100, maxDimension: number = 300): Promise<File> => {
+    const compressImage = async (file: File, maxSizeKB: number = 50, maxDimension: number = 300): Promise<File> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -219,7 +219,7 @@ function LoveProfileForm({
         setUploading(true);
         try {
             // Compress image - larger size and dimension for background images
-            const targetSize = type === "background" ? 1000 : 100;
+            const targetSize = type === "background" ? 100 : 50;
             const maxDimension = type === "background" ? 1920 : 300;
             const compressedFile = await compressImage(file, targetSize, maxDimension);
             console.log(`Image compressed: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`);

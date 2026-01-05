@@ -18,7 +18,7 @@ interface ImageUploadProps {
 // Compress image to target size
 async function compressImage(
     file: File,
-    targetSizeKB: number = 500,
+    targetSizeKB: number = 50,
     maxWidth: number = 1920
 ): Promise<File> {
     return new Promise((resolve, reject) => {
@@ -94,7 +94,7 @@ export function ImageUpload({
     currentImageUrl,
     className = "",
     maxSizeMB = 10, // Allow larger initial files
-    targetSizeKB = 500, // Compress to 500KB
+    targetSizeKB = 50, // Compress to 50KB
     acceptedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"],
 }: ImageUploadProps) {
     const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
@@ -323,7 +323,7 @@ export function ImageUpload({
                             {isDragging ? "Drop image here" : "Click or drag to upload"}
                         </p>
                         <p className="text-xs text-gray-400">
-                            Auto-compress to {targetSizeKB}KB
+                            Tự động nén còn {targetSizeKB}KB
                         </p>
                     </div>
                 )}

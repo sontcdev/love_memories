@@ -24,7 +24,7 @@ interface FileWithPreview {
 // Compress image to target size
 async function compressImage(
     file: File,
-    targetSizeKB: number = 500,
+    targetSizeKB: number = 50,
     maxWidth: number = 1920
 ): Promise<File> {
     return new Promise((resolve, reject) => {
@@ -77,7 +77,7 @@ export function MultiImageUpload({
     onUploadComplete,
     maxFiles = 5,
     maxSizeMB = 10,
-    targetSizeKB = 500,
+    targetSizeKB = 50,
 }: MultiImageUploadProps) {
     const [files, setFiles] = useState<FileWithPreview[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -204,8 +204,8 @@ export function MultiImageUpload({
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
                     className={`cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all ${isDragging
-                            ? "border-pink-400 bg-pink-50"
-                            : "border-gray-300 hover:border-gray-400 bg-gray-50"
+                        ? "border-pink-400 bg-pink-50"
+                        : "border-gray-300 hover:border-gray-400 bg-gray-50"
                         }`}
                 >
                     <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
