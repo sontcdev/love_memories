@@ -320,12 +320,12 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-gray-800 break-words">
                                             {!letter.is_read && (
-                                                <span className={`w-2 h-2 rounded-full bg-${colors.secondary}-500 flex-shrink-0`} />
+                                                <span className={`inline-block w-2 h-2 rounded-full bg-${colors.secondary}-500 mr-2 align-middle`} />
                                             )}
-                                            <h3 className="font-semibold text-gray-800 break-words">{letter.title}</h3>
-                                        </div>
+                                            {letter.title}
+                                        </h3>
                                         <p className="text-sm text-gray-500 mt-1 line-clamp-2 break-words overflow-hidden">
                                             {letter.content}
                                         </p>
