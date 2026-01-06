@@ -123,7 +123,8 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
                                 key={index}
                                 ref={(el) => { inputRefs.current[index] = el; }}
                                 type="text"
-                                inputMode="numeric"
+                                inputMode="none"
+                                readOnly
                                 maxLength={1}
                                 value={digit}
                                 onChange={(e) => handleInputChange(index, e.target.value)}

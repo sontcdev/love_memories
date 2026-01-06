@@ -194,14 +194,14 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Nội dung <span className="text-gray-400 text-xs">({newContent.length}/300)</span>
+                                    Nội dung <span className="text-gray-400 text-xs">({newContent.length}/1000)</span>
                                 </label>
                                 <textarea
                                     value={newContent}
-                                    onChange={(e) => setNewContent(e.target.value.slice(0, 300))}
+                                    onChange={(e) => setNewContent(e.target.value.slice(0, 1000))}
                                     placeholder="Viết những lời yêu thương..."
                                     rows={6}
-                                    maxLength={300}
+                                    maxLength={1000}
                                     className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none resize-none`}
                                 />
                             </div>
