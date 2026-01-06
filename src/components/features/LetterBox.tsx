@@ -324,7 +324,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                             {!letter.is_read && (
                                                 <span className={`w-2 h-2 rounded-full bg-${colors.secondary}-500 flex-shrink-0`} />
                                             )}
-                                            <h3 className="font-semibold text-gray-800 truncate max-w-[250px]" title={letter.title}>{letter.title}</h3>
+                                            <h3 className="font-semibold text-gray-800 break-words">{letter.title}</h3>
                                         </div>
                                         <p className="text-sm text-gray-500 mt-1 line-clamp-2 break-words overflow-hidden">
                                             {letter.content}
