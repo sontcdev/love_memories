@@ -103,7 +103,7 @@ export function LockScreen({ slug, onSuccess }: LockScreenProps) {
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 mb-4 shadow-lg shadow-rose-300/50">
                         <Heart className="w-10 h-10 text-white fill-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Kỷ Niệm Riêng Tư</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Memorae Love</h1>
                     <p className="text-gray-500 text-sm">Mật mã kỷ niệm của chúng mình là gì nhỉ?</p>
                 </div>
 
