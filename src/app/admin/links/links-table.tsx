@@ -215,9 +215,15 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
     }
 
     function handleDialogClose() {
+        const wasSuccessful = createdCredentials !== null;
         setIsCreateOpen(false);
         setCreateError(null);
         setCreatedCredentials(null);
+
+        // Refresh the page to reload links list after successful creation
+        if (wasSuccessful) {
+            router.refresh();
+        }
     }
 
     return (

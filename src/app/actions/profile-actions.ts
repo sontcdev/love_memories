@@ -18,21 +18,7 @@ export interface LoveProfileData {
     short_note?: string;
 }
 
-export interface EveryProfileData {
-    owner_name?: string;
-    group_name?: string;
-    title?: string;
-    short_note?: string;
-}
-
-export interface IdolProfileData {
-    idol_name?: string;
-    fan_name?: string;
-    title?: string;
-    short_note?: string;
-}
-
-export type ProfileData = LoveProfileData | EveryProfileData | IdolProfileData;
+export type ProfileData = LoveProfileData;
 
 // ============================================================================
 // CONFIG DATA TYPES

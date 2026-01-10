@@ -89,10 +89,10 @@ export function middleware(request: NextRequest) {
     const slug = getSlugFromPath(pathname);
 
     if (slug && isProtectedSlugRoute(pathname)) {
-        // Check for user access token cookie
-        const accessToken = request.cookies.get(`access_token_${slug}`)?.value;
+        // Check for user session cookie (set after PIN verification)
+        const sessionToken = request.cookies.get(`session_${slug}`)?.value;
 
-        if (!accessToken) {
+        if (!sessionToken) {
             // Redirect to the main slug page (which shows lock screen)
             const slugUrl = new URL(`/${slug}`, request.url);
             slugUrl.searchParams.set("auth", "required");

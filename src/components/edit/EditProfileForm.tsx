@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
-import { updateLinkProfile, LoveProfileData, EveryProfileData, IdolProfileData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Heart, Users, Star, Camera } from "lucide-react";
+import { updateLinkProfile, LoveProfileData } from "@/app/actions/profile-actions";
+import { Save, Loader2, Heart, Camera } from "lucide-react";
 
 // ============================================================================
 // ZOD SCHEMAS
@@ -20,23 +20,7 @@ const loveProfileSchema = z.object({
     short_note: z.string().max(200).optional(),
 });
 
-const everyProfileSchema = z.object({
-    owner_name: z.string().max(50).optional(),
-    group_name: z.string().min(1, "Required").max(100),
-    title: z.string().max(100).optional(),
-    short_note: z.string().max(200).optional(),
-});
-
-const idolProfileSchema = z.object({
-    idol_name: z.string().min(1, "Required").max(50),
-    fan_name: z.string().max(50).optional(),
-    title: z.string().max(100).optional(),
-    short_note: z.string().max(200).optional(),
-});
-
 type LoveFormData = z.infer<typeof loveProfileSchema>;
-type EveryFormData = z.infer<typeof everyProfileSchema>;
-type IdolFormData = z.infer<typeof idolProfileSchema>;
 
 // ============================================================================
 // COMPONENT
@@ -54,46 +38,21 @@ export function EditProfileForm({ slug, linkType, initialData, onSuccess }: Edit
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     // Render based on link type
-    switch (linkType) {
-        case "LOVE":
-            return (
-                <LoveProfileForm
-                    slug={slug}
-                    initialData={initialData as LoveProfileData}
-                    isSubmitting={isSubmitting}
-                    setIsSubmitting={setIsSubmitting}
-                    message={message}
-                    setMessage={setMessage}
-                    onSuccess={onSuccess}
-                />
-            );
-        case "EVERY":
-            return (
-                <EveryProfileForm
-                    slug={slug}
-                    initialData={initialData as EveryProfileData}
-                    isSubmitting={isSubmitting}
-                    setIsSubmitting={setIsSubmitting}
-                    message={message}
-                    setMessage={setMessage}
-                    onSuccess={onSuccess}
-                />
-            );
-        case "IDOL":
-            return (
-                <IdolProfileForm
-                    slug={slug}
-                    initialData={initialData as IdolProfileData}
-                    isSubmitting={isSubmitting}
-                    setIsSubmitting={setIsSubmitting}
-                    message={message}
-                    setMessage={setMessage}
-                    onSuccess={onSuccess}
-                />
-            );
-        default:
-            return null;
+    if (linkType === "LOVE") {
+        return (
+            <LoveProfileForm
+                slug={slug}
+                initialData={initialData as LoveProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                message={message}
+                setMessage={setMessage}
+                onSuccess={onSuccess}
+            />
+        );
     }
+
+    return null;
 }
 
 // ============================================================================
@@ -446,268 +405,6 @@ function LoveProfileForm({
             <button
                 type="submit"
                 disabled={isSubmitting || uploadingBoy || uploadingGirl}
-                className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
-                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
-            >
-                {isSubmitting ? (
-                    <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Đang lưu...
-                    </>
-                ) : (
-                    <>
-                        <Save className="w-5 h-5" />
-                        Lưu thay đổi
-                    </>
-                )}
-            </button>
-        </form>
-    );
-}
-
-// ============================================================================
-// EVERY PROFILE FORM
-// ============================================================================
-
-function EveryProfileForm({
-    slug,
-    initialData,
-    isSubmitting,
-    setIsSubmitting,
-    message,
-    setMessage,
-    onSuccess,
-}: FormProps<EveryProfileData>) {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<EveryFormData>({
-        resolver: zodResolver(everyProfileSchema),
-        defaultValues: {
-            owner_name: initialData?.owner_name || "",
-            group_name: initialData?.group_name || "",
-            title: initialData?.title || "",
-            short_note: initialData?.short_note || "",
-        },
-    });
-
-    const onSubmit = async (data: EveryFormData) => {
-        setIsSubmitting(true);
-        setMessage(null);
-
-        const result = await updateLinkProfile(slug, data);
-
-        if (result.success) {
-            setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
-            onSuccess?.();
-        } else {
-            setMessage({ type: "error", text: result.error || "Không thể cập nhật" });
-        }
-
-        setIsSubmitting(false);
-    };
-
-    return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-blue-500" />
-                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ nhóm</h3>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên nhóm/Album <span className="text-red-500">*</span>
-                </label>
-                <input
-                    {...register("group_name")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all"
-                    placeholder="Kỷ Niệm Của Chúng Ta"
-                />
-                {errors.group_name && (
-                    <p className="mt-1 text-sm text-red-500">{errors.group_name.message}</p>
-                )}
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên chủ sở hữu
-                </label>
-                <input
-                    {...register("owner_name")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all"
-                    placeholder="Tên của bạn"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tiêu đề trang
-                </label>
-                <input
-                    {...register("title")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all"
-                    placeholder="Hành Trình Của Chúng Ta"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ghi chú ngắn
-                </label>
-                <textarea
-                    {...register("short_note")}
-                    rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all resize-none"
-                    placeholder="Mô tả cho trang của bạn..."
-                />
-            </div>
-
-            {message && (
-                <div
-                    className={`p-3 rounded-lg text-sm ${message.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
-                >
-                    {message.text}
-                </div>
-            )}
-
-            <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
-                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
-            >
-                {isSubmitting ? (
-                    <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Saving...
-                    </>
-                ) : (
-                    <>
-                        <Save className="w-5 h-5" />
-                        Save Changes
-                    </>
-                )}
-            </button>
-        </form>
-    );
-}
-
-// ============================================================================
-// IDOL PROFILE FORM
-// ============================================================================
-
-function IdolProfileForm({
-    slug,
-    initialData,
-    isSubmitting,
-    setIsSubmitting,
-    message,
-    setMessage,
-    onSuccess,
-}: FormProps<IdolProfileData>) {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<IdolFormData>({
-        resolver: zodResolver(idolProfileSchema),
-        defaultValues: {
-            idol_name: initialData?.idol_name || "",
-            fan_name: initialData?.fan_name || "",
-            title: initialData?.title || "",
-            short_note: initialData?.short_note || "",
-        },
-    });
-
-    const onSubmit = async (data: IdolFormData) => {
-        setIsSubmitting(true);
-        setMessage(null);
-
-        const result = await updateLinkProfile(slug, data);
-
-        if (result.success) {
-            setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
-            onSuccess?.();
-        } else {
-            setMessage({ type: "error", text: result.error || "Không thể cập nhật" });
-        }
-
-        setIsSubmitting(false);
-    };
-
-    return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-                <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ Idol</h3>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên Idol <span className="text-red-500">*</span>
-                </label>
-                <input
-                    {...register("idol_name")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
-                    placeholder="Tên của idol"
-                />
-                {errors.idol_name && (
-                    <p className="mt-1 text-sm text-red-500">{errors.idol_name.message}</p>
-                )}
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên fan của bạn
-                </label>
-                <input
-                    {...register("fan_name")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
-                    placeholder="Một người hâm mộ"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tiêu đề trang
-                </label>
-                <input
-                    {...register("title")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
-                    placeholder="Mãi Là Fan"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Lời nhắn fan
-                </label>
-                <textarea
-                    {...register("short_note")}
-                    rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all resize-none"
-                    placeholder="Lời nhắn của bạn gửi idol..."
-                />
-            </div>
-
-            {message && (
-                <div
-                    className={`p-3 rounded-lg text-sm ${message.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
-                >
-                    {message.text}
-                </div>
-            )}
-
-            <button
-                type="submit"
-                disabled={isSubmitting}
                 className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
                 style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
             >
