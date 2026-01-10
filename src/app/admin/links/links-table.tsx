@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
 import { Link, LinkType } from "@prisma/client";
 import {
     createLink,
@@ -65,7 +65,7 @@ interface LinksTableProps {
 }
 
 export function LinksTable({ initialLinks }: LinksTableProps) {
-    const router = useRouter();
+    // const router = useRouter();
     const [links, setLinks] = useState<LinkWithUser[]>(initialLinks);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);

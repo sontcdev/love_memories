@@ -27,8 +27,6 @@ import {
     X,
     Edit3,
     Star,
-    Trophy,
-    Disc,
     Image as ImageIcon,
     AlertCircle,
     Video,

@@ -23,15 +23,7 @@ const loveProfileSchema = z.object({
 
 type LoveFormData = z.infer<typeof loveProfileSchema>;
 
-const idolProfileSchema = z.object({
-    idol_name: z.string().min(1, "Required").max(50),
-    fan_name: z.string().min(1, "Required").max(50),
-    debut_date: z.string().optional(),
-    title: z.string().max(100).optional(),
-    slogan: z.string().max(200).optional(),
-});
 
-type IdolFormData = z.infer<typeof idolProfileSchema>;
 
 // ============================================================================
 // COMPONENT
