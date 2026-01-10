@@ -4,24 +4,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { LinkType } from "@prisma/client";
-import { updateLinkProfile, LoveProfileData, IdolProfileData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Heart, Camera } from "lucide-react";
-import { EditIdolProfileForm } from "./EditIdolProfileForm";
+import { updateLinkProfile, IdolProfileData } from "@/app/actions/profile-actions";
+import { Save, Loader2, Star, Camera } from "lucide-react";
 
 // ============================================================================
-// ZOD SCHEMAS
+// ZOD SCHEMA
 // ============================================================================
-
-const loveProfileSchema = z.object({
-    boy_name: z.string().min(1, "Required").max(50),
-    girl_name: z.string().min(1, "Required").max(50),
-    anniversary_date: z.string().optional(),
-    title: z.string().max(100).optional(),
-    short_note: z.string().max(200).optional(),
-});
-
-type LoveFormData = z.infer<typeof loveProfileSchema>;
 
 const idolProfileSchema = z.object({
     idol_name: z.string().min(1, "Required").max(50),
@@ -37,56 +25,9 @@ type IdolFormData = z.infer<typeof idolProfileSchema>;
 // COMPONENT
 // ============================================================================
 
-interface EditProfileFormProps {
+interface EditIdolProfileFormProps {
     slug: string;
-    linkType: LinkType;
-    initialData: Record<string, unknown> | null;
-    onSuccess?: () => void;
-}
-
-export function EditProfileForm({ slug, linkType, initialData, onSuccess }: EditProfileFormProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-    // Render based on link type
-    if (linkType === "LOVE") {
-        return (
-            <LoveProfileForm
-                slug={slug}
-                initialData={initialData as LoveProfileData}
-                isSubmitting={isSubmitting}
-                setIsSubmitting={setIsSubmitting}
-                message={message}
-                setMessage={setMessage}
-                onSuccess={onSuccess}
-            />
-        );
-    }
-
-    if (linkType === "IDOL") {
-        return (
-            <EditIdolProfileForm
-                slug={slug}
-                initialData={initialData as IdolProfileData}
-                isSubmitting={isSubmitting}
-                setIsSubmitting={setIsSubmitting}
-                message={message}
-                setMessage={setMessage}
-                onSuccess={onSuccess}
-            />
-        );
-    }
-
-    return null;
-}
-
-// ============================================================================
-// LOVE PROFILE FORM
-// ============================================================================
-
-interface FormProps<T> {
-    slug: string;
-    initialData: T | null;
+    initialData: IdolProfileData | null;
     isSubmitting: boolean;
     setIsSubmitting: (v: boolean) => void;
     message: { type: "success" | "error"; text: string } | null;
@@ -94,7 +35,7 @@ interface FormProps<T> {
     onSuccess?: () => void;
 }
 
-function LoveProfileForm({
+export function EditIdolProfileForm({
     slug,
     initialData,
     isSubmitting,
@@ -102,24 +43,24 @@ function LoveProfileForm({
     message,
     setMessage,
     onSuccess,
-}: FormProps<LoveProfileData>) {
-    const [boyAvatar, setBoyAvatar] = useState<string>(initialData?.boy_avatar || "");
-    const [girlAvatar, setGirlAvatar] = useState<string>(initialData?.girl_avatar || "");
-    const [uploadingBoy, setUploadingBoy] = useState(false);
-    const [uploadingGirl, setUploadingGirl] = useState(false);
+}: EditIdolProfileFormProps) {
+    const [idolAvatar, setIdolAvatar] = useState<string>(initialData?.idol_avatar || "");
+    const [fanAvatar, setFanAvatar] = useState<string>(initialData?.fan_avatar || "");
+    const [uploadingIdol, setUploadingIdol] = useState(false);
+    const [uploadingFan, setUploadingFan] = useState(false);
 
     const {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<LoveFormData>({
-        resolver: zodResolver(loveProfileSchema),
+    } = useForm<IdolFormData>({
+        resolver: zodResolver(idolProfileSchema),
         defaultValues: {
-            boy_name: initialData?.boy_name || "",
-            girl_name: initialData?.girl_name || "",
-            anniversary_date: initialData?.anniversary_date || "",
+            idol_name: initialData?.idol_name || "",
+            fan_name: initialData?.fan_name || "",
+            debut_date: initialData?.debut_date || "",
             title: initialData?.title || "",
-            short_note: initialData?.short_note || "",
+            slogan: initialData?.slogan || "",
         },
     });
 
@@ -196,22 +137,20 @@ function LoveProfileForm({
 
     const handleAvatarUpload = async (
         file: File,
-        type: "boy" | "girl" | "background",
+        type: "idol" | "fan",
         setUploading: (v: boolean) => void,
         setAvatar: (v: string) => void
     ) => {
         setUploading(true);
         try {
-            // Compress image - larger size and dimension for background images
-            const targetSize = type === "background" ? 100 : 50;
-            const maxDimension = type === "background" ? 1920 : 300;
-            const compressedFile = await compressImage(file, targetSize, maxDimension);
+            // Compress image
+            const compressedFile = await compressImage(file, 50, 300);
             console.log(`Image compressed: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`);
 
             const formData = new FormData();
             formData.append("file", compressedFile);
             formData.append("slug", slug);
-            formData.append("type", type === "background" ? "background" : `${type}_avatar`);
+            formData.append("type", `${type}_avatar`);
 
             const response = await fetch("/api/upload", {
                 method: "POST",
@@ -231,15 +170,15 @@ function LoveProfileForm({
         setUploading(false);
     };
 
-    const onSubmit = async (data: LoveFormData) => {
+    const onSubmit = async (data: IdolFormData) => {
         setIsSubmitting(true);
         setMessage(null);
 
         // Include avatars in the data
         const fullData = {
             ...data,
-            boy_avatar: boyAvatar,
-            girl_avatar: girlAvatar,
+            idol_avatar: idolAvatar,
+            fan_avatar: fanAvatar,
         };
 
         const result = await updateLinkProfile(slug, fullData);
@@ -257,29 +196,29 @@ function LoveProfileForm({
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-                <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ tình yêu</h3>
+                <Star className="w-5 h-5 text-purple-500 fill-purple-500" />
+                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ Idol</h3>
             </div>
 
             {/* Avatars Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* His Avatar */}
+                {/* Idol Avatar */}
                 <div className="flex flex-col items-center">
                     <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                        Ảnh của anh
+                        Ảnh Idol
                     </label>
                     <div className="relative group">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg">
-                            {boyAvatar ? (
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 p-1 shadow-lg">
+                            {idolAvatar ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
-                                    src={boyAvatar}
-                                    alt="His avatar"
+                                    src={idolAvatar}
+                                    alt="Idol avatar"
                                     className="w-full h-full rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold text-rose-400">
-                                    {initialData?.boy_name?.charAt(0) || "H"}
+                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold text-purple-400">
+                                    {initialData?.idol_name?.charAt(0) || "I"}
                                 </div>
                             )}
                         </div>
@@ -290,11 +229,11 @@ function LoveProfileForm({
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleAvatarUpload(file, "boy", setUploadingBoy, setBoyAvatar);
+                                    if (file) handleAvatarUpload(file, "idol", setUploadingIdol, setIdolAvatar);
                                 }}
-                                disabled={uploadingBoy}
+                                disabled={uploadingIdol}
                             />
-                            {uploadingBoy ? (
+                            {uploadingIdol ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />
                             ) : (
                                 <Camera className="w-6 h-6" />
@@ -303,23 +242,23 @@ function LoveProfileForm({
                     </div>
                 </div>
 
-                {/* Her Avatar */}
+                {/* Fan Avatar */}
                 <div className="flex flex-col items-center">
                     <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                        Ảnh của em
+                        Ảnh Fandom
                     </label>
                     <div className="relative group">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg">
-                            {girlAvatar ? (
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 p-1 shadow-lg">
+                            {fanAvatar ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
-                                    src={girlAvatar}
-                                    alt="Her avatar"
+                                    src={fanAvatar}
+                                    alt="Fan avatar"
                                     className="w-full h-full rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold text-pink-400">
-                                    {initialData?.girl_name?.charAt(0) || "S"}
+                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold text-cyan-400">
+                                    {initialData?.fan_name?.charAt(0) || "F"}
                                 </div>
                             )}
                         </div>
@@ -330,11 +269,11 @@ function LoveProfileForm({
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleAvatarUpload(file, "girl", setUploadingGirl, setGirlAvatar);
+                                    if (file) handleAvatarUpload(file, "fan", setUploadingFan, setFanAvatar);
                                 }}
-                                disabled={uploadingGirl}
+                                disabled={uploadingFan}
                             />
-                            {uploadingGirl ? (
+                            {uploadingFan ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />
                             ) : (
                                 <Camera className="w-6 h-6" />
@@ -348,41 +287,41 @@ function LoveProfileForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tên anh <span className="text-red-500">*</span>
+                        Tên Idol <span className="text-red-500">*</span>
                     </label>
                     <input
-                        {...register("boy_name")}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all"
-                        placeholder="Tên của anh"
+                        {...register("idol_name")}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all"
+                        placeholder="Tên Idol"
                     />
-                    {errors.boy_name && (
-                        <p className="mt-1 text-sm text-red-500">{errors.boy_name.message}</p>
+                    {errors.idol_name && (
+                        <p className="mt-1 text-sm text-red-500">{errors.idol_name.message}</p>
                     )}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tên em <span className="text-red-500">*</span>
+                        Tên Fandom <span className="text-red-500">*</span>
                     </label>
                     <input
-                        {...register("girl_name")}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all"
-                        placeholder="Tên của em"
+                        {...register("fan_name")}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all"
+                        placeholder="Tên Fandom"
                     />
-                    {errors.girl_name && (
-                        <p className="mt-1 text-sm text-red-500">{errors.girl_name.message}</p>
+                    {errors.fan_name && (
+                        <p className="mt-1 text-sm text-red-500">{errors.fan_name.message}</p>
                     )}
                 </div>
             </div>
 
-            {/* Anniversary Date */}
+            {/* Debut Date */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngày kỷ niệm
+                    Ngày Debut
                 </label>
                 <input
-                    {...register("anniversary_date")}
+                    {...register("debut_date")}
                     type="date"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all bg-white appearance-none"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all bg-white appearance-none"
                 />
             </div>
 
@@ -393,24 +332,24 @@ function LoveProfileForm({
                 </label>
                 <input
                     {...register("title")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all"
-                    placeholder="Câu Chuyện Tình Yêu"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all"
+                    placeholder="Fan Page Chính Thức"
                 />
             </div>
 
-            {/* Short Note */}
+            {/* Slogan */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ghi chú ngắn
+                    Slogan / Khẩu hiệu
                 </label>
                 <textarea
-                    {...register("short_note")}
+                    {...register("slogan")}
                     rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none transition-all resize-none"
-                    placeholder="Lời nhắn ngọt ngào cho trang của bạn..."
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all resize-none"
+                    placeholder="Hãy viết slogan hoặc khẩu hiệu yêu thích của bạn..."
                 />
-                {errors.short_note && (
-                    <p className="mt-1 text-sm text-red-500">{errors.short_note.message}</p>
+                {errors.slogan && (
+                    <p className="mt-1 text-sm text-red-500">{errors.slogan.message}</p>
                 )}
             </div>
 
@@ -429,9 +368,9 @@ function LoveProfileForm({
             {/* Submit */}
             <button
                 type="submit"
-                disabled={isSubmitting || uploadingBoy || uploadingGirl}
+                disabled={isSubmitting || uploadingIdol || uploadingFan}
                 className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
-                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
+                style={{ backgroundColor: 'var(--theme-accent, #a855f7)' }}
             >
                 {isSubmitting ? (
                     <>

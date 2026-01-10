@@ -88,11 +88,11 @@ export async function generateMetadata({ params }: PageProps) {
             title = profileData?.title || `Fan Page - ${idolName}`;
             description = `Trang dành cho fan của ${idolName}.`;
             break;
-        case "EVERY":
-            const groupName = profileData?.group_name || "Nhóm";
-            title = profileData?.title || groupName;
-            description = `Trang kỷ niệm của ${groupName}.`;
-            break;
+        // case "EVERY":
+        //     const groupName = profileData?.group_name || "Nhóm";
+        //     title = profileData?.title || groupName;
+        //     description = `Trang kỷ niệm của ${groupName}.`;
+        //     break;
     }
 
     // Get first gallery image for OpenGraph

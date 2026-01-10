@@ -5,6 +5,7 @@ import { LockScreen } from "@/components/auth/LockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
 import { MusicPlayer, MusicPlayerRef, WelcomeOverlay } from "@/components/music";
 import { LoveTemplate } from "@/components/templates/LoveTemplate";
+import { IdolTemplate } from "@/components/templates/IdolTemplate";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -91,8 +92,17 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
 
     // Render template based on link type
     const renderTemplate = () => {
-        // Render template based on type
-        return <LoveTemplate data={linkData} slug={slug} />;
+        switch (linkData.type) {
+            case "LOVE":
+                return <LoveTemplate data={linkData} slug={slug} />;
+            case "IDOL":
+                return <IdolTemplate data={linkData} slug={slug} />;
+            case "EVERY":
+                // TODO: EveryTemplate - using Love for now
+                return <LoveTemplate data={linkData} slug={slug} />;
+            default:
+                return <LoveTemplate data={linkData} slug={slug} />;
+        }
     };
 
     return (

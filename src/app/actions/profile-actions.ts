@@ -18,7 +18,17 @@ export interface LoveProfileData {
     short_note?: string;
 }
 
-export type ProfileData = LoveProfileData;
+export interface IdolProfileData {
+    idol_name?: string;
+    fan_name?: string;
+    idol_avatar?: string;
+    fan_avatar?: string;
+    debut_date?: string;
+    title?: string;
+    slogan?: string;
+}
+
+export type ProfileData = LoveProfileData | IdolProfileData;
 
 // ============================================================================
 // CONFIG DATA TYPES

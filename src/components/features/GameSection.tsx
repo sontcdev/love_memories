@@ -16,6 +16,7 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
     const [drawnCard, setDrawnCard] = useState<DrawnCard | null>(null);
     const [isFlipped, setIsFlipped] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [shownCardIds, setShownCardIds] = useState<string[]>([]); // Track shown cards
 
     const themeColors = {
         love: {
@@ -49,7 +50,7 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
         { level: "HARD", label: "Khó", icon: Star, gradient: colors.hard },
     ];
 
-    const handleDrawCard = async (difficulty: Difficulty, excludeId?: string) => {
+    const handleDrawCard = async (difficulty: Difficulty, excludeIds?: string[]) => {
         setIsDrawing(true);
         setError(null);
         setSelectedDifficulty(difficulty);
@@ -59,12 +60,28 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
         // Small delay for animation
         await new Promise((resolve) => setTimeout(resolve, 300));
 
-        const result = await drawCard(difficulty, excludeId);
+        // If we have cards to exclude, pass them as comma-separated string
+        const excludeParam = excludeIds && excludeIds.length > 0 ? excludeIds.join(",") : undefined;
+        const result = await drawCard(difficulty, excludeParam);
 
         if (result.success && result.card) {
             setDrawnCard(result.card);
+            // Add this card to shown cards
+            setShownCardIds(prev => [...prev, result.card!.id]);
             // Flip after a brief moment
             setTimeout(() => setIsFlipped(true), 500);
+        } else if (result.error === "All cards shown") {
+            // All cards in this difficulty have been shown, reset and try again
+            setShownCardIds([]);
+            // Retry draw with no exclusions
+            const retryResult = await drawCard(difficulty);
+            if (retryResult.success && retryResult.card) {
+                setDrawnCard(retryResult.card);
+                setShownCardIds([retryResult.card.id]);
+                setTimeout(() => setIsFlipped(true), 500);
+            } else {
+                setError(retryResult.error || "Failed to draw card");
+            }
         } else {
             setError(result.error || "Failed to draw card");
         }
@@ -77,12 +94,13 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
         setDrawnCard(null);
         setIsFlipped(false);
         setError(null);
+        setShownCardIds([]); // Clear shown cards when resetting
     };
 
     const shuffleQuestion = async () => {
         if (!selectedDifficulty) return;
-        // Pass current card ID to exclude it from the next draw
-        await handleDrawCard(selectedDifficulty, drawnCard?.id);
+        // Pass all shown card IDs to exclude them
+        await handleDrawCard(selectedDifficulty, shownCardIds);
     };
 
     return (

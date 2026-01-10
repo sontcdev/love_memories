@@ -84,6 +84,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
     const [resetPinDialog, setResetPinDialog] = useState<{ linkId: string; username: string } | null>(null);
     const [resetPinInput, setResetPinInput] = useState("");
     const [resetPinError, setResetPinError] = useState<string | null>(null);
+    const [isReloading, setIsReloading] = useState(false);
 
     const getTypeIcon = (type: LinkType) => {
         switch (type) {
@@ -107,10 +108,12 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
         }
     };
 
-    async function handleCreate(formData: FormData) {
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         setIsCreating(true);
         setCreateError(null);
 
+        const formData = new FormData(e.currentTarget);
         const result = await createLink(formData);
 
         if (result.success && result.data) {
@@ -119,18 +122,12 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                 password: result.data.password,
                 slug: result.data.slug,
             });
-            router.refresh();
-            // Refresh the links list
-            const updatedLinks = await fetch("/admin/links").then((res) => res.json());
-            if (updatedLinks) {
-                router.refresh();
-            }
         } else {
             setCreateError(result.error || "Không thể tạo liên kết");
         }
 
         setIsCreating(false);
-    }
+    };
 
     async function handleDelete(linkId: string) {
         if (!confirm("Bạn có chắc muốn xóa liên kết này? Hành động này không thể hoàn tác.")) {
@@ -220,9 +217,13 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
         setCreateError(null);
         setCreatedCredentials(null);
 
-        // Refresh the page to reload links list after successful creation
+        // Reload page to show new link in table
         if (wasSuccessful) {
-            router.refresh();
+            setIsReloading(true);
+            // Small delay to show loading state
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
         }
     }
 
@@ -275,8 +276,20 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button onClick={handleDialogClose} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                                        Đóng
+                                    <Button
+                                        onClick={handleDialogClose}
+                                        variant="outline"
+                                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                        disabled={isReloading}
+                                    >
+                                        {isReloading ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Đang tải...
+                                            </>
+                                        ) : (
+                                            "Đóng"
+                                        )}
                                     </Button>
                                 </DialogFooter>
                             </>
@@ -288,7 +301,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                         Tạo người dùng mới với liên kết cá nhân hóa.
                                     </DialogDescription>
                                 </DialogHeader>
-                                <form action={handleCreate}>
+                                <form onSubmit={handleFormSubmit}>
                                     <div className="space-y-4 py-4">
                                         {createError && (
                                             <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
@@ -305,6 +318,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                 name="username"
                                                 placeholder="Nhập tên người dùng"
                                                 required
+                                                disabled={isCreating}
                                                 className="bg-slate-900/50 border-slate-600 text-white"
                                             />
                                         </div>
@@ -319,6 +333,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                 placeholder="Tự động tạo nếu để trống"
                                                 maxLength={6}
                                                 pattern="[0-9]{6}"
+                                                disabled={isCreating}
                                                 className="bg-slate-900/50 border-slate-600 text-white"
                                             />
                                             <p className="text-xs text-slate-500">
@@ -330,7 +345,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                             <Label htmlFor="create-type" className="text-slate-300">
                                                 Loại giao diện
                                             </Label>
-                                            <Select name="linkType" defaultValue="LOVE">
+                                            <Select name="linkType" defaultValue="LOVE" disabled={isCreating}>
                                                 <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
                                                     <SelectValue placeholder="Select template" />
                                                 </SelectTrigger>
@@ -347,12 +362,12 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                             Idol
                                                         </div>
                                                     </SelectItem>
-                                                    <SelectItem value="EVERY" className="text-white focus:bg-slate-700 focus:text-white">
+                                                    {/* <SelectItem value="EVERY" className="text-white focus:bg-slate-700 focus:text-white">
                                                         <div className="flex items-center gap-2">
                                                             <Users className="w-4 h-4 text-blue-400" />
                                                             Nhóm
                                                         </div>
-                                                    </SelectItem>
+                                                    </SelectItem> */}
                                                 </SelectContent>
                                             </Select>
                                         </div>

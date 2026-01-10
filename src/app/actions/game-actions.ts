@@ -11,15 +11,18 @@ export interface DrawnCard {
 
 export async function drawCard(
     level: "EASY" | "MEDIUM" | "HARD",
-    excludeId?: string
+    excludeId?: string // Can be comma-separated list of IDs
 ): Promise<{ success: boolean; card?: DrawnCard; error?: string }> {
     try {
+        // Parse excludeId as comma-separated list
+        const excludeIds = excludeId ? excludeId.split(",").filter(id => id.trim()) : [];
+
         // Get all active cards for this level (cards are global, not per-link)
         const cards = await prisma.gameCard.findMany({
             where: {
                 level: level,
                 is_active: true,
-                ...(excludeId ? { id: { not: excludeId } } : {}),
+                ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
             },
             select: {
                 id: true,
@@ -29,6 +32,13 @@ export async function drawCard(
         });
 
         if (cards.length === 0) {
+            // Check if ALL cards have been shown (no cards left after exclusion)
+            if (excludeIds.length > 0) {
+                return {
+                    success: false,
+                    error: "All cards shown"
+                };
+            }
             return {
                 success: false,
                 error: `No ${level.toLowerCase()} cards available`
