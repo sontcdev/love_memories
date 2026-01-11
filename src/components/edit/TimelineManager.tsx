@@ -293,7 +293,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                     </DialogHeader>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
                         <div className="space-y-4">
                             {/* Error Message */}
                             {error && (
