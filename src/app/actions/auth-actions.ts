@@ -49,6 +49,15 @@ export async function verifyLinkPassword(slug: string, pin: string) {
             // No maxAge = session cookie (expires when browser closes)
         });
 
+        // Set access token cookie for edit page access (same as session)
+        cookieStore.set(`access_token_${slug}`, link.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            // No maxAge = session cookie (expires when browser closes)
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Verify link password error:", error);
