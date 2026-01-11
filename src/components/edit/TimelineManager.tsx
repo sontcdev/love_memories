@@ -285,165 +285,170 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
+                <DialogContent className="max-w-lg max-h-[90vh] p-0 flex flex-col">
+                    <DialogHeader className="px-6 pt-6 pb-0">
                         <DialogTitle>
                             {isEditing ? "Sửa sự kiện" : "Thêm sự kiện mới"}
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="space-y-4 mt-4">
-                        {/* Error Message */}
-                        {error && (
-                            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-                                {error}
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                        <div className="space-y-4">
+                            {/* Error Message */}
+                            {error && (
+                                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                                    {error}
+                                </div>
+                            )}
+
+                            {/* Title Input */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="title">Tiêu đề *</Label>
+                                    <span className={`text-xs ${formData.title.length > 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                                        {formData.title.length}/50
+                                    </span>
+                                </div>
+                                <Input
+                                    id="title"
+                                    value={formData.title}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({ ...prev, title: e.target.value.slice(0, 50) }))
+                                    }
+                                    placeholder="Lần hẹn đầu tiên, Kỷ niệm, ..."
+                                    maxLength={50}
+                                />
                             </div>
-                        )}
 
-                        {/* Title Input */}
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="title">Tiêu đề *</Label>
-                                <span className={`text-xs ${formData.title.length > 50 ? 'text-red-500' : 'text-gray-400'}`}>
-                                    {formData.title.length}/50
-                                </span>
+                            {/* Date Input */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Ngày *</Label>
+                                <Input
+                                    id="date"
+                                    type="date"
+                                    value={formData.date}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({ ...prev, date: e.target.value }))
+                                    }
+                                />
                             </div>
-                            <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, title: e.target.value.slice(0, 50) }))
-                                }
-                                placeholder="Lần hẹn đầu tiên, Kỷ niệm, ..."
-                                maxLength={50}
-                            />
-                        </div>
 
-                        {/* Date Input */}
-                        <div className="space-y-2">
-                            <Label htmlFor="date">Ngày *</Label>
-                            <Input
-                                id="date"
-                                type="date"
-                                value={formData.date}
-                                onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, date: e.target.value }))
-                                }
-                            />
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="description">Mô tả (tùy chọn)</Label>
-                                <span className={`text-xs ${formData.description.length > 300 ? 'text-red-500' : 'text-gray-400'}`}>
-                                    {formData.description.length}/300
-                                </span>
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="description">Mô tả (tùy chọn)</Label>
+                                    <span className={`text-xs ${formData.description.length > 300 ? 'text-red-500' : 'text-gray-400'}`}>
+                                        {formData.description.length}/300
+                                    </span>
+                                </div>
+                                <Textarea
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({ ...prev, description: e.target.value.slice(0, 300) }))
+                                    }
+                                    placeholder="Chuyện gì đã xảy ra vào ngày này..."
+                                    rows={3}
+                                    maxLength={300}
+                                />
                             </div>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, description: e.target.value.slice(0, 300) }))
-                                }
-                                placeholder="Chuyện gì đã xảy ra vào ngày này..."
-                                rows={3}
-                                maxLength={300}
-                            />
-                        </div>
 
-                        {/* Image Upload */}
-                        <div className="space-y-2">
-                            <Label>Ảnh (tùy chọn)</Label>
-                            {formData.image_url ? (
-                                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                                    <Image
-                                        src={formData.image_url}
-                                        alt="Event photo"
-                                        fill
-                                        className="object-cover"
+                            {/* Image Upload */}
+                            <div className="space-y-2">
+                                <Label>Ảnh (tùy chọn)</Label>
+                                {formData.image_url ? (
+                                    <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                                        <Image
+                                            src={formData.image_url}
+                                            alt="Event photo"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                        <button
+                                            onClick={() => setFormData((prev) => ({ ...prev, image_url: "" }))}
+                                            className="absolute top-2 right-2 p-2 bg-white/90 rounded-full hover:bg-white shadow"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : showImageUpload ? (
+                                    <ImageUpload
+                                        slug={slug}
+                                        onUploadComplete={handleImageUpload}
+                                        maxSizeMB={5}
                                     />
+                                ) : (
                                     <button
-                                        onClick={() => setFormData((prev) => ({ ...prev, image_url: "" }))}
-                                        className="absolute top-2 right-2 p-2 bg-white/90 rounded-full hover:bg-white shadow"
+                                        onClick={() => setShowImageUpload(true)}
+                                        className="w-full py-6 border-2 border-dashed rounded-lg text-gray-400 hover:text-gray-500 hover:border-gray-400 transition-colors"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <ImageIcon className="w-6 h-6 mx-auto mb-1" />
+                                        <span className="text-sm">Thêm ảnh</span>
                                     </button>
-                                </div>
-                            ) : showImageUpload ? (
-                                <ImageUpload
-                                    slug={slug}
-                                    onUploadComplete={handleImageUpload}
-                                    maxSizeMB={5}
-                                />
-                            ) : (
-                                <button
-                                    onClick={() => setShowImageUpload(true)}
-                                    className="w-full py-6 border-2 border-dashed rounded-lg text-gray-400 hover:text-gray-500 hover:border-gray-400 transition-colors"
-                                >
-                                    <ImageIcon className="w-6 h-6 mx-auto mb-1" />
-                                    <span className="text-sm">Thêm ảnh</span>
-                                </button>
-                            )}
-                        </div>
+                                )}
+                            </div>
 
-                        {/* Video URL Input */}
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-1">
-                                <Video className="w-4 h-4" />
-                                Video (YouTube/TikTok)
-                            </Label>
-                            {formData.video_url ? (
-                                <div className="space-y-2">
-                                    <VideoPlayer url={formData.video_url} className="rounded-lg" />
-                                    <button
-                                        onClick={() => setFormData((prev) => ({ ...prev, video_url: "" }))}
-                                        className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                                    >
-                                        <X className="w-4 h-4" />
-                                        Xóa video
-                                    </button>
-                                </div>
-                            ) : (
-                                <VideoInput
-                                    value={formData.video_url}
-                                    onChange={(url) => setFormData((prev) => ({ ...prev, video_url: url }))}
-                                    placeholder="Dán link YouTube hoặc TikTok..."
-                                />
-                            )}
-                        </div>
-
-                        {/* Voice Recording */}
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-1">
-                                <Mic className="w-4 h-4" />
-                                Ghi âm (tùy chọn)
-                            </Label>
-                            {formData.audio_url ? (
-                                <div className="space-y-2">
-                                    <audio
-                                        src={formData.audio_url}
-                                        controls
-                                        className="w-full h-10"
+                            {/* Video URL Input */}
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-1">
+                                    <Video className="w-4 h-4" />
+                                    Video (YouTube/TikTok)
+                                </Label>
+                                {formData.video_url ? (
+                                    <div className="space-y-2">
+                                        <VideoPlayer url={formData.video_url} className="rounded-lg" />
+                                        <button
+                                            onClick={() => setFormData((prev) => ({ ...prev, video_url: "" }))}
+                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            Xóa video
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <VideoInput
+                                        value={formData.video_url}
+                                        onChange={(url) => setFormData((prev) => ({ ...prev, video_url: url }))}
+                                        placeholder="Dán link YouTube hoặc TikTok..."
                                     />
-                                    <button
-                                        onClick={() => setFormData((prev) => ({ ...prev, audio_url: "" }))}
-                                        className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                                    >
-                                        <X className="w-4 h-4" />
-                                        Xóa ghi âm
-                                    </button>
-                                </div>
-                            ) : (
-                                <VoiceRecorder
-                                    slug={slug}
-                                    onUploadComplete={(url) => setFormData((prev) => ({ ...prev, audio_url: url }))}
-                                />
-                            )}
-                        </div>
+                                )}
+                            </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-3 pt-4">
+                            {/* Voice Recording */}
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-1">
+                                    <Mic className="w-4 h-4" />
+                                    Ghi âm (tùy chọn)
+                                </Label>
+                                {formData.audio_url ? (
+                                    <div className="space-y-2">
+                                        <audio
+                                            src={formData.audio_url}
+                                            controls
+                                            className="w-full h-10"
+                                        />
+                                        <button
+                                            onClick={() => setFormData((prev) => ({ ...prev, audio_url: "" }))}
+                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            Xóa ghi âm
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <VoiceRecorder
+                                        slug={slug}
+                                        onUploadComplete={(url) => setFormData((prev) => ({ ...prev, audio_url: url }))}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Fixed Footer Actions */}
+                    <div className="flex-shrink-0 bg-white border-t border-gray-200 px-6 py-4">
+                        <div className="flex gap-3">
                             <Button
                                 onClick={handleSave}
                                 disabled={!isFormValid || isSaving}

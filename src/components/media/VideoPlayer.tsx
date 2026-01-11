@@ -76,7 +76,7 @@ export function VideoPlayer({ url, className = "" }: VideoPlayerProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-white font-medium text-sm">Video TikTok</p>
-                    <p className="text-gray-400 text-xs truncate">{url}</p>
+                    <p className="text-gray-400 text-xs break-all line-clamp-2">{url}</p>
                 </div>
                 <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0" />
             </a>
