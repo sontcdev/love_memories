@@ -48,6 +48,8 @@ function parseTikTokUrl(url: string): string | null {
         /tiktok\.com\/@[^/]+\/video\/(\d+)/,
         // vm.tiktok.com/CODE
         /vm\.tiktok\.com\/([a-zA-Z0-9]+)/,
+        // vt.tiktok.com/CODE
+        /vt\.tiktok\.com\/([a-zA-Z0-9]+)/,
         // tiktok.com/t/CODE
         /tiktok\.com\/t\/([a-zA-Z0-9]+)/,
     ];
@@ -90,10 +92,14 @@ function getVideoInfo(url: string): VideoInfo {
     return { platform: "unknown", videoId: null, embedUrl: null, thumbnailUrl: null };
 }
 
-// Check if URL is valid video URL
+// Check if URL is valid video URL - simplified to just check domain
 function isValidVideoUrl(url: string): boolean {
-    const info = getVideoInfo(url);
-    return info.platform !== "unknown" && info.videoId !== null;
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    // Accept any YouTube or TikTok URL
+    return lowerUrl.includes('youtube.com') ||
+        lowerUrl.includes('youtu.be') ||
+        lowerUrl.includes('tiktok.com');
 }
 
 export function VideoInput({ value, onChange, placeholder = "Paste YouTube or TikTok URL..." }: VideoInputProps) {
@@ -117,7 +123,7 @@ export function VideoInput({ value, onChange, placeholder = "Paste YouTube or Ti
 
     const handleBlur = useCallback(() => {
         if (inputValue && !isValidVideoUrl(inputValue)) {
-            setError("Please enter a valid YouTube or TikTok URL");
+            setError("Vui lòng nhập link YouTube hoặc TikTok hợp lệ");
         }
     }, [inputValue]);
 

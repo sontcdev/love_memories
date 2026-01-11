@@ -285,7 +285,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-lg max-h-[90vh] p-0 flex flex-col">
+                <DialogContent className="max-w-lg max-h-[calc(100vh-2rem)] p-0 flex flex-col">
                     <DialogHeader className="px-6 pt-6 pb-0">
                         <DialogTitle>
                             {isEditing ? "Sửa sự kiện" : "Thêm sự kiện mới"}
