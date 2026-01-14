@@ -1,0 +1,71 @@
+name: love_memories
+description: "Kỷ Niệm Số - Digital Memories Application"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_bloc: ^8.1.3
+  equatable: ^2.0.5
+
+  # Navigation
+  go_router: ^13.0.0
+
+  # Network
+  dio: ^5.4.0
+  json_annotation: ^4.8.1
+  supabase_flutter: ^2.9.0
+
+  # UI Helpers
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+  flutter_staggered_grid_view: ^0.7.0
+  font_awesome_flutter: ^10.7.0
+  google_fonts: ^6.1.0
+
+  # Media
+  youtube_player_flutter: ^9.1.3
+  flutter_image_compress: ^2.1.0
+  image_picker: ^1.0.4
+  record: ^6.1.2
+  audioplayers: ^5.2.1
+  uuid: ^4.2.1
+
+  # Local Storage
+  flutter_secure_storage: ^9.0.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+
+  # Functional Programming
+  dartz: ^0.10.1
+
+  # Environment Variables
+  flutter_dotenv: ^5.1.0
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Linting
+  flutter_lints: ^5.0.0
+
+  # Code Generation
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+  #   - assets/images/
+  #   - assets/icons/
