@@ -12,6 +12,7 @@ import {
 } from "next/font/google";
 import { Suspense } from "react";
 import { LoadingProvider, NavigationProgress } from "@/components/providers";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import "./globals.css";
 
 const inter = Inter({
@@ -78,6 +79,15 @@ export const metadata: Metadata = {
   keywords: ["kỷ niệm", "anniversary", "love", "memories", "couple", "idol", "fan page", "timeline", "gallery"],
   authors: [{ name: "Love Memories" }],
   creator: "Love Memories",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Love Memories",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     locale: "vi_VN",
@@ -96,6 +106,18 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ec4899" },
+    { media: "(prefers-color-scheme: dark)", color: "#be185d" },
+  ],
+};
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -103,6 +125,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body
         className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -111,6 +137,7 @@ export default function RootLayout({
             <NavigationProgress />
           </Suspense>
           {children}
+          <PWAInstallPrompt />
         </LoadingProvider>
       </body>
     </html>

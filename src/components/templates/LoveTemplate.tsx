@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic } from "lucide-react";
+import { useSwipeable } from "react-swipeable";
 import { GameSection } from "@/components/features/GameSection";
 import { LetterBox } from "@/components/features/LetterBox";
 import { VideoPlayer } from "@/components/media";
@@ -75,6 +76,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [lightboxIndex, nextImage, prevImage]);
 
+
     // Calculate days together
     const getDaysTogether = () => {
         if (!anniversaryDate) return null;
@@ -87,13 +89,26 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
 
     const daysTogether = getDaysTogether();
 
+    // Swipe handlers for mobile gallery navigation
+    const swipeHandlers = useSwipeable({
+        onSwipedLeft: () => {
+            if (lightboxIndex !== null) nextImage();
+        },
+        onSwipedRight: () => {
+            if (lightboxIndex !== null) prevImage();
+        },
+        preventScrollOnSwipe: true,
+        trackMouse: false,
+    });
+
     return (
         <div className="min-h-screen relative" style={{ backgroundColor: 'var(--theme-bg, #fff0f5)' }}>
             {/* Edit Button - Fixed */}
             <Link
                 href={`/${slug}/edit`}
-                className="fixed top-4 right-4 z-30 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all"
+                className="fixed top-4 right-4 z-30 p-3 tap-target safe-top safe-right bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all"
                 title="Edit Page"
+                aria-label="Chỉnh sửa trang"
             >
                 <Settings className="w-5 h-5 text-gray-600" />
             </Link>
@@ -257,11 +272,12 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
 
                 {/* Gallery Lightbox */}
                 {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={closeLightbox}>
+                    <div {...swipeHandlers} className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={closeLightbox}>
                         {/* Close button */}
                         <button
                             onClick={closeLightbox}
-                            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors"
+                            className="absolute top-4 right-4 p-3 tap-target text-white/80 hover:text-white transition-colors z-10"
+                            aria-label="Đóng"
                         >
                             <X className="w-8 h-8" />
                         </button>
@@ -269,13 +285,14 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                         {/* Previous button */}
                         <button
                             onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-3 tap-target bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                            aria-label="Ảnh trước"
                         >
-                            <ChevronLeft className="w-8 h-8" />
+                            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
                         </button>
 
                         {/* Image */}
-                        <div className="relative max-w-4xl max-h-[80vh] mx-16" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative max-w-4xl max-h-[80vh] mx-4 md:mx-16" onClick={(e) => e.stopPropagation()}>
                             <Image
                                 src={data.galleries[lightboxIndex].image_url}
                                 alt={data.galleries[lightboxIndex].caption || "Photo"}
@@ -285,7 +302,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                             />
                             {/* Caption */}
                             {data.galleries[lightboxIndex].caption && (
-                                <p className="text-center text-white mt-4 text-lg">
+                                <p className="text-center text-white mt-4 text-base md:text-lg px-4">
                                     {data.galleries[lightboxIndex].caption}
                                 </p>
                             )}
@@ -298,9 +315,10 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                         {/* Next button */}
                         <button
                             onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-3 tap-target bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                            aria-label="Ảnh tiếp theo"
                         >
-                            <ChevronRight className="w-8 h-8" />
+                            <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
                         </button>
                     </div>
                 )}
@@ -403,8 +421,8 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {showScrollTop && (
                     <button
                         onClick={scrollToTop}
-                        className="fixed bottom-24 right-6 z-40 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-rose-100 hover:bg-rose-50 transition-all hover:scale-110"
-                        aria-label="Scroll to top"
+                        className="fixed bottom-24 right-6 z-40 p-3 tap-target safe-bottom safe-right bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-rose-100 hover:bg-rose-50 transition-all hover:scale-110"
+                        aria-label="Lên đầu trang"
                     >
                         <ChevronUp className="w-5 h-5 text-rose-500" />
                     </button>
