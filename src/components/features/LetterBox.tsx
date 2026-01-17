@@ -318,8 +318,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                     setExpandedId(expandedId === letter.id ? null : letter.id)
                                 }
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
                                         <h3 className="font-semibold text-gray-800 break-words">{letter.title}</h3>
                                         <p className="text-sm text-gray-500 mt-1 line-clamp-2 break-words overflow-hidden">
                                             {letter.content}
@@ -336,7 +336,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                    <div className="flex items-center gap-2 flex-shrink-0 min-w-[4rem]">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
