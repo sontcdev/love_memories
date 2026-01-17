@@ -109,8 +109,8 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ec4899" },
     { media: "(prefers-color-scheme: dark)", color: "#be185d" },
@@ -130,7 +130,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body
-        className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
         <LoadingProvider>
           <Suspense fallback={null}>
