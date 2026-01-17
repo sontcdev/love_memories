@@ -41,7 +41,14 @@ export async function getLetters(slug: string) {
 // Create a new letter
 export async function createLetter(
     slug: string,
-    data: { title: string; content: string; image_url?: string; video_url?: string; audio_url?: string }
+    data: {
+        title: string;
+        content: string;
+        image_url?: string;
+        video_url?: string;
+        audio_url?: string;
+        unlock_date?: Date | null;
+    }
 ) {
     try {
         const link = await prisma.link.findUnique({
@@ -68,6 +75,7 @@ export async function createLetter(
                 image_url: data.image_url,
                 video_url: data.video_url,
                 audio_url: data.audio_url,
+                unlock_date: data.unlock_date || null,
                 sort_order: (maxSort?.sort_order || 0) + 1,
             },
             include: { replies: true },

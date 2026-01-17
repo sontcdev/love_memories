@@ -4,7 +4,6 @@ import { useState, useOptimistic, useTransition } from "react";
 import Image from "next/image";
 import { Timeline } from "@prisma/client";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
 import {
     upsertTimelineEvent,
     deleteTimelineEvent,
@@ -29,8 +28,6 @@ import {
     Calendar,
     Image as ImageIcon,
     AlertCircle,
-    Video,
-    Mic,
 } from "lucide-react";
 
 interface TimelineManagerProps {
@@ -389,62 +386,6 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                 )}
                             </div>
 
-                            {/* Video URL Input */}
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-1">
-                                    <Video className="w-4 h-4" />
-                                    Video (YouTube/TikTok)
-                                </Label>
-                                {formData.video_url ? (
-                                    <div className="space-y-2">
-                                        <div className="max-h-[200px] sm:max-h-[300px] overflow-hidden rounded-lg">
-                                            <VideoPlayer url={formData.video_url} className="rounded-lg" />
-                                        </div>
-                                        <button
-                                            onClick={() => setFormData((prev) => ({ ...prev, video_url: "" }))}
-                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            Xóa video
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <VideoInput
-                                        value={formData.video_url}
-                                        onChange={(url) => setFormData((prev) => ({ ...prev, video_url: url }))}
-                                        placeholder="Dán link YouTube hoặc TikTok..."
-                                    />
-                                )}
-                            </div>
-
-                            {/* Voice Recording */}
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-1">
-                                    <Mic className="w-4 h-4" />
-                                    Ghi âm (tùy chọn)
-                                </Label>
-                                {formData.audio_url ? (
-                                    <div className="space-y-2">
-                                        <audio
-                                            src={formData.audio_url}
-                                            controls
-                                            className="w-full h-10"
-                                        />
-                                        <button
-                                            onClick={() => setFormData((prev) => ({ ...prev, audio_url: "" }))}
-                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            Xóa ghi âm
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <VoiceRecorder
-                                        slug={slug}
-                                        onUploadComplete={(url) => setFormData((prev) => ({ ...prev, audio_url: url }))}
-                                    />
-                                )}
-                            </div>
                         </div>
                     </div>
 

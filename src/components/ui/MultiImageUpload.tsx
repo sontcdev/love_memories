@@ -132,10 +132,13 @@ export function MultiImageUpload({
                     .from(STORAGE_BUCKET)
                     .upload(filePath, fileToUpload, {
                         cacheControl: "3600",
-                        upsert: false,
+                        upsert: true, // Allow overwrite if file exists
                     });
 
-                if (uploadError) throw uploadError;
+                if (uploadError) {
+                    console.error("Supabase upload error:", uploadError);
+                    throw new Error(uploadError.message);
+                }
 
                 const publicUrl = getPublicUrl(filePath);
 
@@ -146,9 +149,10 @@ export function MultiImageUpload({
 
                 return publicUrl;
             } catch (err) {
-                console.error("Upload error:", err);
+                const errorMsg = err instanceof Error ? err.message : "Upload failed";
+                console.error("Upload error:", errorMsg, err);
                 setFiles(prev => prev.map((f, i) =>
-                    i === index ? { ...f, status: "error", error: "Failed" } : f
+                    i === index ? { ...f, status: "error", error: errorMsg } : f
                 ));
                 return null;
             }

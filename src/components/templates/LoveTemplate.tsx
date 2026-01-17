@@ -105,7 +105,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
             {/* Edit Button - Fixed */}
             <Link
                 href={`/${slug}/edit`}
-                className="fixed top-4 right-4 z-30 p-3 tap-target safe-top safe-right bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all"
+                className="fixed top-4 right-4 z-30 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all"
                 title="Edit Page"
                 aria-label="Chỉnh sửa trang"
             >
@@ -271,54 +271,64 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
 
                 {/* Gallery Lightbox */}
                 {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                    <div {...swipeHandlers} className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={closeLightbox}>
-                        {/* Close button */}
-                        <button
-                            onClick={closeLightbox}
-                            className="absolute top-4 right-4 p-3 tap-target text-white/80 hover:text-white transition-colors z-10"
-                            aria-label="Đóng"
-                        >
-                            <X className="w-8 h-8" />
-                        </button>
+                    <div {...swipeHandlers} className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4" onClick={closeLightbox}>
+                        {/* Top bar with close button and counter */}
+                        <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 z-20">
+                            <span className="text-white/70 text-sm font-medium">
+                                {lightboxIndex + 1} / {data.galleries.length}
+                            </span>
+                            <button
+                                onClick={closeLightbox}
+                                className="p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg transition-all hover:scale-110"
+                                style={{ color: 'var(--theme-accent, #ec4899)' }}
+                                aria-label="Đóng"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
 
-                        {/* Previous button */}
-                        <button
-                            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-3 tap-target bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-                            aria-label="Ảnh trước"
-                        >
-                            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
-                        </button>
+                        {/* Image container - larger size */}
+                        <div className="relative w-full max-w-4xl flex-1 flex items-center justify-center px-4" onClick={(e) => e.stopPropagation()}>
+                            <div className="relative w-full max-h-[70vh] aspect-[3/4] sm:aspect-[4/3] bg-black/30 rounded-xl overflow-hidden">
+                                <Image
+                                    src={data.galleries[lightboxIndex].image_url}
+                                    alt={data.galleries[lightboxIndex].caption || "Photo"}
+                                    fill
+                                    className="object-contain transition-opacity duration-200"
+                                    priority
+                                />
+                            </div>
+                        </div>
 
-                        {/* Image */}
-                        <div className="relative max-w-4xl max-h-[80vh] mx-4 md:mx-16" onClick={(e) => e.stopPropagation()}>
-                            <Image
-                                src={data.galleries[lightboxIndex].image_url}
-                                alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                width={1200}
-                                height={800}
-                                className="max-h-[80vh] w-auto object-contain rounded-lg"
-                            />
+                        {/* Bottom bar with caption and navigation */}
+                        <div className="w-full max-w-2xl mt-4 space-y-3">
                             {/* Caption */}
                             {data.galleries[lightboxIndex].caption && (
-                                <p className="text-center text-white mt-4 text-base md:text-lg px-4">
+                                <p className="text-center text-white text-sm md:text-base px-4">
                                     {data.galleries[lightboxIndex].caption}
                                 </p>
                             )}
-                            {/* Counter */}
-                            <p className="text-center text-white/60 mt-2 text-sm">
-                                {lightboxIndex + 1} / {data.galleries.length}
-                            </p>
-                        </div>
 
-                        {/* Next button */}
-                        <button
-                            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-3 tap-target bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-                            aria-label="Ảnh tiếp theo"
-                        >
-                            <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
-                        </button>
+                            {/* Navigation buttons */}
+                            <div className="flex justify-center items-center gap-4">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                                    className="p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-lg transition-all hover:scale-110"
+                                    style={{ color: 'var(--theme-accent, #ec4899)' }}
+                                    aria-label="Ảnh trước"
+                                >
+                                    <ChevronLeft className="w-6 h-6" />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                                    className="p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-lg transition-all hover:scale-110"
+                                    style={{ color: 'var(--theme-accent, #ec4899)' }}
+                                    aria-label="Ảnh tiếp theo"
+                                >
+                                    <ChevronRight className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -409,7 +419,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {showScrollTop && (
                     <button
                         onClick={scrollToTop}
-                        className="fixed bottom-24 right-6 z-40 p-3 tap-target safe-bottom safe-right bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-rose-100 hover:bg-rose-50 transition-all hover:scale-110"
+                        className="fixed bottom-28 right-6 z-40 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-rose-100 hover:bg-rose-50 transition-all hover:scale-110"
                         aria-label="Lên đầu trang"
                     >
                         <ChevronUp className="w-5 h-5 text-rose-500" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Letter, LetterReply } from "@prisma/client";
 import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
@@ -23,6 +23,8 @@ import {
     MessageCircle,
     Video,
     Mic,
+    Lock,
+    Calendar,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -36,6 +38,38 @@ interface LetterBoxProps {
 
 export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
+
+    // Helper to check if a letter is currently locked
+    const isLocked = (letter: LetterWithReplies): boolean => {
+        if (!letter.unlock_date) return false;
+        // Compare dates only (ignore time) - unlock at start of the day
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const unlockDate = new Date(letter.unlock_date);
+        unlockDate.setHours(0, 0, 0, 0);
+        return today < unlockDate;
+    };
+
+    // Sort letters:
+    // 1. Unlocked letters (no unlock_date OR unlock_date passed) - sort by created_at ascending
+    // 2. Locked letters (has unlock_date in future) - sort by unlock_date ascending
+    const sortedLetters = [...letters].sort((a, b) => {
+        const aLocked = isLocked(a);
+        const bLocked = isLocked(b);
+
+        // Both unlocked - sort by created_at ascending
+        if (!aLocked && !bLocked) {
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        }
+
+        // Both locked - sort by unlock_date ascending
+        if (aLocked && bLocked) {
+            return new Date(a.unlock_date!).getTime() - new Date(b.unlock_date!).getTime();
+        }
+
+        // Mixed: unlocked comes first
+        return aLocked ? 1 : -1;
+    });
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
@@ -50,6 +84,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
     const [newContent, setNewContent] = useState("");
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [newAudioUrl, setNewAudioUrl] = useState("");
+    const [newUnlockDate, setNewUnlockDate] = useState<string>("");
 
     const themeColors = {
         love: {
@@ -77,6 +112,38 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
 
     const colors = themeColors[theme];
 
+    // State for realtime unlock check
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    // Update time every minute for realtime unlock
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000); // Check every minute
+        return () => clearInterval(interval);
+    }, []);
+
+    // Helper to check if letter is locked
+    const isLetterLocked = (letter: LetterWithReplies): boolean => {
+        if (!letter.unlock_date) return false;
+        // Compare dates only (ignore time) - unlock at start of the day
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const unlockDate = new Date(letter.unlock_date);
+        unlockDate.setHours(0, 0, 0, 0);
+        return today < unlockDate;
+    };
+
+    // Helper to format unlock date
+    const formatUnlockDate = (date: Date): string => {
+        return new Date(date).toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+    };
+
+
     async function handleCreate() {
         if (!newTitle.trim() || !newContent.trim()) return;
 
@@ -86,6 +153,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             content: newContent.trim(),
             video_url: newVideoUrl || undefined,
             audio_url: newAudioUrl || undefined,
+            unlock_date: newUnlockDate ? new Date(newUnlockDate) : null,
         });
 
         if (result.success && result.data) {
@@ -94,6 +162,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             setNewContent("");
             setNewVideoUrl("");
             setNewAudioUrl("");
+            setNewUnlockDate("");
             setShowCreateForm(false);
         }
         setIsCreating(false);
@@ -257,6 +326,39 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                 )}
                             </div>
 
+                            {/* Unlock Date Picker */}
+                            <div>
+                                <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                                    <Calendar className="w-4 h-4" />
+                                    Ngày mở khóa (tùy chọn)
+                                </label>
+                                <input
+                                    type="date"
+                                    value={newUnlockDate}
+                                    onChange={(e) => {
+                                        const selectedDate = new Date(e.target.value);
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        // Only accept dates after today
+                                        if (selectedDate > today) {
+                                            setNewUnlockDate(e.target.value);
+                                        }
+                                    }}
+                                    min={(() => {
+                                        const tomorrow = new Date();
+                                        tomorrow.setDate(tomorrow.getDate() + 1);
+                                        const year = tomorrow.getFullYear();
+                                        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                                        const day = String(tomorrow.getDate()).padStart(2, '0');
+                                        return `${year}-${month}-${day}`;
+                                    })()}
+                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
+                                />
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Thư sẽ bị khóa cho đến ngày này
+                                </p>
+                            </div>
+
                             <button
                                 onClick={handleCreate}
                                 disabled={isCreating || !newTitle.trim() || !newContent.trim()}
@@ -306,7 +408,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {letters.map((letter) => (
+                    {sortedLetters.map((letter) => (
                         <div
                             key={letter.id}
                             className={`bg-white rounded-2xl shadow-md border ${colors.border} overflow-hidden transition-all`}
@@ -320,9 +422,16 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-gray-800 break-words">{letter.title}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-semibold text-gray-800 break-words">{letter.title}</h3>
+                                            {isLetterLocked(letter) && (
+                                                <Lock className={`w-4 h-4 ${colors.text} flex-shrink-0`} />
+                                            )}
+                                        </div>
                                         <p className="text-sm text-gray-500 mt-1 line-clamp-2 break-words overflow-hidden">
-                                            {letter.content}
+                                            {isLetterLocked(letter)
+                                                ? `🔒 Mở khóa vào ${formatUnlockDate(letter.unlock_date!)}`
+                                                : letter.content}
                                         </p>
                                         <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
                                             <span>
@@ -363,115 +472,129 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                             {/* Expanded Content */}
                             {expandedId === letter.id && (
                                 <div className="p-4 border-t border-gray-100">
-                                    {/* Letter Content */}
-                                    <div className="prose prose-sm max-w-none mb-4 overflow-hidden">
-                                        <p className="whitespace-pre-wrap break-words text-gray-700">{letter.content}</p>
-                                    </div>
-
-                                    {/* Image */}
-                                    {letter.image_url && (
-                                        <div className="mb-4">
-                                            <Image
-                                                src={letter.image_url}
-                                                alt="Letter attachment"
-                                                width={400}
-                                                height={300}
-                                                className="rounded-lg object-cover"
-                                            />
+                                    {/* Check if letter is locked */}
+                                    {isLetterLocked(letter) ? (
+                                        <div className={`${colors.bg} rounded-xl p-6 text-center`}>
+                                            <Lock className={`w-12 h-12 mx-auto mb-3 ${colors.text}`} />
+                                            <h4 className="font-semibold text-gray-800 mb-2">Thư đang bị khóa</h4>
+                                            <p className="text-gray-600 text-sm">
+                                                Chờ đến ngày <span className="font-semibold">{formatUnlockDate(letter.unlock_date!)}</span> để xem nội dung
+                                            </p>
                                         </div>
-                                    )}
-
-                                    {/* Video */}
-                                    {letter.video_url && (
-                                        <div className="mb-4">
-                                            <VideoPlayer url={letter.video_url} className="rounded-xl" />
-                                        </div>
-                                    )}
-
-                                    {/* Audio */}
-                                    {letter.audio_url && (
-                                        <div className="mb-4">
-                                            <div className={`${colors.bg} p-3 rounded-xl`}>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Mic className={`w-4 h-4 ${colors.text}`} />
-                                                    <span className="text-sm font-medium text-gray-700">Ghi âm đính kèm</span>
-                                                </div>
-                                                <audio
-                                                    src={letter.audio_url}
-                                                    controls
-                                                    className="w-full h-10"
-                                                />
+                                    ) : (
+                                        <>
+                                            {/* Letter Content */}
+                                            <div className="prose prose-sm max-w-none mb-4 overflow-hidden">
+                                                <p className="whitespace-pre-wrap break-words text-gray-700">{letter.content}</p>
                                             </div>
-                                        </div>
-                                    )}
 
-                                    {/* Replies Thread */}
-                                    {letter.replies.length > 0 && (
-                                        <div className="space-y-3 mb-4">
-                                            <h4 className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                                                <MessageCircle className="w-4 h-4" />
-                                                Câu trả lời
-                                            </h4>
-                                            {letter.replies.map((reply) => (
-                                                <div
-                                                    key={reply.id}
-                                                    className={`${colors.bg} rounded-xl p-3 relative group`}
-                                                >
-                                                    <p className="text-sm text-gray-700 pr-10 break-words overflow-hidden">{reply.content}</p>
-                                                    <div className="flex items-center justify-between mt-1">
-                                                        <span className="text-xs text-gray-400">
-                                                            {new Date(reply.created_at).toLocaleDateString("vi-VN", {
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                            })}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => setDeleteConfirm({ type: "reply", id: reply.id, letterId: letter.id })}
-                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-xs"
-                                                            title="Xóa trả lời"
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </button>
+                                            {/* Image */}
+                                            {letter.image_url && (
+                                                <div className="mb-4">
+                                                    <Image
+                                                        src={letter.image_url}
+                                                        alt="Letter attachment"
+                                                        width={400}
+                                                        height={300}
+                                                        className="rounded-lg object-cover"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Video */}
+                                            {letter.video_url && (
+                                                <div className="mb-4">
+                                                    <VideoPlayer url={letter.video_url} className="rounded-xl" />
+                                                </div>
+                                            )}
+
+                                            {/* Audio */}
+                                            {letter.audio_url && (
+                                                <div className="mb-4">
+                                                    <div className={`${colors.bg} p-3 rounded-xl`}>
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Mic className={`w-4 h-4 ${colors.text}`} />
+                                                            <span className="text-sm font-medium text-gray-700">Ghi âm đính kèm</span>
+                                                        </div>
+                                                        <audio
+                                                            src={letter.audio_url}
+                                                            controls
+                                                            className="w-full h-10"
+                                                            onPlay={() => window.dispatchEvent(new CustomEvent('pause-music'))}
+                                                        />
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                            )}
 
-                                    {/* Reply Input */}
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={replyingTo === letter.id ? replyContent : ""}
-                                                onChange={(e) => {
-                                                    setReplyingTo(letter.id);
-                                                    const value = e.target.value;
-                                                    setReplyContent(value.length > 300 ? value.slice(0, 300) : value);
-                                                }}
-                                                onFocus={() => setReplyingTo(letter.id)}
-                                                placeholder="Viết câu trả lời..."
-                                                className={`flex-1 px-4 py-2 rounded-full border ${colors.border} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
-                                            />
-                                            <button
-                                                onClick={() => handleReply(letter.id)}
-                                                disabled={isSendingReply || !replyContent.trim() || replyContent.length > 300}
-                                                className="p-2 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 hover:brightness-110"
-                                                style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
-                                            >
-                                                {isSendingReply ? (
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                ) : (
-                                                    <Send className="w-5 h-5" />
+                                            {/* Replies Thread */}
+                                            {letter.replies.length > 0 && (
+                                                <div className="space-y-3 mb-4">
+                                                    <h4 className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                                                        <MessageCircle className="w-4 h-4" />
+                                                        Câu trả lời
+                                                    </h4>
+                                                    {letter.replies.map((reply) => (
+                                                        <div
+                                                            key={reply.id}
+                                                            className={`${colors.bg} rounded-xl p-3 relative group`}
+                                                        >
+                                                            <p className="text-sm text-gray-700 pr-10 break-words overflow-hidden">{reply.content}</p>
+                                                            <div className="flex items-center justify-between mt-1">
+                                                                <span className="text-xs text-gray-400">
+                                                                    {new Date(reply.created_at).toLocaleDateString("vi-VN", {
+                                                                        hour: "2-digit",
+                                                                        minute: "2-digit",
+                                                                    })}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => setDeleteConfirm({ type: "reply", id: reply.id, letterId: letter.id })}
+                                                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-xs"
+                                                                    title="Xóa trả lời"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Reply Input */}
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={replyingTo === letter.id ? replyContent : ""}
+                                                        onChange={(e) => {
+                                                            setReplyingTo(letter.id);
+                                                            const value = e.target.value;
+                                                            setReplyContent(value.length > 300 ? value.slice(0, 300) : value);
+                                                        }}
+                                                        onFocus={() => setReplyingTo(letter.id)}
+                                                        placeholder="Viết câu trả lời..."
+                                                        className={`flex-1 px-4 py-2 rounded-full border ${colors.border} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
+                                                    />
+                                                    <button
+                                                        onClick={() => handleReply(letter.id)}
+                                                        disabled={isSendingReply || !replyContent.trim() || replyContent.length > 300}
+                                                        className="p-2 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 hover:brightness-110"
+                                                        style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
+                                                    >
+                                                        {isSendingReply ? (
+                                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                                        ) : (
+                                                            <Send className="w-5 h-5" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                {replyingTo === letter.id && replyContent.length > 0 && (
+                                                    <span className={`text-xs text-right ${replyContent.length >= 280 ? 'text-red-500' : 'text-gray-400'}`}>
+                                                        {replyContent.length}/300
+                                                    </span>
                                                 )}
-                                            </button>
-                                        </div>
-                                        {replyingTo === letter.id && replyContent.length > 0 && (
-                                            <span className={`text-xs text-right ${replyContent.length >= 280 ? 'text-red-500' : 'text-gray-400'}`}>
-                                                {replyContent.length}/300
-                                            </span>
-                                        )}
-                                    </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>

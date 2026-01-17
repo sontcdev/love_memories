@@ -162,17 +162,18 @@ model Timeline {
 // ============================================================================
 
 model Letter {
-  id         String   @id @default(cuid())
-  link_id    String
-  title      String
-  content    String   @db.Text
-  image_url  String?
-  video_url  String?  // YouTube/TikTok URL
-  audio_url  String?  // Uploaded voice recording URL
-  is_read    Boolean  @default(false)
-  sort_order Int      @default(0)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id          String    @id @default(cuid())
+  link_id     String
+  title       String
+  content     String    @db.Text
+  image_url   String?
+  video_url   String?   // YouTube/TikTok URL
+  audio_url   String?   // Uploaded voice recording URL
+  unlock_date DateTime? // Optional unlock date - letter is locked until this date
+  is_read     Boolean   @default(false)
+  sort_order  Int       @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 
   // Relations
   link    Link          @relation(fields: [link_id], references: [id], onDelete: Cascade)

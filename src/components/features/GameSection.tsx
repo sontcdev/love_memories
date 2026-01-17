@@ -225,7 +225,7 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
                             className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition-colors"
                         >
                             <RotateCcw className="w-4 h-4" />
-                            Rút lại
+                            Đổi độ khó
                         </button>
                     </div>
                 </div>
