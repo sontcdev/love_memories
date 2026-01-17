@@ -285,15 +285,15 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-lg max-h-[calc(100vh-2rem)] p-0 flex flex-col">
-                    <DialogHeader className="px-6 pt-6 pb-0">
+                <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] p-0 flex flex-col">
+                    <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
                         <DialogTitle>
                             {isEditing ? "Sửa sự kiện" : "Thêm sự kiện mới"}
                         </DialogTitle>
                     </DialogHeader>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4">
                         <div className="space-y-4">
                             {/* Error Message */}
                             {error && (
@@ -447,8 +447,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                     </div>
 
                     {/* Fixed Footer Actions */}
-                    <div className="flex-shrink-0 bg-white border-t border-gray-200 px-6 py-4">
-                        <div className="flex gap-3">
+                    <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 sm:px-6 py-4">
+                        <div className="flex gap-2 sm:gap-3">
                             <Button
                                 onClick={handleSave}
                                 disabled={!isFormValid || isSaving}

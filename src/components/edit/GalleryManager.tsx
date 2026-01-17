@@ -403,7 +403,7 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
             {/* Edit Caption Dialog */}
             {editingImage && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                    <div className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] flex flex-col">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold">Sửa chú thích</h3>
                             <button

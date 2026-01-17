@@ -169,8 +169,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             {/* Create Form Modal */}
             {showCreateForm && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-                        <div className={`bg-gradient-to-r ${colors.primary} p-4 text-white`}>
+                    <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
+                        <div className={`bg-gradient-to-r ${colors.primary} p-4 text-white flex-shrink-0`}>
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold">Viết thư tình</h3>
                                 <button onClick={() => setShowCreateForm(false)}>
@@ -178,7 +178,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                 </button>
                             </div>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Tiêu đề <span className="text-gray-400 text-xs">({newTitle.length}/50)</span>
