@@ -105,6 +105,22 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
             }
         }, [isYouTube, youtubeId, autoPlay]);
 
+        // Listen for pause-music events from VoiceRecorder
+        useEffect(() => {
+            const handlePauseMusic = () => {
+                if (isYouTube) {
+                    const ytPlayer = (window as unknown as { ytPlayer?: { pauseVideo: () => void } }).ytPlayer;
+                    ytPlayer?.pauseVideo();
+                } else if (audioRef.current) {
+                    audioRef.current.pause();
+                }
+                setIsPlaying(false);
+            };
+
+            window.addEventListener('pause-music', handlePauseMusic);
+            return () => window.removeEventListener('pause-music', handlePauseMusic);
+        }, [isYouTube]);
+
         // Expose methods to parent
         useImperativeHandle(ref, () => ({
             play: () => {

@@ -101,6 +101,9 @@ export function VoiceRecorder({
         audioChunksRef.current = [];
 
         try {
+            // Pause background music before recording
+            window.dispatchEvent(new CustomEvent('pause-music'));
+
             // Request microphone access
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
@@ -176,9 +179,11 @@ export function VoiceRecorder({
         } catch (err) {
             console.error("Failed to start recording:", err);
             if (err instanceof DOMException && err.name === "NotAllowedError") {
-                setError("Microphone access denied. Please allow access and try again.");
+                setError("Quyền truy cập micro bị từ chối. Vui lòng cho phép và thử lại.");
+            } else if (err instanceof DOMException && err.name === "NotFoundError") {
+                setError("Không tìm thấy micro. Vui lòng kiểm tra thiết bị.");
             } else {
-                setError("Failed to start recording. Please check your microphone.");
+                setError("Không thể ghi âm. Vui lòng kiểm tra micro và thử lại.");
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -320,8 +325,14 @@ export function VoiceRecorder({
             {/* Review State - Audio Player + Actions */}
             {state === "review" && audioUrl && (
                 <div className="w-full flex flex-col items-center gap-4">
-                    {/* Audio Element (hidden) */}
-                    <audio ref={audioRef} src={audioUrl} preload="metadata" />
+                    {/* Audio Element - visible controls for debugging */}
+                    <audio
+                        ref={audioRef}
+                        src={audioUrl}
+                        preload="metadata"
+                        controls
+                        className="hidden"
+                    />
 
                     {/* Custom Player UI */}
                     <div className="w-full flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
