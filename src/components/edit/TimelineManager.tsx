@@ -397,7 +397,9 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                 </Label>
                                 {formData.video_url ? (
                                     <div className="space-y-2">
-                                        <VideoPlayer url={formData.video_url} className="rounded-lg" />
+                                        <div className="max-h-[200px] sm:max-h-[300px] overflow-hidden rounded-lg">
+                                            <VideoPlayer url={formData.video_url} className="rounded-lg" />
+                                        </div>
                                         <button
                                             onClick={() => setFormData((prev) => ({ ...prev, video_url: "" }))}
                                             className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
