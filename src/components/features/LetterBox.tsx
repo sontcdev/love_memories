@@ -127,7 +127,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
     const isLetterLocked = (letter: LetterWithReplies): boolean => {
         if (!letter.unlock_date) return false;
         // Compare dates only (ignore time) - unlock at start of the day
-        const today = new Date();
+        // Use currentTime state for realtime updates
+        const today = new Date(currentTime);
         today.setHours(0, 0, 0, 0);
         const unlockDate = new Date(letter.unlock_date);
         unlockDate.setHours(0, 0, 0, 0);
