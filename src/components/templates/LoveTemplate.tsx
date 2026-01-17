@@ -356,38 +356,27 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                                                     {event.title}
                                                 </h3>
-                                                {event.description && (
-                                                    <p className="text-gray-500 text-sm">{event.description}</p>
-                                                )}
-                                                {event.image_url && (
-                                                    <div className="mt-4 w-48 h-48 rounded-xl overflow-hidden bg-gray-100">
-                                                        <Image
-                                                            src={event.image_url}
-                                                            alt={event.title}
-                                                            width={192}
-                                                            height={192}
-                                                            className="w-full h-full object-contain"
-                                                        />
-                                                    </div>
-                                                )}
-                                                {event.video_url && (
-                                                    <div className="mt-4">
-                                                        <VideoPlayer url={event.video_url} className="rounded-xl" />
-                                                    </div>
-                                                )}
-                                                {event.audio_url && (
-                                                    <div className="mt-4 bg-rose-50 p-3 rounded-xl">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <Mic className="w-4 h-4 text-rose-500" />
-                                                            <span className="text-sm font-medium text-gray-700">Ghi âm</span>
+                                                {/* Event Content */}
+                                                <div className="space-y-4">
+                                                    {event.description && (
+                                                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                            {event.description}
+                                                        </p>
+                                                    )}
+
+                                                    {/* Image */}
+                                                    {event.image_url && (
+                                                        <div className="rounded-xl overflow-hidden shadow-md">
+                                                            <Image
+                                                                src={event.image_url}
+                                                                alt={event.title}
+                                                                width={800}
+                                                                height={600}
+                                                                className="w-full object-cover"
+                                                            />
                                                         </div>
-                                                        <audio
-                                                            src={event.audio_url}
-                                                            controls
-                                                            className="w-full h-10"
-                                                        />
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
