@@ -45,18 +45,22 @@ const MAX_PHOTOS = 20;
 interface GalleryManagerProps {
     slug: string;
     initialGallery: Gallery[];
+    isDark?: boolean;
 }
 
 // Full-screen loading overlay component
-function LoadingOverlay({ message }: { message: string }) {
+// Full-screen loading overlay component
+function LoadingOverlay({ message, isDark }: { message: string; isDark?: boolean }) {
     return (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100]">
-            <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
+            <div className={`rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 border transition-all ${
+                isDark ? "bg-slate-900 border-purple-500/20 text-white shadow-[0_0_30px_rgba(168,85,247,0.2)]" : "bg-white border-gray-100 text-gray-700"
+            }`}>
                 <div className="relative">
-                    <div className="w-12 h-12 border-4 border-pink-200 rounded-full animate-pulse" />
-                    <Loader2 className="w-12 h-12 text-pink-500 animate-spin absolute inset-0" />
+                    <div className={`w-12 h-12 border-4 rounded-full animate-pulse ${isDark ? "border-purple-900/50" : "border-pink-200"}`} />
+                    <Loader2 className={`w-12 h-12 animate-spin absolute inset-0 ${isDark ? "text-purple-500" : "text-pink-500"}`} />
                 </div>
-                <p className="text-gray-700 font-medium">{message}</p>
+                <p className={`font-medium ${isDark ? "text-purple-200" : "text-gray-700"}`}>{message}</p>
             </div>
         </div>
     );
@@ -111,18 +115,18 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
 
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors">
-                {/* Drag Handle */}
+                 {/* Drag Handle */}
                 <div
                     {...attributes}
                     {...listeners}
-                    className="absolute top-2 left-2 p-2 bg-white/90 rounded-full cursor-grab active:cursor-grabbing shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    className="absolute top-2 left-2 p-2 bg-white/90 rounded-full cursor-grab active:cursor-grabbing shadow-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity hover:bg-white"
                     title="Kéo để sắp xếp"
                 >
                     <GripVertical className="w-4 h-4 text-gray-600" />
                 </div>
 
                 {/* Actions */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 flex gap-1 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
                     <button
                         onClick={onEdit}
                         disabled={isLoading}
@@ -147,7 +151,7 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
 
                 {/* Caption */}
                 {image.caption && (
-                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
                         <p className="text-white text-sm truncate">{image.caption}</p>
                     </div>
                 )}
@@ -156,7 +160,7 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
     );
 }
 
-export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
+export function GalleryManager({ slug, initialGallery, isDark = false }: GalleryManagerProps) {
     const [gallery, setGallery] = useState<Gallery[]>(initialGallery);
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingImage, setEditingImage] = useState<Gallery | null>(null);
@@ -287,7 +291,7 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
     return (
         <div className="space-y-6">
             {/* Global Loading Overlay */}
-            {isLoading && <LoadingOverlay message={loadingMessage} />}
+            {isLoading && <LoadingOverlay message={loadingMessage} isDark={isDark} />}
 
             {/* Delete Confirm Dialog */}
             <ConfirmDialog
@@ -305,15 +309,19 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-800">Bộ sưu tập</h2>
-                    <p className="text-sm text-gray-500">
+                    <h2 className={`text-xl font-semibold ${isDark ? "text-purple-100" : "text-gray-800"}`}>Bộ sưu tập</h2>
+                    <p className={`text-sm ${isDark ? "text-purple-300/70" : "text-gray-500"}`}>
                         {gallery.length} / {MAX_PHOTOS} ảnh
                     </p>
                 </div>
                 <button
                     onClick={() => setIsAddingNew(true)}
                     disabled={isLoading || isLimitReached}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isDark 
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35 hover:shadow-purple-500/20" 
+                            : "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-pink-500/20 hover:shadow-pink-500/35"
+                    }`}
                 >
                     <Plus className="w-4 h-4" />
                     Thêm ảnh
@@ -322,7 +330,11 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
 
             {/* Limit Warning */}
             {isLimitReached && (
-                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm">
+                <div className={`flex items-center gap-2 p-3 border rounded-xl text-sm ${
+                    isDark 
+                        ? "bg-amber-950/40 border-amber-800/40 text-amber-300" 
+                        : "bg-amber-50 border-amber-200 text-amber-700"
+                }`}>
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     Đã đạt giới hạn {MAX_PHOTOS} ảnh. Xóa bớt ảnh để thêm mới.
                 </div>
@@ -330,17 +342,23 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
 
             {/* Add New Photos Modal */}
             {isAddingNew && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className={`rounded-2xl p-6 w-full max-w-md border transition-all ${
+                        isDark 
+                            ? "bg-slate-900 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.2)] text-white" 
+                            : "bg-white border-gray-100 shadow-2xl text-gray-800"
+                    }`}>
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h3 className="text-lg font-semibold">Thêm ảnh</h3>
-                                <p className="text-sm text-gray-500">Chọn tối đa {Math.min(5, remainingSlots)} ảnh</p>
+                                <h3 className={`text-lg font-semibold ${isDark ? "text-purple-100" : "text-gray-950"}`}>Thêm ảnh</h3>
+                                <p className={`text-sm ${isDark ? "text-purple-300/70" : "text-gray-500"}`}>Chọn tối đa {Math.min(5, remainingSlots)} ảnh</p>
                             </div>
                             <button
                                 onClick={() => setIsAddingNew(false)}
                                 disabled={isLoading}
-                                className="p-2 hover:bg-gray-100 rounded-full disabled:opacity-50"
+                                className={`p-2 rounded-full disabled:opacity-50 transition-colors ${
+                                    isDark ? "hover:bg-slate-800 text-purple-300 hover:text-white" : "hover:bg-gray-100 text-gray-500"
+                                }`}
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -357,12 +375,18 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
 
             {/* Gallery Grid */}
             {gallery.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 rounded-2xl">
-                    <ImageIcon className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500 mb-4">Chưa có ảnh nào</p>
+                <div className={`text-center py-16 rounded-2xl border transition-all ${
+                    isDark 
+                        ? "bg-slate-950/40 border-purple-950/40" 
+                        : "bg-gray-50 border-gray-100"
+                }`}>
+                    <ImageIcon className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-purple-900/60" : "text-gray-300"}`} />
+                    <p className={`mb-4 ${isDark ? "text-purple-300/60" : "text-gray-500"}`}>Chưa có ảnh nào</p>
                     <button
                         onClick={() => setIsAddingNew(true)}
-                        className="text-pink-500 hover:text-pink-600 font-medium"
+                        className={`font-medium transition-colors ${
+                            isDark ? "text-purple-400 hover:text-purple-300" : "text-pink-500 hover:text-pink-600"
+                        }`}
                     >
                         Tải ảnh đầu tiên lên
                     </button>
@@ -370,7 +394,7 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
             ) : (
                 <>
                     {/* Helper text */}
-                    <p className="text-xs text-gray-400 flex items-center gap-1">
+                    <p className={`text-xs flex items-center gap-1 ${isDark ? "text-purple-400/60" : "text-gray-400"}`}>
                         <GripVertical className="w-3 h-3" />
                         Kéo thả để sắp xếp lại ảnh
                     </p>
@@ -402,21 +426,27 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
 
             {/* Edit Caption Dialog */}
             {editingImage && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] flex flex-col">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className={`rounded-2xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] flex flex-col border transition-all ${
+                        isDark 
+                            ? "bg-slate-900 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.2)] text-white" 
+                            : "bg-white border-gray-100 shadow-2xl text-gray-800"
+                    }`}>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Sửa chú thích</h3>
+                            <h3 className={`text-lg font-semibold ${isDark ? "text-purple-100" : "text-gray-950"}`}>Sửa chú thích</h3>
                             <button
                                 onClick={closeEditDialog}
                                 disabled={savingCaption}
-                                className="p-2 hover:bg-gray-100 rounded-full disabled:opacity-50"
+                                className={`p-2 rounded-full disabled:opacity-50 transition-colors ${
+                                    isDark ? "hover:bg-slate-800 text-purple-300 hover:text-white" : "hover:bg-gray-100 text-gray-500"
+                                }`}
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {/* Image Preview */}
-                        <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 mb-4">
+                        <div className={`relative aspect-video rounded-xl overflow-hidden mb-4 border ${isDark ? "border-purple-950/40 bg-slate-950" : "bg-gray-100 border-gray-200"}`}>
                             <ShimmerImage
                                 src={editingImage.image_url}
                                 alt="Preview"
@@ -428,8 +458,8 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
                         {/* Caption Input */}
                         <div className="space-y-2 mb-4">
                             <div className="flex items-center justify-between">
-                                <label className="text-sm font-medium text-gray-700">Chú thích</label>
-                                <span className={`text-xs ${editCaption.length > 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                                <label className={`text-sm font-medium ${isDark ? "text-purple-200" : "text-gray-700"}`}>Chú thích</label>
+                                <span className={`text-xs ${editCaption.length > 50 ? 'text-red-500' : isDark ? 'text-purple-400/60' : 'text-gray-400'}`}>
                                     {editCaption.length}/50
                                 </span>
                             </div>
@@ -438,7 +468,11 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
                                 value={editCaption}
                                 onChange={(e) => setEditCaption(e.target.value.slice(0, 50))}
                                 placeholder="Nhập chú thích cho ảnh này..."
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                className={`w-full px-4 py-3 rounded-xl text-sm outline-none border transition-all ${
+                                    isDark 
+                                        ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
+                                        : "bg-white border-gray-200 text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                }`}
                                 autoFocus
                                 disabled={savingCaption}
                                 maxLength={50}
@@ -450,7 +484,11 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
                             <button
                                 onClick={saveCaption}
                                 disabled={savingCaption}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-medium disabled:opacity-50"
+                                className={`flex-1 flex items-center justify-center gap-2 py-3 text-white rounded-xl font-medium disabled:opacity-50 transition-all ${
+                                    isDark 
+                                        ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/30 hover:shadow-purple-500/20" 
+                                        : "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-pink-500/20 hover:shadow-pink-500/35"
+                                }`}
                             >
                                 {savingCaption ? (
                                     <>
@@ -467,7 +505,9 @@ export function GalleryManager({ slug, initialGallery }: GalleryManagerProps) {
                             <button
                                 onClick={closeEditDialog}
                                 disabled={savingCaption}
-                                className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium disabled:opacity-50"
+                                className={`px-6 py-3 rounded-xl font-medium disabled:opacity-50 transition-colors ${
+                                    isDark ? "bg-slate-800 text-purple-300 hover:bg-slate-700 hover:text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
                             >
                                 Hủy
                             </button>

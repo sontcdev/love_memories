@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 
@@ -90,12 +90,17 @@ export function GalleryGrid({ images, columns = 3 }: GalleryGridProps) {
         }
     }, [lightboxIndex, images.length]);
 
-    // Handle keyboard navigation
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        if (e.key === "Escape") closeLightbox();
-        if (e.key === "ArrowRight") goNext();
-        if (e.key === "ArrowLeft") goPrev();
-    }, [closeLightbox, goNext, goPrev]);
+    // Handle keyboard navigation globally when lightbox is open
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (lightboxIndex === null) return;
+            if (e.key === "Escape") closeLightbox();
+            if (e.key === "ArrowRight") goNext();
+            if (e.key === "ArrowLeft") goPrev();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [lightboxIndex, closeLightbox, goNext, goPrev]);
 
     if (images.length === 0) {
         return (
@@ -131,8 +136,6 @@ export function GalleryGrid({ images, columns = 3 }: GalleryGridProps) {
                 <div
                     className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
                     onClick={closeLightbox}
-                    onKeyDown={handleKeyDown}
-                    tabIndex={0}
                 >
                     {/* Close Button */}
                     <button

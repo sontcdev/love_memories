@@ -6,11 +6,12 @@ import { Sparkles, Heart, Flame, Star, RotateCcw, Loader2, RefreshCw } from "luc
 
 interface GameSectionProps {
     theme?: "love" | "every" | "idol";
+    isDark?: boolean;
 }
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
-export function GameSection({ theme = "love" }: GameSectionProps) {
+export function GameSection({ theme = "love", isDark = false }: GameSectionProps) {
     const [isDrawing, setIsDrawing] = useState(false);
     const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
     const [drawnCard, setDrawnCard] = useState<DrawnCard | null>(null);
@@ -104,14 +105,20 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
     };
 
     return (
-        <div className={`rounded-3xl p-6 md:p-8 ${colors.bg}`}>
+        <div className={`rounded-3xl p-6 md:p-8 transition-all ${
+            isDark 
+                ? "bg-slate-900/80 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)] text-white" 
+                : colors.bg
+        }`}>
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 mb-2">
                     <Sparkles className="w-6 h-6 text-amber-400" />
-                    <h2 className="text-2xl font-bold text-gray-800">Thử Thách Tình Yêu</h2>
+                    <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
+                        {theme === "idol" ? "Thử Thách Fandom" : "Thử Thách Tình Yêu"}
+                    </h2>
                     <Sparkles className="w-6 h-6 text-amber-400" />
                 </div>
-                <p className="text-gray-500 text-sm">Chọn độ khó và khám phá thử thách của bạn!</p>
+                <p className={`${isDark ? "text-purple-200/70" : "text-gray-500"} text-sm`}>Chọn độ khó và khám phá thử thách của bạn!</p>
             </div>
 
             {/* Difficulty Buttons */}
@@ -140,7 +147,7 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
                 <div className="flex flex-col items-center">
                     {/* Card Container */}
                     <div
-                        className="relative w-72 h-96 perspective-1000 mb-6"
+                        className="relative w-full max-w-[280px] sm:w-72 h-96 perspective-1000 mb-6"
                         style={{ perspective: "1000px" }}
                     >
                         <div
@@ -168,7 +175,9 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
 
                             {/* Card Front (Content) */}
                             <div
-                                className="absolute inset-0 rounded-3xl bg-white shadow-2xl p-6 flex flex-col items-center justify-center backface-hidden"
+                                className={`absolute inset-0 rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-center backface-hidden ${
+                                    isDark ? "bg-slate-950 border border-purple-500/30 text-white" : "bg-white text-gray-800"
+                                }`}
                                 style={{
                                     backfaceVisibility: "hidden",
                                     transform: "rotateY(180deg)",
@@ -189,7 +198,9 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
 
                                         {/* Card Content */}
                                         <div className="flex-1 flex items-center justify-center">
-                                            <p className="text-xl md:text-2xl text-center text-gray-800 font-medium leading-relaxed">
+                                            <p className={`text-xl md:text-2xl text-center font-medium leading-relaxed ${
+                                                isDark ? "text-white" : "text-gray-800"
+                                            }`}>
                                                 {drawnCard.content}
                                             </p>
                                         </div>
@@ -221,12 +232,16 @@ export function GameSection({ theme = "love" }: GameSectionProps) {
                             )}
                         </button>
                         <button
-                            onClick={resetGame}
-                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition-colors"
-                        >
-                            <RotateCcw className="w-4 h-4" />
-                            Đổi độ khó
-                        </button>
+                                onClick={resetGame}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-colors ${
+                                    isDark 
+                                        ? "bg-slate-800 hover:bg-slate-700 text-purple-200" 
+                                        : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                                }`}
+                            >
+                                <RotateCcw className="w-4 h-4" />
+                                Đổi độ khó
+                            </button>
                     </div>
                 </div>
             )}

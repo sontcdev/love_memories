@@ -405,22 +405,42 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                 <div className={`text-center py-16 ${colors.bg} rounded-2xl`}>
                     <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                     <p className="text-gray-400">Chưa có thư nào...</p>
-                    <p className="text-gray-400 text-sm">Hãy viết bức thư tình đầu tiên!</p>
+                    <p className="text-gray-400 text-sm">Hãy gửi những lời chúc đầu tiên!</p>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {sortedLetters.map((letter) => (
-                        <div
-                            key={letter.id}
-                            className={`bg-white rounded-2xl shadow-md border ${colors.border} overflow-hidden transition-all`}
-                        >
-                            {/* Letter Header */}
+                <div className={theme === "idol" ? "grid grid-cols-1 sm:grid-cols-2 gap-6 items-start" : "space-y-4"}>
+                    {sortedLetters.map((letter, index) => {
+                        const idolStickyColors = [
+                            { bg: "bg-[#fff9db]", border: "border-[#ffe066]", text: "text-[#f59f00]", pin: "bg-[#f59f00]" }, // Yellow
+                            { bg: "bg-[#fff0f6]", border: "border-[#ffdeeb]", text: "text-[#e64980]", pin: "bg-[#e64980]" }, // Pink
+                            { bg: "bg-[#f3f0ff]", border: "border-[#e5dbff]", text: "text-[#7048e8]", pin: "bg-[#7048e8]" }, // Purple
+                            { bg: "bg-[#e7f5ff]", border: "border-[#d0ebff]", text: "text-[#1c7ed6]", pin: "bg-[#1c7ed6]" }, // Blue
+                            { bg: "bg-[#e6fcf5]", border: "border-[#c3fae8]", text: "text-[#0ca678]", pin: "bg-[#0ca678]" }, // Teal
+                        ];
+                        const stickyColor = theme === "idol" 
+                            ? idolStickyColors[index % idolStickyColors.length]
+                            : { bg: "bg-white", border: colors.border, text: colors.text, pin: "" };
+                        
+                        const rotationDeg = theme === "idol" ? (index % 4) - 2 : 0;
+                        
+                        return (
                             <div
-                                className={`p-4 cursor-pointer ${colors.bg} hover:bg-opacity-80 transition-colors`}
-                                onClick={() =>
-                                    setExpandedId(expandedId === letter.id ? null : letter.id)
-                                }
+                                key={letter.id}
+                                className={`rounded-2xl shadow-md border ${stickyColor.border} ${stickyColor.bg} overflow-hidden transition-all relative`}
+                                style={theme === "idol" ? { transform: `rotate(${rotationDeg}deg)` } : {}}
                             >
+                                {/* Push Pin */}
+                                {theme === "idol" && (
+                                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full shadow-md bg-gradient-to-br from-red-400 to-red-600 z-10" />
+                                )}
+                                
+                                {/* Letter Header */}
+                                <div
+                                    className={`p-4 cursor-pointer ${theme === "idol" ? "bg-transparent" : colors.bg} hover:bg-black/5 transition-colors`}
+                                    onClick={() =>
+                                        setExpandedId(expandedId === letter.id ? null : letter.id)
+                                    }
+                                >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
@@ -599,7 +619,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                 </div>
                             )}
                         </div>
-                    ))}
+                    );
+                })}
                 </div>
             )}
 

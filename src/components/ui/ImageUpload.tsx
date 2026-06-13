@@ -27,6 +27,7 @@ async function compressImage(
         const img = document.createElement("img");
 
         img.onload = () => {
+            URL.revokeObjectURL(img.src);
             // Calculate new dimensions
             let { width, height } = img;
             if (width > maxWidth) {
@@ -83,7 +84,10 @@ async function compressImage(
             findOptimalQuality();
         };
 
-        img.onerror = () => reject(new Error("Failed to load image"));
+        img.onerror = () => {
+            URL.revokeObjectURL(img.src);
+            reject(new Error("Failed to load image"));
+        };
         img.src = URL.createObjectURL(file);
     });
 }

@@ -33,10 +33,11 @@ interface EditProfileFormProps {
     slug: string;
     linkType: LinkType;
     initialData: Record<string, unknown> | null;
+    isDark?: boolean;
     onSuccess?: () => void;
 }
 
-export function EditProfileForm({ slug, linkType, initialData, onSuccess }: EditProfileFormProps) {
+export function EditProfileForm({ slug, linkType, initialData, isDark = false, onSuccess }: EditProfileFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -65,6 +66,7 @@ export function EditProfileForm({ slug, linkType, initialData, onSuccess }: Edit
                 message={message}
                 setMessage={setMessage}
                 onSuccess={onSuccess}
+                isDark={isDark}
             />
         );
     }

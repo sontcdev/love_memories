@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { Heart } from "lucide-react";
 
 interface DayCounterProps {
@@ -139,7 +139,7 @@ interface TimeUnitProps {
     colors: { primary: string; secondary: string };
 }
 
-function TimeUnit({ value, label, colors }: TimeUnitProps) {
+const TimeUnit = memo(function TimeUnit({ value, label, colors }: TimeUnitProps) {
     return (
         <div className="flex flex-col items-center">
             <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${colors.primary} flex items-center justify-center shadow-lg`}>
@@ -152,4 +152,4 @@ function TimeUnit({ value, label, colors }: TimeUnitProps) {
             </span>
         </div>
     );
-}
+});

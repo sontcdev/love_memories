@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { LockScreen } from "@/components/auth/LockScreen";
+import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
 import { MusicPlayer, MusicPlayerRef, WelcomeOverlay } from "@/components/music";
 import { LoveTemplate } from "@/components/templates/LoveTemplate";
@@ -44,6 +45,13 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
 
     // Show lock screen if not authenticated
     if (!authenticated) {
+        if (linkData?.type === "IDOL") {
+            return (
+                <ThemeWrapper config={linkData?.config || null}>
+                    <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
+                </ThemeWrapper>
+            );
+        }
         return (
             <ThemeWrapper config={linkData?.config || null}>
                 <LockScreen slug={slug} onSuccess={handleUnlock} />

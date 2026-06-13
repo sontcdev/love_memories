@@ -17,21 +17,18 @@ export async function drawCard(
         // Parse excludeId as comma-separated list
         const excludeIds = excludeId ? excludeId.split(",").filter(id => id.trim()) : [];
 
-        // Get all active cards for this level (cards are global, not per-link)
-        const cards = await prisma.gameCard.findMany({
-            where: {
-                level: level,
-                is_active: true,
-                ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
-            },
-            select: {
-                id: true,
-                content: true,
-                level: true,
-            },
+        const whereCondition = {
+            level: level,
+            is_active: true,
+            ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+        };
+
+        // Get total count of cards matching criteria
+        const totalCount = await prisma.gameCard.count({
+            where: whereCondition,
         });
 
-        if (cards.length === 0) {
+        if (totalCount === 0) {
             // Check if ALL cards have been shown (no cards left after exclusion)
             if (excludeIds.length > 0) {
                 return {
@@ -45,9 +42,23 @@ export async function drawCard(
             };
         }
 
-        // Pick random card
-        const randomIndex = Math.floor(Math.random() * cards.length);
-        return { success: true, card: cards[randomIndex] };
+        // Pick random card using skip
+        const randomSkip = Math.floor(Math.random() * totalCount);
+        const randomCard = await prisma.gameCard.findFirst({
+            where: whereCondition,
+            skip: randomSkip,
+            select: {
+                id: true,
+                content: true,
+                level: true,
+            },
+        });
+
+        if (!randomCard) {
+            return { success: false, error: "Failed to draw card" };
+        }
+
+        return { success: true, card: randomCard };
     } catch (error) {
         console.error("Draw card error:", error);
         return { success: false, error: "Failed to draw card" };

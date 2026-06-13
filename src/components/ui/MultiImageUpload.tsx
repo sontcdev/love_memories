@@ -1,6 +1,6 @@
 "use client";
-
-import { useState, useRef, useCallback } from "react";
+ 
+import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { supabase, STORAGE_BUCKET, generateFilePath, getPublicUrl } from "@/lib/supabase";
 import { Upload, X, Loader2, ImageIcon, Check, AlertCircle } from "lucide-react";
@@ -33,6 +33,7 @@ async function compressImage(
         const img = document.createElement("img");
 
         img.onload = () => {
+            URL.revokeObjectURL(img.src);
             let { width, height } = img;
             if (width > maxWidth) {
                 height = Math.round((height * maxWidth) / width);
@@ -67,7 +68,10 @@ async function compressImage(
             tryCompress();
         };
 
-        img.onerror = () => reject(new Error("Failed to load image"));
+        img.onerror = () => {
+            URL.revokeObjectURL(img.src);
+            reject(new Error("Failed to load image"));
+        };
         img.src = URL.createObjectURL(file);
     });
 }
@@ -83,8 +87,21 @@ export function MultiImageUpload({
     const [isProcessing, setIsProcessing] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const previewsRef = useRef<string[]>([]);
 
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    // Revoke all preview URLs on unmount
+    useEffect(() => {
+        const currentPreviews = previewsRef.current;
+        return () => {
+            currentPreviews.forEach((url) => {
+                if (url.startsWith("blob:")) {
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, []);
 
     const handleFiles = useCallback(async (selectedFiles: FileList | File[]) => {
         const fileArray = Array.from(selectedFiles).slice(0, maxFiles);
@@ -95,9 +112,12 @@ export function MultiImageUpload({
             if (!file.type.startsWith("image/")) continue;
             if (file.size > maxSizeBytes) continue;
 
+            const previewUrl = URL.createObjectURL(file);
+            previewsRef.current.push(previewUrl);
+
             validFiles.push({
                 file,
-                preview: URL.createObjectURL(file),
+                preview: previewUrl,
                 status: "pending",
             });
         }
@@ -184,6 +204,10 @@ export function MultiImageUpload({
     };
 
     const removeFile = (index: number) => {
+        const fileToRemove = files[index];
+        if (fileToRemove && fileToRemove.preview.startsWith("blob:")) {
+            URL.revokeObjectURL(fileToRemove.preview);
+        }
         setFiles(prev => prev.filter((_, i) => i !== index));
     };
 

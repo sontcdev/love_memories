@@ -120,7 +120,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                     <div className="flex items-start justify-center gap-2 sm:gap-6 mb-8">
                         {/* His Profile */}
                         <div className="flex flex-col items-center flex-1 min-w-0 max-w-[120px] sm:max-w-[140px]">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg mb-2 flex-shrink-0">
+                            <div className="w-16 h-16 min-[380px]:w-20 min-[380px]:h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg mb-2 flex-shrink-0">
                                 {boyAvatar ? (
                                     <Image
                                         src={boyAvatar}
@@ -139,13 +139,13 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                         </div>
 
                         {/* Heart - aligned with avatar center */}
-                        <div className="h-20 sm:h-24 flex items-center flex-shrink-0">
+                        <div className="h-16 min-[380px]:h-20 sm:h-24 flex items-center flex-shrink-0">
                             <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-rose-400 fill-rose-400 animate-pulse" />
                         </div>
 
                         {/* Her Profile */}
                         <div className="flex flex-col items-center flex-1 min-w-0 max-w-[120px] sm:max-w-[140px]">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg mb-2 flex-shrink-0">
+                            <div className="w-16 h-16 min-[380px]:w-20 min-[380px]:h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg mb-2 flex-shrink-0">
                                 {girlAvatar ? (
                                     <Image
                                         src={girlAvatar}

@@ -33,6 +33,7 @@ interface EditIdolProfileFormProps {
     message: { type: "success" | "error"; text: string } | null;
     setMessage: (m: { type: "success" | "error"; text: string } | null) => void;
     onSuccess?: () => void;
+    isDark?: boolean;
 }
 
 export function EditIdolProfileForm({
@@ -43,6 +44,7 @@ export function EditIdolProfileForm({
     message,
     setMessage,
     onSuccess,
+    isDark = false,
 }: EditIdolProfileFormProps) {
     const [idolAvatar, setIdolAvatar] = useState<string>(initialData?.idol_avatar || "");
     const [fanAvatar, setFanAvatar] = useState<string>(initialData?.fan_avatar || "");
@@ -197,18 +199,18 @@ export function EditIdolProfileForm({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
                 <Star className="w-5 h-5 text-purple-500 fill-purple-500" />
-                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ Idol</h3>
+                <h3 className={`text-lg font-semibold ${isDark ? "text-purple-100" : "text-gray-800"}`}>Hồ sơ Idol</h3>
             </div>
 
             {/* Avatars Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Idol Avatar */}
                 <div className="flex flex-col items-center">
-                    <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+                    <label className={`block text-sm font-medium mb-3 text-center ${isDark ? "text-purple-200" : "text-gray-700"}`}>
                         Ảnh Idol
                     </label>
                     <div className="relative group">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 p-1 shadow-lg">
+                        <div className={`w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 p-1 shadow-lg ${isDark ? "shadow-purple-900/30" : ""}`}>
                             {idolAvatar ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
@@ -217,7 +219,9 @@ export function EditIdolProfileForm({
                                     className="w-full h-full rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold text-purple-400">
+                                <div className={`w-full h-full rounded-full flex items-center justify-center text-2xl font-bold ${
+                                    isDark ? "bg-slate-950 text-purple-400" : "bg-white text-purple-400"
+                                }`}>
                                     {initialData?.idol_name?.charAt(0) || "I"}
                                 </div>
                             )}
@@ -244,11 +248,11 @@ export function EditIdolProfileForm({
 
                 {/* Fan Avatar */}
                 <div className="flex flex-col items-center">
-                    <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+                    <label className={`block text-sm font-medium mb-3 text-center ${isDark ? "text-purple-200" : "text-gray-700"}`}>
                         Ảnh Fandom
                     </label>
                     <div className="relative group">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 p-1 shadow-lg">
+                        <div className={`w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 p-1 shadow-lg ${isDark ? "shadow-purple-900/30" : ""}`}>
                             {fanAvatar ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
@@ -257,7 +261,9 @@ export function EditIdolProfileForm({
                                     className="w-full h-full rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold text-cyan-400">
+                                <div className={`w-full h-full rounded-full flex items-center justify-center text-2xl font-bold ${
+                                    isDark ? "bg-slate-950 text-cyan-400" : "bg-white text-cyan-400"
+                                }`}>
                                     {initialData?.fan_name?.charAt(0) || "F"}
                                 </div>
                             )}
@@ -286,12 +292,16 @@ export function EditIdolProfileForm({
             {/* Names Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={`block text-sm font-medium mb-1 ${isDark ? "text-purple-200/90" : "text-gray-700"}`}>
                         Tên Idol <span className="text-red-500">*</span>
                     </label>
                     <input
                         {...register("idol_name")}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all"
+                        className={`w-full px-4 py-2 rounded-lg border outline-none transition-all ${
+                            isDark 
+                                ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
+                                : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
+                        }`}
                         placeholder="Tên Idol"
                     />
                     {errors.idol_name && (
@@ -299,12 +309,16 @@ export function EditIdolProfileForm({
                     )}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={`block text-sm font-medium mb-1 ${isDark ? "text-purple-200/90" : "text-gray-700"}`}>
                         Tên Fandom <span className="text-red-500">*</span>
                     </label>
                     <input
                         {...register("fan_name")}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all"
+                        className={`w-full px-4 py-2 rounded-lg border outline-none transition-all ${
+                            isDark 
+                                ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
+                                : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
+                        }`}
                         placeholder="Tên Fandom"
                     />
                     {errors.fan_name && (
@@ -315,37 +329,50 @@ export function EditIdolProfileForm({
 
             {/* Debut Date */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-purple-200/90" : "text-gray-700"}`}>
                     Ngày Debut
                 </label>
                 <input
                     {...register("debut_date")}
                     type="date"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all bg-white appearance-none"
+                    style={{ colorScheme: isDark ? "dark" : "light" }}
+                    className={`w-full px-4 py-2 rounded-lg border outline-none transition-all appearance-none ${
+                        isDark 
+                            ? "bg-slate-950/60 border-purple-500/30 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
+                            : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
+                    }`}
                 />
             </div>
 
             {/* Title */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-purple-200/90" : "text-gray-700"}`}>
                     Tiêu đề trang
                 </label>
                 <input
                     {...register("title")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all"
+                    className={`w-full px-4 py-2 rounded-lg border outline-none transition-all ${
+                        isDark 
+                            ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
+                            : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
+                    }`}
                     placeholder="Fan Page Chính Thức"
                 />
             </div>
 
             {/* Slogan */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-purple-200/90" : "text-gray-700"}`}>
                     Slogan / Khẩu hiệu
                 </label>
                 <textarea
                     {...register("slogan")}
                     rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all resize-none"
+                    className={`w-full px-4 py-2 rounded-lg border outline-none transition-all resize-none ${
+                        isDark 
+                            ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
+                            : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
+                    }`}
                     placeholder="Hãy viết slogan hoặc khẩu hiệu yêu thích của bạn..."
                 />
                 {errors.slogan && (
@@ -356,10 +383,15 @@ export function EditIdolProfileForm({
             {/* Message */}
             {message && (
                 <div
-                    className={`p-3 rounded-lg text-sm ${message.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
+                    className={`p-3 rounded-lg text-sm border ${
+                        message.type === "success"
+                            ? isDark
+                                ? "bg-green-950/40 text-green-300 border-green-800/40"
+                                : "bg-green-50 text-green-700 border-green-200"
+                            : isDark
+                                ? "bg-red-950/40 text-red-300 border-red-800/40"
+                                : "bg-red-50 text-red-700 border-red-200"
+                    }`}
                 >
                     {message.text}
                 </div>
@@ -369,8 +401,12 @@ export function EditIdolProfileForm({
             <button
                 type="submit"
                 disabled={isSubmitting || uploadingIdol || uploadingFan}
-                className="w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110"
-                style={{ backgroundColor: 'var(--theme-accent, #a855f7)' }}
+                className={`w-full py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:brightness-110 ${
+                    isDark 
+                        ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35" 
+                        : "hover:shadow-pink-500/20"
+                }`}
+                style={isDark ? {} : { backgroundColor: 'var(--theme-accent, #a855f7)' }}
             >
                 {isSubmitting ? (
                     <>

@@ -1,0 +1,150 @@
+# AGENTS.md
+
+## Project Overview
+
+Next.js 14 (App Router) + TypeScript + Prisma + Supabase application for personalized anniversary/love memory websites. Users get unique slugs (`/[slug]`) with galleries, timelines, letters, and games. PWA-enabled with offline support.
+
+## Tech Stack
+
+**Core:**
+- Next.js 14.2.35 (App Router)
+- TypeScript 5
+- React 18
+
+**Database & Backend:**
+- Prisma 6.19.1 (ORM)
+- PostgreSQL via Supabase
+- Supabase JS 2.89.0 (storage, auth)
+
+**Styling & UI:**
+- Tailwind CSS 3.4.1
+- Radix UI (dialog, label, select, slot)
+- Lucide React (icons)
+- class-variance-authority + clsx + tailwind-merge (utility)
+
+**Forms & Validation:**
+- React Hook Form 7.69.0
+- Zod 4.2.1
+- @hookform/resolvers 5.2.2
+
+**Features:**
+- @dnd-kit (drag & drop for gallery sorting)
+- react-swipeable (mobile gestures)
+- html-to-image (QR code generation)
+- react-qr-code (QR display)
+- bcryptjs (password hashing)
+- next-pwa 5.6.0 (PWA support)
+
+**Dev Tools:**
+- ESLint (next/core-web-vitals, next/typescript)
+- PostCSS
+- tsx (for running scripts)
+
+## Recommended Skills
+
+Agent skills available for this stack:
+
+**Next.js/React/TypeScript:**
+- `sickn33/antigravity-awesome-skills@react-nextjs-development` (776 installs)
+- `davila7/claude-code-templates@react-dev` (494 installs)
+- `duyet/claude-plugins@react-nextjs-patterns` (298 installs)
+
+**Forms & Validation:**
+- `ovachiever/droid-tings@react-hook-form-zod` (572 installs)
+- `erichowens/some_claude_skills@form-validation-architect` (121 installs)
+
+**Database & Prisma:**
+- `mindrally/skills@prisma-development` (427 installs)
+
+**Tailwind CSS:**
+- `heygen-com/hyperframes@tailwind` (70K installs)
+
+Install with: `npx skills add <owner/repo@skill> -g -y`
+
+## Build & Development
+
+```bash
+npm run dev                    # Start dev server (localhost:3000)
+npm run build                  # Build (runs prisma generate first)
+npm start                      # Production server
+npm run lint                   # ESLint via Next.js
+```
+
+**Critical:** `npm run build` automatically runs `prisma generate` first (see `package.json:7`). The `postinstall` hook also runs `prisma generate`.
+
+## Database & Prisma
+
+```bash
+npm run db:push                # Push schema changes to database
+npm run db:studio              # Open Prisma Studio GUI
+npm run db:seed                # Seed database with sample data
+npx tsx scripts/reset-admin.ts # Reset admin account (admin/admin123)
+npx tsx scripts/activate-links.ts # Activate all user links
+```
+
+**Environment:** Requires `DATABASE_URL` and `DIRECT_URL` (Supabase connection pooling).
+
+**Schema:** PostgreSQL via Supabase. Key models: `User`, `Link`, `Gallery`, `Timeline`, `Letter`, `GameCard`, `Admin`. See `prisma/schema.prisma:1-218`.
+
+## Architecture
+
+- **Path alias:** `@/*` maps to `./src/*` (tsconfig.json:24-27)
+- **App structure:** Next.js App Router with dynamic `[slug]` routes
+- **Server actions:** `src/app/actions/*` (8 files: admin, auth, gallery, game, letter, profile, timeline)
+- **Middleware:** Session-based auth protection at `src/middleware.ts`
+  - Admin routes: `/admin/*` requires `admin_session` cookie
+  - User edit routes: `/[slug]/edit`, `/[slug]/letters`, `/[slug]/timeline` require `session_{slug}` cookie
+- **Database client:** Singleton Prisma client at `src/lib/prisma.ts`
+- **Storage:** Supabase client at `src/lib/supabase.ts` for file uploads
+
+## Key Constraints
+
+**Media limits** (enforced in components, validated server-side):
+- Gallery: max 20 photos, 5 uploads/batch, target 50KB after compression
+- Timeline: max 10 events
+- Voice recordings: max 300 seconds (5 minutes)
+- Image uploads: compress to 50KB target, max 1920px width, binary search for optimal quality
+
+**Text limits:**
+- Names: 50 chars
+- Letter title: 50 chars, content: 1000 chars
+- Timeline title: 50 chars, description: 300 chars
+- Gallery caption: 50 chars
+
+## Next.js Configuration
+
+**PWA:** Enabled in production via `next-pwa` (next.config.mjs:26-85). Disabled in development. Service worker writes to `public/`.
+
+**Image remotePatterns:** Allows `*.supabase.co` and `*.supabase.in` storage URLs (next.config.mjs:6-17).
+
+**Server Actions:** Body size limit raised to 10MB (next.config.mjs:20-23).
+
+## Common Gotchas
+
+1. **Build errors on Windows:** Prisma generate may fail with `EPERM` errors. Run with elevated permissions or in WSL.
+
+2. **Scripts are excluded from TypeScript:** `tsconfig.json` excludes `scripts/` directory. Use `npx tsx` to run scripts directly.
+
+3. **User PIN is 6 digits:** `User.password_hash` is varchar(6) in schema but actually stores bcrypt hash (schema comment is misleading at prisma/schema.prisma:51).
+
+4. **Session cookies are slug-specific:** Each link has its own session cookie `session_{slug}`, not a global user session.
+
+5. **PWA files regenerate on build:** Don't manually edit `public/sw.js` or `public/workbox-*.js` - they're generated by next-pwa.
+
+6. **Image compression is client-side:** Binary search algorithm in ImageUpload component, not server-side. Uploads may timeout on slow connections.
+
+## Testing & Verification
+
+No test framework configured. Manual testing workflow:
+1. Check TypeScript: build includes typecheck
+2. Run dev server and test routes
+3. Verify middleware protection (try accessing `/[slug]/edit` without auth)
+4. Test image uploads and compression
+
+## Useful File Locations
+
+- Main template: `src/components/templates/LoveTemplate.tsx` (referenced in LOVE_TEMPLATE_REPORT.md)
+- Auth middleware: `src/middleware.ts:60-110`
+- Server actions: `src/app/actions/*.ts`
+- Database schema: `prisma/schema.prisma`
+- Full feature spec: `LOVE_TEMPLATE_REPORT.md` (in Vietnamese)
