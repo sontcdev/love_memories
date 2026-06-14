@@ -78,6 +78,7 @@ export async function generateMetadata({ params }: PageProps) {
 
     switch (linkType) {
         case "LOVE":
+        case "LOVE2":
             const boyName = profileData?.boy_name || "Anh";
             const girlName = profileData?.girl_name || "Em";
             title = profileData?.title || `Kỷ niệm của ${boyName} & ${girlName}`;
@@ -87,6 +88,21 @@ export async function generateMetadata({ params }: PageProps) {
             const idolName = profileData?.idol_name || "Idol";
             title = profileData?.title || `Fan Page - ${idolName}`;
             description = `Trang dành cho fan của ${idolName}.`;
+            break;
+        case "GRAD_PERSONAL":
+            const studentName = profileData?.student_name || "Học sinh";
+            title = profileData?.title || `Kỷ niệm tốt nghiệp - ${studentName}`;
+            description = `Trang kỷ niệm tốt nghiệp cá nhân của ${studentName}. ${profileData?.slogan || ""}`;
+            break;
+        case "GRAD_CLASS":
+            const className = profileData?.class_name || "Tập thể lớp";
+            title = profileData?.title || `Kỷ yếu số lớp ${className}`;
+            description = `Trang kỷ yếu số và lưu bút của tập thể lớp ${className}. ${profileData?.slogan || ""}`;
+            break;
+        case "GRAD_GROUP":
+            const groupName = profileData?.group_name || "Nhóm bạn";
+            title = profileData?.title || `Kỷ niệm nhóm - ${groupName}`;
+            description = `Trang kỷ niệm của nhóm bạn ${groupName}. ${profileData?.slogan || ""}`;
             break;
         // case "EVERY":
         //     const groupName = profileData?.group_name || "Nhóm";

@@ -17,8 +17,12 @@ datasource db {
 
 enum LinkType {
   LOVE
+  LOVE2
   EVERY
   IDOL
+  GRAD_PERSONAL
+  GRAD_CLASS
+  GRAD_GROUP
 }
 
 enum GameLevel {

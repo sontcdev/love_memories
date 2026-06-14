@@ -8,7 +8,7 @@ interface WelcomeOverlayProps {
     subtitle?: string;
     buttonText?: string;
     onOpen: () => void;
-    theme?: "love" | "every" | "idol";
+    theme?: "love" | "every" | "idol" | "grad_personal" | "grad_class";
 }
 
 const SESSION_KEY = "welcome_shown";
@@ -65,6 +65,18 @@ export function WelcomeOverlay({
             bgGradient: "from-yellow-100 via-amber-100 to-orange-100",
             buttonGradient: "from-amber-400 to-orange-500",
             particles: "from-yellow-300 to-amber-400",
+        },
+        grad_personal: {
+            gradient: "from-emerald-400 via-teal-500 to-cyan-500",
+            bgGradient: "from-emerald-50 via-teal-50 to-cyan-100",
+            buttonGradient: "from-emerald-400 to-teal-500",
+            particles: "from-emerald-300 to-teal-400",
+        },
+        grad_class: {
+            gradient: "from-cyan-400 via-blue-500 to-indigo-500",
+            bgGradient: "from-cyan-50 via-blue-50 to-indigo-100",
+            buttonGradient: "from-cyan-400 to-blue-500",
+            particles: "from-cyan-300 to-blue-400",
         },
     };
 

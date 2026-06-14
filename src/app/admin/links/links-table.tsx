@@ -51,6 +51,7 @@ import {
     QrCode,
     KeyRound,
     Shuffle,
+    GraduationCap,
 } from "lucide-react";
 
 type LinkWithUser = Link & {
@@ -90,10 +91,18 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
         switch (type) {
             case "LOVE":
                 return <Heart className="w-4 h-4 text-pink-400" />;
+            case "LOVE2":
+                return <Heart className="w-4 h-4 text-rose-400" />;
             case "IDOL":
                 return <Star className="w-4 h-4 text-yellow-400" />;
             case "EVERY":
                 return <Users className="w-4 h-4 text-blue-400" />;
+            case "GRAD_PERSONAL":
+                return <GraduationCap className="w-4 h-4 text-emerald-400" />;
+            case "GRAD_CLASS":
+                return <Users className="w-4 h-4 text-cyan-400" />;
+            case "GRAD_GROUP":
+                return <Users className="w-4 h-4 text-orange-400" />;
         }
     };
 
@@ -101,10 +110,18 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
         switch (type) {
             case "LOVE":
                 return "bg-pink-500/10 text-pink-400 border-pink-500/30";
+            case "LOVE2":
+                return "bg-rose-500/10 text-rose-400 border-rose-500/30";
             case "IDOL":
                 return "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
             case "EVERY":
                 return "bg-blue-500/10 text-blue-400 border-blue-500/30";
+            case "GRAD_PERSONAL":
+                return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+            case "GRAD_CLASS":
+                return "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
+            case "GRAD_GROUP":
+                return "bg-orange-500/10 text-orange-400 border-orange-500/30";
         }
     };
 
@@ -382,7 +399,13 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                     <SelectItem value="LOVE" className="text-white focus:bg-slate-700 focus:text-white">
                                                         <div className="flex items-center gap-2">
                                                             <Heart className="w-4 h-4 text-pink-400" />
-                                                            Tình yêu
+                                                            Tình yêu (Cũ)
+                                                        </div>
+                                                    </SelectItem>
+                                                    <SelectItem value="LOVE2" className="text-white focus:bg-slate-700 focus:text-white">
+                                                        <div className="flex items-center gap-2">
+                                                            <Heart className="w-4 h-4 text-rose-400" />
+                                                            Tình yêu 2 (Lưu bút)
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="IDOL" className="text-white focus:bg-slate-700 focus:text-white">
@@ -391,12 +414,24 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                             Idol
                                                         </div>
                                                     </SelectItem>
-                                                    {/* <SelectItem value="EVERY" className="text-white focus:bg-slate-700 focus:text-white">
+                                                    <SelectItem value="GRAD_PERSONAL" className="text-white focus:bg-slate-700 focus:text-white">
                                                         <div className="flex items-center gap-2">
-                                                            <Users className="w-4 h-4 text-blue-400" />
-                                                            Nhóm
+                                                            <GraduationCap className="w-4 h-4 text-emerald-400" />
+                                                            Tốt nghiệp cá nhân
                                                         </div>
-                                                    </SelectItem> */}
+                                                    </SelectItem>
+                                                    <SelectItem value="GRAD_CLASS" className="text-white focus:bg-slate-700 focus:text-white">
+                                                        <div className="flex items-center gap-2">
+                                                            <Users className="w-4 h-4 text-cyan-400" />
+                                                            Tốt nghiệp tập thể
+                                                        </div>
+                                                    </SelectItem>
+                                                    <SelectItem value="GRAD_GROUP" className="text-white focus:bg-slate-700 focus:text-white">
+                                                        <div className="flex items-center gap-2">
+                                                            <Users className="w-4 h-4 text-orange-400" />
+                                                            Tốt nghiệp nhóm bạn
+                                                        </div>
+                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

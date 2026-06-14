@@ -5,8 +5,12 @@ import { LockScreen } from "@/components/auth/LockScreen";
 import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
 import { MusicPlayer, MusicPlayerRef, WelcomeOverlay } from "@/components/music";
-import { LoveTemplate } from "@/components/templates/LoveTemplate";
-import { IdolTemplate } from "@/components/templates/IdolTemplate";
+import { LoveTemplate } from "@/components/templates/love/LoveTemplate";
+import { Love2Template } from "@/components/templates/love2/Love2Template";
+import { IdolTemplate } from "@/components/templates/idol/IdolTemplate";
+import { GradPersonalTemplate } from "@/components/templates/grad-personal/GradPersonalTemplate";
+import { GradClassTemplate } from "@/components/templates/grad-class/GradClassTemplate";
+import { GradGroupTemplate } from "@/components/templates/grad-group/GradGroupTemplate";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -54,7 +58,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
         }
         return (
             <ThemeWrapper config={linkData?.config || null}>
-                <LockScreen slug={slug} onSuccess={handleUnlock} />
+                <LockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
             </ThemeWrapper>
         );
     }
@@ -76,6 +80,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
     const getWelcomeTitle = () => {
         switch (linkData.type) {
             case "LOVE":
+            case "LOVE2":
                 const boyName = profileData?.boy_name || "Him";
                 const girlName = profileData?.girl_name || "Her";
                 return `${boyName} & ${girlName}`;
@@ -83,17 +88,27 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
                 return profileData?.group_name || "Our Memories";
             case "IDOL":
                 return `For ${profileData?.idol_name || "My Idol"}`;
+            case "GRAD_PERSONAL":
+                return profileData?.student_name || "Graduation Day";
+            case "GRAD_CLASS":
+                return profileData?.class_name || "Our Class";
+            case "GRAD_GROUP":
+                return profileData?.group_name || "Our Group";
             default:
                 return "Welcome";
         }
     };
 
     // Map link type to theme
-    const getTheme = (): "love" | "every" | "idol" => {
+    const getTheme = (): "love" | "every" | "idol" | "grad_personal" | "grad_class" => {
         switch (linkData.type) {
             case "LOVE": return "love";
+            case "LOVE2": return "love";
             case "EVERY": return "every";
             case "IDOL": return "idol";
+            case "GRAD_PERSONAL": return "grad_personal";
+            case "GRAD_CLASS": return "grad_class";
+            case "GRAD_GROUP": return "every";
             default: return "love";
         }
     };
@@ -103,8 +118,16 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
         switch (linkData.type) {
             case "LOVE":
                 return <LoveTemplate data={linkData} slug={slug} />;
+            case "LOVE2":
+                return <Love2Template data={linkData} slug={slug} />;
             case "IDOL":
                 return <IdolTemplate data={linkData} slug={slug} />;
+            case "GRAD_PERSONAL":
+                return <GradPersonalTemplate data={linkData} slug={slug} />;
+            case "GRAD_CLASS":
+                return <GradClassTemplate data={linkData} slug={slug} />;
+            case "GRAD_GROUP":
+                return <GradGroupTemplate data={linkData} slug={slug} />;
             case "EVERY":
                 // TODO: EveryTemplate - using Love for now
                 return <LoveTemplate data={linkData} slug={slug} />;

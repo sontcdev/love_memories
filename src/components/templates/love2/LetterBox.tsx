@@ -145,7 +145,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         });
     };
 
-
     async function handleCreate() {
         if (!newTitle.trim() || !newContent.trim()) return;
 
@@ -402,7 +401,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
 
             {/* Letters List */}
             {letters.length === 0 ? (
-                <div className={`text-center py-16 ${isDark ? "bg-zinc-900/50 border border-zinc-800/80" : colors.bg} rounded-2xl`}>
+                <div className={`text-center py-16 ${isDark ? "bg-zinc-900/50 border border-zinc-850/80" : colors.bg} rounded-2xl`}>
                     <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300 opacity-60" />
                     <p className={isDark ? "text-slate-400" : "text-gray-400"}>Chưa có thư nào...</p>
                     <p className={`text-sm ${isDark ? "text-slate-500" : "text-gray-400"}`}>Hãy gửi những lời chúc đầu tiên!</p>

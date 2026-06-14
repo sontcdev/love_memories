@@ -85,6 +85,9 @@ npx tsx scripts/activate-links.ts # Activate all user links
 **Environment:** Requires `DATABASE_URL` and `DIRECT_URL` (Supabase connection pooling).
 
 **Schema:** PostgreSQL via Supabase. Key models: `User`, `Link`, `Gallery`, `Timeline`, `Letter`, `GameCard`, `Admin`. See `prisma/schema.prisma:1-218`.
+- `LinkType` values: `LOVE`, `LOVE2`, `EVERY`, `IDOL`, `GRAD_PERSONAL`, `GRAD_CLASS`, `GRAD_GROUP` (added `LOVE2`, `GRAD_PERSONAL`, `GRAD_CLASS`, and `GRAD_GROUP`).
+
+**JSON profile_data:** Each link stores rich profile data as a JSON blob in `Link.profile_data`. When writing to this field via Prisma, always cast with `as Prisma.InputJsonValue` to satisfy Prisma 6 strict JSON type constraints.
 
 ## Architecture
 
@@ -96,6 +99,67 @@ npx tsx scripts/activate-links.ts # Activate all user links
   - User edit routes: `/[slug]/edit`, `/[slug]/letters`, `/[slug]/timeline` require `session_{slug}` cookie
 - **Database client:** Singleton Prisma client at `src/lib/prisma.ts`
 - **Storage:** Supabase client at `src/lib/supabase.ts` for file uploads
+
+## Templates
+
+Each template is **completely decoupled and self-contained** in its own folder under `src/components/templates/`. Templates do NOT share components with each other — each folder has its own copies of `GameSection.tsx` and `LetterBox.tsx` for safe isolated editing.
+
+### Template Overview
+
+| LinkType | Folder | Theme Name | Description |
+|---|---|---|---|
+| `LOVE` | `love/` | Classic Love | Original couple template |
+| `LOVE2` | `love2/` | Scrapbook / Polaroid | Craft paper, sticky notes, polaroid photos |
+| `IDOL` | `idol/` | Concert Fanpage | Neon stage, holographic, concert vibes |
+| `GRAD_PERSONAL` | `grad-personal/` | Emerald Desk | Individual student graduation — desk, laurel, phoenix |
+| `GRAD_CLASS` | `grad-class/` | Blackboard Yearbook | Whole class collective — corkboard, chalkboard |
+| `GRAD_GROUP` | `grad-group/` | Chuyến Xe Thanh Xuân | Friend group graduation with 3 selectable sub-themes |
+
+### GRAD_GROUP Sub-Themes
+
+The `GRAD_GROUP` template supports 3 sub-themes stored inside `Link.profile_data.theme`:
+
+| `theme` value | Display Name | Visual Style |
+|---|---|---|
+| `caravan` | Chuyến Xe Thanh Xuân | Warm wood, amber, road-trip wanderlust |
+| `scrapbook` | Sổ Tay Polaroid | Kraft paper, polaroid photos, patchwork |
+| `station` | Trạm Ký Ức | Dark neon, violet tram station, cyberpunk |
+
+All 3 sub-themes support both **Night mode** and **Light mode** toggle.
+
+### Night/Light Mode
+
+All templates except the original `LOVE` support Night/Light mode toggle. The toggle state is persisted in `localStorage` under key `theme_mode_${slug}`. Key implementation pattern:
+
+```tsx
+// ALWAYS initialize isDark BEFORE any function that references it (avoid TDZ error)
+const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
+const isDark = overrideDark !== null ? overrideDark : false; // ← must come here
+
+const getThemeProps = () => {
+    // now safe to reference isDark inside
+    return { bgClass: isDark ? "dark-bg" : "light-bg", ... };
+};
+```
+
+## Edit Page (`/[slug]/edit`)
+
+The edit page (`src/app/[slug]/edit/edit-client.tsx`) auto-detects the link type and applies themed layout:
+
+- **Love / Love2:** Standard white card dashboard
+- **Idol:** Holographic stage with neon grid overlay, laser beams, bokeh bubbles
+- **GRAD_PERSONAL / GRAD_CLASS / GRAD_GROUP:** Notebook-style layout — wood sidebar + lined paper content area + spiral ring binder divider decorations. Colors adapt per sub-theme.
+
+**Theme detection in edit-client:**
+```tsx
+const isGrad = linkData.type === "GRAD_PERSONAL" || linkData.type === "GRAD_CLASS" || linkData.type === "GRAD_GROUP";
+let gradTheme = "emerald"; // default for GRAD_PERSONAL
+if (linkData.type === "GRAD_CLASS") gradTheme = "chalkboard";
+else if (linkData.type === "GRAD_GROUP") {
+    const profileData = linkData.profile_data as Record<string, unknown> | null;
+    gradTheme = (profileData?.theme as string) || "caravan";
+}
+```
 
 ## Key Constraints
 
@@ -110,6 +174,11 @@ npx tsx scripts/activate-links.ts # Activate all user links
 - Letter title: 50 chars, content: 1000 chars
 - Timeline title: 50 chars, description: 300 chars
 - Gallery caption: 50 chars
+
+**GRAD_GROUP specific limits:**
+- Members: recommended max 12 per group
+- Quiz questions: supports custom badges (perfect/good/normal titles & descriptions)
+- Goals/Roadmap: travel milestones stored in `profile_data.goals[]`
 
 ## Next.js Configuration
 
@@ -133,18 +202,50 @@ npx tsx scripts/activate-links.ts # Activate all user links
 
 6. **Image compression is client-side:** Binary search algorithm in ImageUpload component, not server-side. Uploads may timeout on slow connections.
 
+7. **`isDark` must be initialized before `getThemeProps()`:** In templates that call `isDark` inside a helper function, declare `isDark` immediately after the `overrideDark` state — before the helper function definition — to avoid a TDZ (Temporal Dead Zone) `ReferenceError` at runtime.
+
+8. **Prisma JSON field type:** When updating `profile_data`, always cast the value: `data: { profile_data: newData as Prisma.InputJsonValue }`. Import `Prisma` from `@prisma/client`. Sub-types like `GroupMember[]` are not directly assignable to Prisma's JSON type without this cast.
+
+9. **Sub-themes stored in JSON:** `GRAD_GROUP` sub-theme is stored in `profile_data.theme`, not a dedicated DB column. This avoids migration overhead while allowing full customizability.
+
 ## Testing & Verification
 
 No test framework configured. Manual testing workflow:
-1. Check TypeScript: build includes typecheck
-2. Run dev server and test routes
+1. Check TypeScript: `npm run build` includes full typecheck
+2. Run dev server: `npm run dev` and test routes
 3. Verify middleware protection (try accessing `/[slug]/edit` without auth)
 4. Test image uploads and compression
+5. For GRAD_GROUP: verify sub-theme switching updates template and edit page styles
+6. For Night/Light mode: verify toggle persists across page reloads via localStorage
 
 ## Useful File Locations
 
-- Main template: `src/components/templates/LoveTemplate.tsx` (referenced in LOVE_TEMPLATE_REPORT.md)
-- Auth middleware: `src/middleware.ts:60-110`
-- Server actions: `src/app/actions/*.ts`
-- Database schema: `prisma/schema.prisma`
-- Full feature spec: `LOVE_TEMPLATE_REPORT.md` (in Vietnamese)
+- **Templates:**
+  - `src/components/templates/love/LoveTemplate.tsx` (Original love template)
+  - `src/components/templates/love2/Love2Template.tsx` (New love template - Scrapbook/Polaroid style)
+  - `src/components/templates/grad-personal/GradPersonalTemplate.tsx` (Individual graduation template - Emerald Desk theme)
+  - `src/components/templates/grad-class/GradClassTemplate.tsx` (Class collective yearbook template - Blackboard/Corkboard theme)
+  - `src/components/templates/grad-group/GradGroupTemplate.tsx` (Group graduation template - Chuyến Xe Thanh Xuân theme with caravan, scrapbook, station sub-themes)
+  - `src/components/templates/idol/IdolTemplate.tsx` (Idol fanpage template)
+  *Note:* Each template is completely decoupled and self-contained in its respective folder, containing its own copies of `GameSection.tsx` and `LetterBox.tsx` for easy isolated editing.
+
+- **Profile Edit Forms:**
+  - `src/components/edit/EditProfileForm.tsx` (Standard profile editor routing — dispatches to the correct form by `LinkType`)
+  - `src/components/edit/EditGradProfileForm.tsx` (Individual & class graduation profile editor form)
+  - `src/components/edit/EditGradGroupProfileForm.tsx` (Group graduation profile editor form — sub-theme selector, member cards, badge customizer, travel roadmap)
+  - `src/components/edit/EditIdolProfileForm.tsx` (Idol fanpage profile editor form)
+
+- **Edit Page Client:**
+  - `src/app/[slug]/edit/edit-client.tsx` (Unified edit layout with themed backgrounds per template type)
+
+- **PIN Screen / Lock Screen:**
+  - `src/components/auth/LockScreen.tsx` (PIN screen styling with custom themes per template)
+
+- **Auth middleware:** `src/middleware.ts:60-110`
+- **Server actions:** `src/app/actions/*.ts`
+  - `profile-actions.ts` — exports `updateLinkProfile`, all profile data types (`LoveProfileData`, `IdolProfileData`, `GradPersonalProfileData`, `GradClassProfileData`, `GradGroupProfileData`, `GroupMember`)
+- **Admin panel:**
+  - `src/app/admin/links/links-table.tsx` (Create/manage links, supports all `LinkType` values including `GRAD_GROUP`)
+- **Database schema:** `prisma/schema.prisma`
+- **Full feature spec:** `LOVE_TEMPLATE_REPORT.md` (in Vietnamese)
+- **New template spec & requirements docs:** `docx/` folder

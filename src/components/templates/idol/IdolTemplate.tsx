@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Star, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic, Trophy, Disc, Sun, Moon } from "lucide-react";
-import { GameSection } from "@/components/features/GameSection";
-import { LetterBox } from "@/components/features/LetterBox";
+import { GameSection } from "./GameSection";
+import { LetterBox } from "./LetterBox";
 import { VideoPlayer } from "@/components/media";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -1002,7 +1002,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                 {/* Letters Section */}
                 {activeSection === "letters" && (
                     <section className="max-w-2xl mx-auto py-12 relative z-10">
-                        <LetterBox slug={slug} initialLetters={data.letters} theme="idol" />
+                        <LetterBox slug={slug} initialLetters={data.letters} theme="idol" isDark={isDark} />
                     </section>
                 )}
 

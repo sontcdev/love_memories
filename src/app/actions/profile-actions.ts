@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 // ============================================================================
@@ -28,7 +29,87 @@ export interface IdolProfileData {
     slogan?: string;
 }
 
-export type ProfileData = LoveProfileData | IdolProfileData;
+export interface GradPersonalProfileData {
+    student_name?: string;
+    class_name?: string;
+    school_name?: string;
+    graduation_year?: string;
+    student_avatar?: string;
+    slogan?: string;
+    dream_job?: string;
+    dream_university?: string;
+    title?: string;
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    goals?: {
+        id: string;
+        title: string;
+        description: string;
+        status: "todo" | "done";
+    }[];
+}
+
+export interface GroupMember {
+    id: string;
+    name: string;
+    nickname?: string;
+    avatar?: string;
+    quote?: string;
+    dream_university?: string;
+    dream_job?: string;
+    facebook?: string;
+    instagram?: string;
+}
+
+export interface GradGroupProfileData {
+    group_name?: string;
+    group_avatar?: string;
+    graduation_year?: string;
+    slogan?: string;
+    title?: string;
+    theme?: "caravan" | "scrapbook" | "station";
+    members?: GroupMember[];
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    quiz_badges?: {
+        perfect_title?: string;
+        perfect_desc?: string;
+        good_title?: string;
+        good_desc?: string;
+        average_title?: string;
+        average_desc?: string;
+        low_title?: string;
+        low_desc?: string;
+    };
+    goals?: {
+        id: string;
+        title: string;
+        description: string;
+        status: "todo" | "done";
+    }[];
+}
+
+export interface GradClassProfileData {
+    class_name?: string;
+    school_name?: string;
+    graduation_year?: string;
+    slogan?: string;
+    members_count?: number;
+    homeroom_teacher_name?: string;
+    homeroom_teacher_avatar?: string;
+    homeroom_teacher_message?: string;
+    class_officers_monitor?: string;
+    class_officers_vice_monitor?: string;
+    title?: string;
+}
+
+export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData;
 
 // ============================================================================
 // CONFIG DATA TYPES
@@ -93,7 +174,7 @@ export async function updateLinkProfile(
         // Update
         await prisma.link.update({
             where: { slug },
-            data: { profile_data: newData },
+            data: { profile_data: newData as Prisma.InputJsonValue },
         });
 
         revalidatePath(`/${slug}`);

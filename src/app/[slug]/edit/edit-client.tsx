@@ -47,6 +47,16 @@ const TABS: { id: TabId; label: string; icon: typeof User; description: string }
 export function EditPageClient({ slug, linkData }: EditPageClientProps) {
     const [activeTab, setActiveTab] = useState<TabId>("profile");
     const isIdol = linkData.type === "IDOL";
+    const isGrad = linkData.type === "GRAD_PERSONAL" || linkData.type === "GRAD_CLASS" || linkData.type === "GRAD_GROUP";
+
+    let gradTheme = "emerald";
+    if (linkData.type === "GRAD_CLASS") {
+        gradTheme = "chalkboard";
+    } else if (linkData.type === "GRAD_GROUP") {
+        const profileData = linkData.profile_data as Record<string, unknown> | null;
+        gradTheme = (profileData?.theme as string) || "caravan";
+    }
+
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
     const [copied, setCopied] = useState(false);
     const [fullUrl, setFullUrl] = useState(`https://love-memories.com/${slug}`);
@@ -93,7 +103,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
 
     // Read from localStorage on mount
     useEffect(() => {
-        if (!isIdol) return;
+        if (!isIdol && !isGrad) return;
         const saved = localStorage.getItem(`theme_mode_${slug}`);
         if (saved) {
             const isSavedDark = saved === "dark";
@@ -106,7 +116,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                 root.style.setProperty("--theme-bg", linkData.config?.background_color || "#ffffff");
             }
         }
-    }, [slug, isIdol, linkData.config?.background_color]);
+    }, [slug, isIdol, isGrad, linkData.config?.background_color]);
 
     const isDarkBackground = useCallback((hex?: string | null) => {
         if (!hex) return false;
@@ -119,7 +129,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         return brightness < 120; // threshold for dark backgrounds
     }, []);
 
-    const isDark = isIdol && (overrideDark !== null ? overrideDark : isDarkBackground(linkData.config?.background_color));
+    const isDark = (isIdol || isGrad) && (overrideDark !== null ? overrideDark : isDarkBackground(linkData.config?.background_color));
 
     const handleThemeToggle = () => {
         const newDark = !isDark;
@@ -134,8 +144,119 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         }
     };
 
+    // Themed styles setup
+    let wrapperClass = `min-h-screen relative overflow-x-hidden transition-colors duration-500 ${isDark ? "bg-[#0a0a0c] text-white" : "bg-gray-50 text-gray-800"}`;
+    let containerClass = `rounded-3xl border transition-all duration-500 overflow-hidden ${
+        isDark 
+            ? "bg-slate-900/85 border-purple-500/20 shadow-[0_0_40px_rgba(168,85,247,0.15)] text-white backdrop-blur-sm" 
+            : "bg-white border-gray-100 shadow-xl text-gray-800"
+    }`;
+    let sidebarClass = `w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r transition-all ${
+        isDark ? "border-purple-500/25 bg-slate-950/20" : "border-gray-100 bg-gray-50/30"
+    }`;
+    let mainClass = "flex-1 p-4 sm:p-6 md:p-8";
+    
+    let headerClass = `sticky top-0 z-20 border-b transition-all ${
+        isDark 
+            ? "bg-slate-950/80 border-purple-900/30 backdrop-blur-md" 
+            : "bg-white border-gray-200 shadow-sm"
+    }`;
+    
+    let headerTextClass = isDark ? "text-white" : "text-gray-800";
+    let headerBackLinkClass = isDark ? "hover:bg-slate-800 text-purple-400" : "hover:bg-gray-100 text-gray-600";
+    let headerViewLinkClass = isDark ? "text-purple-300 hover:text-white" : "text-gray-600 hover:text-gray-800";
+
+    if (isGrad) {
+        if (gradTheme === "emerald") {
+            if (isDark) {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#150f0b] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,40,32,0.6),rgba(0,0,0,0.8))] py-6";
+                containerClass = "rounded-3xl border-4 border-[#1c1511] shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden bg-[#24352f] text-emerald-100 max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#10201a] bg-[#0f1d19] text-emerald-200 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#24352f] bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_2.5rem] text-emerald-100 relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#12241d] bg-[#0f1d19] text-emerald-200";
+            } else {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#2d1f18] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))] py-6";
+                containerClass = "rounded-3xl border-4 border-[#3e2b20] shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden bg-[#faf6ee] text-slate-800 max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#1a3028]/20 bg-[#1c352d] text-emerald-100 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#faf6ee] bg-[linear-gradient(rgba(36,74,60,0.03)_1px,transparent_1px)] bg-[size:100%_2.5rem] text-slate-800 relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#12241d] bg-[#1c352d] text-emerald-100";
+            }
+            headerTextClass = "text-current";
+            headerBackLinkClass = "hover:bg-black/10 text-current";
+            headerViewLinkClass = "text-current opacity-80 hover:opacity-100";
+        } else if (gradTheme === "chalkboard") {
+            if (isDark) {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#1a0f0b] py-6";
+                containerClass = "rounded-3xl border-4 border-[#0c0503] shadow-[0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden bg-[#0b120f] text-[#a5c0b0] max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#070b09] bg-[#182024] text-slate-300 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#0b120f] bg-[radial-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:16px_16px] text-[#a5c0b0] relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#070b09] bg-[#182024] text-slate-300";
+            } else {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#3e2723] bg-gradient-to-b from-[#2d1a12] to-[#3e2723] py-6";
+                containerClass = "rounded-3xl border-4 border-[#1e100b] shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden bg-[#131f1a] text-[#f4f7f6] max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#0c1411] bg-[#263238] text-slate-200 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#131f1a] bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:16px_16px] text-[#f4f7f6] relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#0c1411] bg-[#263238] text-slate-200";
+            }
+            headerTextClass = "text-current";
+            headerBackLinkClass = "hover:bg-black/10 text-current";
+            headerViewLinkClass = "text-current opacity-80 hover:opacity-100";
+        } else if (gradTheme === "caravan") {
+            if (isDark) {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#120a05] py-6";
+                containerClass = "rounded-3xl border-4 border-[#3a2517] shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden bg-[#2d1b10] text-[#f2e6d9] max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#1d1008] bg-[#4a3525] text-orange-200 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#2d1b10] bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_2.5rem] text-[#f2e6d9] relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#1d1008] bg-[#4a3525] text-orange-200";
+            } else {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#27150c] bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.2)_1px,transparent_1px)] py-6";
+                containerClass = "rounded-3xl border-4 border-[#543b27] shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden bg-[#faf4e8] text-amber-950 max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#543b27]/20 bg-[#7a5c43] text-orange-50 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#faf4e8] bg-[linear-gradient(rgba(84,59,39,0.03)_1px,transparent_1px)] bg-[size:100%_2.5rem] text-amber-950 relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#543b27]/20 bg-[#7a5c43] text-orange-50";
+            }
+            headerTextClass = "text-current";
+            headerBackLinkClass = "hover:bg-black/10 text-current";
+            headerViewLinkClass = "text-current opacity-80 hover:opacity-100";
+        } else if (gradTheme === "scrapbook") {
+            if (isDark) {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#1e1c18] py-6";
+                containerClass = "rounded-3xl border-4 border-[#7a0c3a] shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden bg-[#2b2b2b] text-slate-100 max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#1a1a1a] bg-[#880e4f] text-pink-100 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#2b2b2b] bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_2.5rem] text-slate-100 relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#1a1a1a] bg-[#880e4f] text-pink-100";
+            } else {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#f0e6d2] bg-[radial-gradient(#d3c5a7_1px,transparent_1px)] [background-size:24px_24px] py-6";
+                containerClass = "rounded-3xl border-4 border-[#ad1457] shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden bg-white text-slate-800 max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-pink-200 bg-[#d81b60] text-pink-50 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-white bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100%_2.5rem] text-slate-800 relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-pink-200 bg-[#d81b60] text-pink-50";
+            }
+            headerTextClass = "text-current";
+            headerBackLinkClass = "hover:bg-black/10 text-current";
+            headerViewLinkClass = "text-current opacity-80 hover:opacity-100";
+        } else { // station theme
+            if (isDark) {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#05070a] py-6";
+                containerClass = "rounded-3xl border-4 border-[#10161c] shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden bg-[#182026] text-slate-200 max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-[#10161c] bg-[#1b252f] text-blue-200 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#182026] bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:2rem_2rem] text-slate-200 relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-[#10161c] bg-[#1b252f] text-blue-200";
+            } else {
+                wrapperClass = "min-h-screen relative overflow-x-hidden bg-[#0d131a] bg-gradient-to-tr from-[#060a0f] to-[#141d26] py-6";
+                containerClass = "rounded-3xl border-4 border-[#1a252f] shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden bg-[#f4f7f6] text-slate-800 max-w-6xl mx-auto";
+                sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 md:border-slate-300 bg-[#2c3e50] text-blue-50 relative";
+                mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#f4f7f6] bg-[linear-gradient(rgba(44,62,80,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(44,62,80,0.03)_1px,transparent_1px)] bg-[size:2rem_2rem] text-slate-800 relative shadow-inner";
+                headerClass = "sticky top-0 z-20 border-b border-slate-300 bg-[#2c3e50] text-blue-50";
+            }
+            headerTextClass = "text-current";
+            headerBackLinkClass = "hover:bg-black/10 text-current";
+            headerViewLinkClass = "text-current opacity-80 hover:opacity-100";
+        }
+    }
+
     return (
-        <div className={`min-h-screen relative overflow-x-hidden transition-colors duration-500 ${isDark ? "bg-[#0a0a0c] text-white" : "bg-gray-50 text-gray-800"}`}
+        <div className={wrapperClass}
             style={isIdol ? { backgroundColor: 'var(--theme-bg, #fff0f5)' } : {}}
         >
             {/* Holographic Stage Backdrop Elements (concert theme) */}
@@ -160,34 +281,32 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
             )}
 
             {/* Header */}
-            <header className={`sticky top-0 z-20 border-b transition-all ${
-                isDark 
-                    ? "bg-slate-950/80 border-purple-900/30 backdrop-blur-md" 
-                    : "bg-white border-gray-200 shadow-sm"
-            }`}>
+            <header className={headerClass}>
                 <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-4">
                         <Link
                             href={`/${slug}`}
-                            className={`p-2 rounded-lg transition-colors ${
-                                isDark ? "hover:bg-slate-800 text-purple-400" : "hover:bg-gray-100 text-gray-600"
-                            }`}
+                            className={`p-2 rounded-lg transition-colors ${headerBackLinkClass}`}
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
                         <div>
-                            <h1 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>Chỉnh sửa trang</h1>
+                            <h1 className={`text-xl font-bold ${headerTextClass}`}>Chỉnh sửa trang</h1>
                         </div>
                     </div>
                     
                     <div className="flex items-center gap-4">
-                        {isIdol && (
+                        {(isIdol || isGrad) && (
                             <button
                                 onClick={handleThemeToggle}
                                 className={`p-2 rounded-lg transition-all hover:scale-105 ${
                                     isDark 
-                                        ? "bg-slate-900 text-yellow-400 border border-purple-500/30" 
-                                        : "bg-white text-indigo-600 border border-gray-200 hover:bg-gray-50"
+                                        ? isGrad
+                                            ? "bg-black/20 text-yellow-400 border border-yellow-500/30"
+                                            : "bg-slate-900 text-yellow-400 border border-purple-500/30" 
+                                        : isGrad
+                                            ? "bg-white/20 text-amber-600 border border-amber-600/30 hover:bg-white/30"
+                                            : "bg-white text-indigo-600 border border-gray-200 hover:bg-gray-50"
                                 }`}
                                 title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
                             >
@@ -196,9 +315,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                         )}
                         <Link
                             href={`/${slug}`}
-                            className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                isDark ? "text-purple-300 hover:text-white" : "text-gray-600 hover:text-gray-800"
-                            }`}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${headerViewLinkClass}`}
                         >
                             Xem trang
                         </Link>
@@ -209,32 +326,83 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
             {/* Main content body */}
             <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 md:py-8 relative z-10">
                 {/* Unified Card Container (Dashboard Panel layout) */}
-                <div className={`rounded-3xl border transition-all duration-500 overflow-hidden ${
-                    isDark 
-                        ? "bg-slate-900/85 border-purple-500/20 shadow-[0_0_40px_rgba(168,85,247,0.15)] text-white backdrop-blur-sm" 
-                        : "bg-white border-gray-100 shadow-xl text-gray-800"
-                }`}>
-                    <div className="flex flex-col md:flex-row min-h-[600px]">
+                <div className={containerClass}>
+                    <div className="flex flex-col md:flex-row min-h-[600px] relative">
+                        {isGrad && (
+                            <div className="hidden md:flex absolute left-72 top-0 bottom-0 w-0 z-20 flex-col justify-around py-8 pointer-events-none">
+                                {Array.from({ length: 12 }).map((_, i) => (
+                                    <div key={i} className="w-8 h-4 -translate-x-1/2 bg-gradient-to-r from-gray-300 via-gray-100 to-gray-400 rounded-full shadow-lg border border-gray-400/85 flex items-center justify-between">
+                                        <div className="w-1.5 h-1.5 bg-gray-600/50 rounded-full ml-1" />
+                                        <div className="w-1.5 h-1.5 bg-gray-600/50 rounded-full mr-1" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         {/* Left Column (Sidebar Panel) */}
-                        <aside className={`w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r transition-all ${
-                            isDark ? "border-purple-500/25 bg-slate-950/20" : "border-gray-100 bg-gray-50/30"
-                        }`}>
+                        <aside className={sidebarClass}>
                             <nav className="grid grid-cols-2 md:flex md:flex-col gap-2">
                                 {TABS.map((tab) => {
                                     const isActive = activeTab === tab.id;
+                                    let tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
+                                        isActive
+                                            ? isDark
+                                                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] border border-purple-400/25"
+                                                : "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md"
+                                            : isDark
+                                                ? "text-purple-300 hover:bg-slate-800/80"
+                                                : "text-gray-600 hover:bg-gray-50"
+                                    }`;
+
+                                    if (isGrad) {
+                                        if (gradTheme === "emerald") {
+                                            tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-l-xl text-left transition-all md:rounded-r-none md:-mr-6 ${
+                                                isActive
+                                                    ? "bg-[#faf6ee] text-emerald-900 font-bold border-y border-l border-emerald-900/20 shadow-[-4px_0_10px_rgba(0,0,0,0.05)] relative z-10"
+                                                    : "text-emerald-100 hover:bg-[#152822]"
+                                            }`;
+                                            if (isDark && isActive) {
+                                                tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-l-xl text-left transition-all md:rounded-r-none md:-mr-6 bg-[#24352f] text-emerald-200 font-bold border-y border-l border-[#10201a]/30 shadow-[-4px_0_10px_rgba(0,0,0,0.15)] relative z-10`;
+                                            }
+                                        } else if (gradTheme === "chalkboard") {
+                                            tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-l-xl text-left transition-all md:rounded-r-none md:-mr-6 ${
+                                                isActive
+                                                    ? isDark
+                                                        ? "bg-[#0b120f] text-[#a5c0b0] font-bold border-y border-l border-[#070b09]/30 shadow-[-4px_0_10px_rgba(0,0,0,0.2)] relative z-10"
+                                                        : "bg-[#131f1a] text-emerald-400 font-bold border-y border-l border-emerald-950/20 shadow-[-4px_0_10px_rgba(0,0,0,0.15)] relative z-10"
+                                                    : "text-slate-300 hover:bg-[#1e2d25]"
+                                            }`;
+                                        } else if (gradTheme === "caravan") {
+                                            tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-l-xl text-left transition-all md:rounded-r-none md:-mr-6 ${
+                                                isActive
+                                                    ? isDark
+                                                        ? "bg-[#2d1b10] text-[#f2e6d9] font-bold border-y border-l border-[#1d1008]/30 shadow-[-4px_0_10px_rgba(0,0,0,0.15)] relative z-10"
+                                                        : "bg-[#faf4e8] text-[#543b27] font-bold border-y border-l border-[#543b27]/20 shadow-[-4px_0_10px_rgba(0,0,0,0.05)] relative z-10"
+                                                    : "text-orange-100 hover:bg-[#644933]"
+                                            }`;
+                                        } else if (gradTheme === "scrapbook") {
+                                            tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-l-xl text-left transition-all md:rounded-r-none md:-mr-6 ${
+                                                isActive
+                                                    ? isDark
+                                                        ? "bg-[#2b2b2b] text-pink-200 font-bold border-y border-l border-[#1a1a1a]/30 shadow-[-4px_0_10px_rgba(0,0,0,0.15)] relative z-10"
+                                                        : "bg-white text-[#d81b60] font-bold border-y border-l border-pink-100 shadow-[-4px_0_10px_rgba(0,0,0,0.05)] relative z-10"
+                                                    : "text-pink-100 hover:bg-[#c2185b]"
+                                            }`;
+                                        } else { // station theme
+                                            tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-l-xl text-left transition-all md:rounded-r-none md:-mr-6 ${
+                                                isActive
+                                                    ? isDark
+                                                        ? "bg-[#182026] text-blue-200 font-bold border-y border-l border-[#10161c]/30 shadow-[-4px_0_10px_rgba(0,0,0,0.15)] relative z-10"
+                                                        : "bg-[#f4f7f6] text-blue-900 font-bold border-y border-l border-blue-100 shadow-[-4px_0_10px_rgba(0,0,0,0.05)] relative z-10"
+                                                    : "text-blue-100 hover:bg-[#202d3b]"
+                                            }`;
+                                        }
+                                    }
+
                                     return (
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
-                                                isActive
-                                                    ? isDark
-                                                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] border border-purple-400/25"
-                                                        : "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md"
-                                                    : isDark
-                                                        ? "text-purple-300 hover:bg-slate-800/80"
-                                                        : "text-gray-600 hover:bg-gray-50"
-                                            }`}
+                                            className={tabBtnClass}
                                         >
                                             <tab.icon className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                                             <div className="flex-1 min-w-0">
@@ -252,25 +420,29 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                             </nav>
 
                             {/* Page Status / QR Code Widget (Desktop sidebar space filler) */}
-                            {isIdol && (
+                            {(isIdol || isGrad) && (
                                 <div className={`hidden md:flex flex-col gap-4 p-4 rounded-2xl border transition-all ${
                                     isDark 
-                                        ? "bg-slate-950/40 border-purple-500/10" 
-                                        : "bg-white border-gray-200/60 shadow-sm"
+                                        ? isGrad
+                                            ? "bg-black/25 border-white/5"
+                                            : "bg-slate-950/40 border-purple-500/10" 
+                                        : isGrad
+                                            ? "bg-white/40 border-black/5"
+                                            : "bg-white border-gray-200/60 shadow-sm"
                                 }`}>
-                                    <div className="flex items-center gap-2 border-b pb-2" style={isDark ? { borderColor: 'rgba(168,85,247,0.1)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
-                                        <QrCode className={`w-4 h-4 ${isDark ? "text-purple-400" : "text-purple-600"}`} />
+                                    <div className="flex items-center gap-2 border-b pb-2" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
+                                        <QrCode className={`w-4 h-4 ${isDark ? isGrad ? "text-yellow-400" : "text-purple-400" : "text-purple-600"}`} />
                                         <span className="text-[10px] font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
                                     </div>
                                     
                                     {/* URL slug & Copy Link */}
                                     <div className="space-y-1.5">
                                         <p className="text-[10px] opacity-70">Đường dẫn trang của bạn:</p>
-                                        <div className={`flex items-center gap-1 p-1.5 rounded-lg text-[10px] font-mono break-all ${isDark ? "bg-slate-950 text-purple-300" : "bg-gray-50 text-gray-700"}`}>
+                                        <div className={`flex items-center gap-1 p-1.5 rounded-lg text-[10px] font-mono break-all ${isDark ? "bg-black/30 text-slate-300" : "bg-white/60 text-gray-700 border border-black/5"}`}>
                                             <span className="flex-1 truncate select-all">{fullUrl}</span>
                                             <button 
                                                 onClick={handleCopyLink}
-                                                className={`p-1 rounded transition-colors ${isDark ? "bg-slate-900 hover:bg-slate-800 text-purple-400" : "bg-white hover:bg-gray-100 text-gray-600 border border-gray-200"}`}
+                                                className={`p-1 rounded transition-colors ${isDark ? "bg-black/20 hover:bg-black/40 text-slate-300" : "bg-white hover:bg-gray-100 text-gray-600 border border-gray-200"}`}
                                                 title="Sao chép liên kết"
                                             >
                                                 {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
@@ -279,7 +451,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                     </div>
                                     
                                     {/* QR Code preview */}
-                                    <div className="flex flex-col items-center gap-2 py-1.5 border-t" style={isDark ? { borderColor: 'rgba(168,85,247,0.1)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
+                                    <div className="flex flex-col items-center gap-2 py-1.5 border-t" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
                                         <div className={`p-2.5 rounded-xl ${isDark ? "bg-white/95" : "bg-white border border-gray-100 shadow-sm"}`}>
                                             <QRCode
                                                 value={fullUrl}
@@ -297,7 +469,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                         </aside>
 
                         {/* Right Column (Forms Content Panel) */}
-                        <main className="flex-1 p-4 sm:p-6 md:p-8">
+                        <main className={mainClass}>
                             {activeTab === "profile" && (
                                 <EditProfileForm
                                     slug={slug}
@@ -352,24 +524,28 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                 </div>
 
                 {/* Page Status / QR Code Widget (Only visible on mobile at the bottom to avoid blocking form) */}
-                {isIdol && (
+                {(isIdol || isGrad) && (
                     <div className={`md:hidden mt-6 p-4 rounded-3xl border transition-all ${
                         isDark 
-                            ? "bg-slate-900/85 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] text-white backdrop-blur-sm" 
-                            : "bg-white border-gray-100 shadow-lg text-gray-800"
+                            ? isGrad
+                                ? "bg-black/25 border-white/5 text-slate-100 shadow-lg"
+                                : "bg-slate-900/85 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] text-white backdrop-blur-sm" 
+                            : isGrad
+                                ? "bg-white/40 border-black/5 text-slate-800 shadow-md"
+                                : "bg-white border-gray-100 shadow-lg text-gray-800"
                     }`}>
-                        <div className="flex items-center gap-2 border-b pb-2 mb-3" style={isDark ? { borderColor: 'rgba(168,85,247,0.1)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
-                            <QrCode className="w-4 h-4 text-purple-500" />
+                        <div className="flex items-center gap-2 border-b pb-2 mb-3" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
+                            <QrCode className={`w-4 h-4 ${isDark ? isGrad ? "text-yellow-400" : "text-purple-500" : "text-purple-600"}`} />
                             <span className="text-xs font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                             <div className="flex-1 w-full space-y-2">
                                 <p className="text-xs opacity-75">Đường dẫn xem trang của bạn:</p>
-                                <div className={`flex items-center gap-1.5 p-2 rounded-lg text-xs font-mono break-all ${isDark ? "bg-slate-950 text-purple-300" : "bg-gray-50 text-gray-700"}`}>
+                                <div className={`flex items-center gap-1.5 p-2 rounded-lg text-xs font-mono break-all ${isDark ? "bg-black/30 text-slate-300" : "bg-white/60 text-gray-700 border border-black/5"}`}>
                                     <span className="flex-1 truncate select-all">{fullUrl}</span>
                                     <button 
                                         onClick={handleCopyLink}
-                                        className={`p-1.5 rounded transition-all ${isDark ? "bg-slate-900 hover:bg-slate-800 text-purple-400" : "bg-white hover:bg-gray-100 text-gray-600 border border-gray-200"}`}
+                                        className={`p-1.5 rounded transition-all ${isDark ? "bg-black/20 hover:bg-black/40 text-slate-300" : "bg-white hover:bg-gray-100 text-gray-600 border border-gray-200"}`}
                                     >
                                         {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                                     </button>
