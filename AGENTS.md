@@ -4,62 +4,11 @@
 
 Next.js 14 (App Router) + TypeScript + Prisma + Supabase application for personalized anniversary/love memory websites. Users get unique slugs (`/[slug]`) with galleries, timelines, letters, and games. PWA-enabled with offline support.
 
-## Tech Stack
+## Stack
 
-**Core:**
-- Next.js 14.2.35 (App Router)
-- TypeScript 5
-- React 18
+Next.js 14.2.35 App Router, TypeScript 5, React 18, Prisma 6.19.1, PostgreSQL (Supabase), Tailwind CSS 3.4.1, React Hook Form + Zod, next-pwa 5.6.0.
 
-**Database & Backend:**
-- Prisma 6.19.1 (ORM)
-- PostgreSQL via Supabase
-- Supabase JS 2.89.0 (storage, auth)
 
-**Styling & UI:**
-- Tailwind CSS 3.4.1
-- Radix UI (dialog, label, select, slot)
-- Lucide React (icons)
-- class-variance-authority + clsx + tailwind-merge (utility)
-
-**Forms & Validation:**
-- React Hook Form 7.69.0
-- Zod 4.2.1
-- @hookform/resolvers 5.2.2
-
-**Features:**
-- @dnd-kit (drag & drop for gallery sorting)
-- react-swipeable (mobile gestures)
-- html-to-image (QR code generation)
-- react-qr-code (QR display)
-- bcryptjs (password hashing)
-- next-pwa 5.6.0 (PWA support)
-
-**Dev Tools:**
-- ESLint (next/core-web-vitals, next/typescript)
-- PostCSS
-- tsx (for running scripts)
-
-## Recommended Skills
-
-Agent skills available for this stack:
-
-**Next.js/React/TypeScript:**
-- `sickn33/antigravity-awesome-skills@react-nextjs-development` (776 installs)
-- `davila7/claude-code-templates@react-dev` (494 installs)
-- `duyet/claude-plugins@react-nextjs-patterns` (298 installs)
-
-**Forms & Validation:**
-- `ovachiever/droid-tings@react-hook-form-zod` (572 installs)
-- `erichowens/some_claude_skills@form-validation-architect` (121 installs)
-
-**Database & Prisma:**
-- `mindrally/skills@prisma-development` (427 installs)
-
-**Tailwind CSS:**
-- `heygen-com/hyperframes@tailwind` (70K installs)
-
-Install with: `npx skills add <owner/repo@skill> -g -y`
 
 ## Build & Development
 
@@ -70,7 +19,7 @@ npm start                      # Production server
 npm run lint                   # ESLint via Next.js
 ```
 
-**Critical:** `npm run build` automatically runs `prisma generate` first (see `package.json:7`). The `postinstall` hook also runs `prisma generate`.
+**Critical:** `npm run build` automatically runs `prisma generate` first (package.json:7). The `postinstall` hook also runs `prisma generate` after `npm install`.
 
 ## Database & Prisma
 
@@ -84,21 +33,21 @@ npx tsx scripts/activate-links.ts # Activate all user links
 
 **Environment:** Requires `DATABASE_URL` and `DIRECT_URL` (Supabase connection pooling).
 
-**Schema:** PostgreSQL via Supabase. Key models: `User`, `Link`, `Gallery`, `Timeline`, `Letter`, `GameCard`, `Admin`. See `prisma/schema.prisma:1-218`.
-- `LinkType` values: `LOVE`, `LOVE2`, `EVERY`, `IDOL`, `GRAD_PERSONAL`, `GRAD_CLASS`, `GRAD_GROUP` (added `LOVE2`, `GRAD_PERSONAL`, `GRAD_CLASS`, and `GRAD_GROUP`).
+**Schema:** PostgreSQL via Supabase. Key models: `User`, `Link`, `Gallery`, `Timeline`, `Letter`, `GameCard`, `Admin`. See `prisma/schema.prisma`.
+- `LinkType` enum: `LOVE`, `LOVE2`, `EVERY`, `IDOL`, `GRAD_PERSONAL`, `GRAD_CLASS`, `GRAD_GROUP`.
 
 **JSON profile_data:** Each link stores rich profile data as a JSON blob in `Link.profile_data`. When writing to this field via Prisma, always cast with `as Prisma.InputJsonValue` to satisfy Prisma 6 strict JSON type constraints.
 
 ## Architecture
 
-- **Path alias:** `@/*` maps to `./src/*` (tsconfig.json:24-27)
+- **Path alias:** `@/*` → `./src/*`
 - **App structure:** Next.js App Router with dynamic `[slug]` routes
-- **Server actions:** `src/app/actions/*` (8 files: admin, auth, gallery, game, letter, profile, timeline)
-- **Middleware:** Session-based auth protection at `src/middleware.ts`
-  - Admin routes: `/admin/*` requires `admin_session` cookie
+- **Server actions:** `src/app/actions/*` (admin, auth, gallery, game, letter, profile, timeline)
+- **Middleware:** `src/middleware.ts` — session-based auth protection
+  - Admin routes: `/admin/*` require `admin_session` cookie
   - User edit routes: `/[slug]/edit`, `/[slug]/letters`, `/[slug]/timeline` require `session_{slug}` cookie
-- **Database client:** Singleton Prisma client at `src/lib/prisma.ts`
-- **Storage:** Supabase client at `src/lib/supabase.ts` for file uploads
+- **Database client:** Singleton at `src/lib/prisma.ts`
+- **Storage:** Supabase client at `src/lib/supabase.ts`
 
 ## Templates
 
@@ -194,7 +143,7 @@ else if (linkData.type === "GRAD_GROUP") {
 
 2. **Scripts are excluded from TypeScript:** `tsconfig.json` excludes `scripts/` directory. Use `npx tsx` to run scripts directly.
 
-3. **User PIN is 6 digits:** `User.password_hash` is varchar(6) in schema but actually stores bcrypt hash (schema comment is misleading at prisma/schema.prisma:51).
+3. **User PIN is 6 digits:** `User.password_hash` is varchar(6) in schema comment but actually stores bcrypt hash. The column itself is not limited to 6 chars.
 
 4. **Session cookies are slug-specific:** Each link has its own session cookie `session_{slug}`, not a global user session.
 
@@ -208,15 +157,13 @@ else if (linkData.type === "GRAD_GROUP") {
 
 9. **Sub-themes stored in JSON:** `GRAD_GROUP` sub-theme is stored in `profile_data.theme`, not a dedicated DB column. This avoids migration overhead while allowing full customizability.
 
-## Testing & Verification
+## Verification
 
-No test framework configured. Manual testing workflow:
-1. Check TypeScript: `npm run build` includes full typecheck
-2. Run dev server: `npm run dev` and test routes
-3. Verify middleware protection (try accessing `/[slug]/edit` without auth)
-4. Test image uploads and compression
-5. For GRAD_GROUP: verify sub-theme switching updates template and edit page styles
-6. For Night/Light mode: verify toggle persists across page reloads via localStorage
+No test framework configured. After code changes:
+1. `npm run build` — typechecks and builds
+2. `npm run dev` — manual testing at localhost:3000
+3. Test middleware protection (access `/[slug]/edit` without PIN)
+4. For template changes: test Night/Light toggle persistence, sub-theme switching (GRAD_GROUP)
 
 ## Useful File Locations
 
