@@ -54,9 +54,32 @@ if grep -q "project-id" "$ACTIVE_ENV" || grep -q "anon-key-here" "$ACTIVE_ENV"; 
     exit 1
 fi
 
-# Copy chosen profile to active .env
+# Copy chosen profile to active .env, preserving any real keys already set in .env
 print_status "Setting active profile to $ACTIVE_ENV..."
-cp "$ACTIVE_ENV" .env
+
+# Smart merge: start with profile, then preserve real (non-placeholder) values from existing .env
+cp "$ACTIVE_ENV" .env.tmp
+
+if [ -f ".env" ]; then
+    while IFS='=' read -r key value; do
+        # Skip comments and empty lines
+        [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+        # Strip surrounding quotes from value for comparison
+        stripped=$(echo "$value" | sed 's/^"\(.*\)"$/\1/')
+        # Only preserve if value looks like a real key (not a placeholder)
+        if [[ -n "$stripped" ]] && \
+           [[ "$stripped" != *"placeholder"* ]] && \
+           [[ "$stripped" != *"-key-here"* ]] && \
+           [[ "$stripped" != *"project-id"* ]] && \
+           [[ "$stripped" != *"password"* || "$key" == "DATABASE_URL" || "$key" == "DIRECT_URL" ]]; then
+            # Replace the value in .env.tmp
+            sed -i "s|^${key}=.*|${key}=${value}|" .env.tmp
+        fi
+    done < .env
+fi
+
+mv .env.tmp .env
+print_success "Active profile set (real keys from existing .env preserved)."
 
 # Verify node_modules exists
 if [ ! -d node_modules ]; then

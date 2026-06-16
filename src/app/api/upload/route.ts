@@ -2,14 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-// Initialize Supabase client
+// Initialize Supabase admin client (server-side, bypasses RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const isPlaceholder = (key: string | undefined) => {
-    return !key || key.includes("placeholder") || key.includes("service-role-key-here") || key.startsWith("prod-") || key.startsWith("dev-");
-};
-const supabaseKey = isPlaceholder(process.env.SUPABASE_SERVICE_ROLE_KEY)
-    ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    : process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Service role key is REQUIRED for server-side storage uploads to bypass RLS.
+// Get it from: Supabase Dashboard → Project Settings → API → service_role key
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabaseBucket = "memories"; // Matches STORAGE_BUCKET in src/lib/supabase.ts
 
@@ -60,8 +57,24 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Initialize Supabase
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        // Initialize Supabase admin client
+        // Service role key bypasses RLS — required for server-side uploads
+        // A valid Supabase JWT always starts with "eyJ"
+        const isValidJwt = supabaseServiceKey && supabaseServiceKey.startsWith("eyJ");
+        if (!isValidJwt) {
+            console.error(
+                "SUPABASE_SERVICE_ROLE_KEY is missing or not a valid JWT.\n" +
+                "Get it from: Supabase Dashboard → Project Settings → API → service_role key\n" +
+                `Current value: "${supabaseServiceKey?.slice(0, 20)}..."`
+            );
+            return NextResponse.json(
+                { success: false, error: "Storage service not configured. Please set SUPABASE_SERVICE_ROLE_KEY in .env" },
+                { status: 500 }
+            );
+        }
+        const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+            auth: { persistSession: false },
+        });
 
         // Generate unique filename
         const timestamp = Date.now();

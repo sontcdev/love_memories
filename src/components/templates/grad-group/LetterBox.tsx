@@ -552,10 +552,14 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                                                 <button
                                                     onClick={() => handleReply(letter.id)}
                                                     disabled={isSendingReply || !replyContent.trim()}
-                                                    className="p-1.5 rounded-full text-white shadow"
+                                                    className="p-1.5 rounded-full text-white shadow flex items-center justify-center disabled:opacity-50"
                                                     style={{ backgroundColor: accentColor }}
                                                 >
-                                                    <Send className="w-4 h-4" />
+                                                    {isSendingReply ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <Send className="w-4 h-4" />
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>

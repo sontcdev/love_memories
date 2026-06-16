@@ -633,9 +633,13 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                                                 <button
                                                     onClick={() => handleReply(letter.id)}
                                                     disabled={isSendingReply || !replyContent.trim()}
-                                                    className="p-2 rounded-full bg-amber-700 hover:bg-amber-800 text-white shadow-md disabled:opacity-50 transition-colors"
+                                                    className="p-2 rounded-full bg-amber-700 hover:bg-amber-800 text-white shadow-md disabled:opacity-50 transition-colors flex items-center justify-center"
                                                 >
-                                                    <Send className="w-4 h-4" />
+                                                    {isSendingReply ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <Send className="w-4 h-4" />
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
