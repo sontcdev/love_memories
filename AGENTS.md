@@ -1,57 +1,50 @@
 # AGENTS.md
 
-## Project Overview
-
-Next.js 14 (App Router) + TypeScript + Prisma + Supabase application for personalized anniversary/love memory websites. Users get unique slugs (`/[slug]`) with galleries, timelines, letters, and games. PWA-enabled with offline support.
+Next.js 14 App Router + Prisma + Supabase app for personalized anniversary/memory websites. Users get unique slugs (`/[slug]`) with galleries, timelines, letters, and games. PWA-enabled.
 
 ## Stack
 
-Next.js 14.2.35 App Router, TypeScript 5, React 18, Prisma 6.19.1, PostgreSQL (Supabase), Tailwind CSS 3.4.1, React Hook Form + Zod, next-pwa 5.6.0.
+Next.js 14.2.35, TypeScript 5, React 18, Prisma 6.19.1, PostgreSQL (Supabase), Tailwind CSS 3.4.1, React Hook Form + Zod, next-pwa 5.6.0.
 
 
 
-## Build & Development
+## Commands
 
 ```bash
-npm run dev                    # Start dev server (localhost:3000)
+npm run dev                    # Dev server (localhost:3000)
 npm run build                  # Build (runs prisma generate first)
 npm start                      # Production server
-npm run lint                   # ESLint via Next.js
+npm run lint                   # ESLint
+
+npm run db:push                # Push schema changes
+npm run db:studio              # Prisma Studio GUI
+npm run db:seed                # Seed database
+npx tsx scripts/reset-admin.ts # Reset admin (admin/admin123)
+npx tsx scripts/activate-links.ts # Activate all links
 ```
 
-**Critical:** `npm run build` automatically runs `prisma generate` first (package.json:7). The `postinstall` hook also runs `prisma generate` after `npm install`.
+**Critical:** `npm run build` runs `prisma generate` first. `postinstall` hook also runs it after `npm install`.
 
-## Database & Prisma
+**Environment:** Requires `DATABASE_URL` and `DIRECT_URL` (Supabase pooling).
 
-```bash
-npm run db:push                # Push schema changes to database
-npm run db:studio              # Open Prisma Studio GUI
-npm run db:seed                # Seed database with sample data
-npx tsx scripts/reset-admin.ts # Reset admin account (admin/admin123)
-npx tsx scripts/activate-links.ts # Activate all user links
-```
-
-**Environment:** Requires `DATABASE_URL` and `DIRECT_URL` (Supabase connection pooling).
-
-**Schema:** PostgreSQL via Supabase. Key models: `User`, `Link`, `Gallery`, `Timeline`, `Letter`, `GameCard`, `Admin`. See `prisma/schema.prisma`.
-- `LinkType` enum: `LOVE`, `LOVE2`, `EVERY`, `IDOL`, `GRAD_PERSONAL`, `GRAD_CLASS`, `GRAD_GROUP`.
-
-**JSON profile_data:** Each link stores rich profile data as a JSON blob in `Link.profile_data`. When writing to this field via Prisma, always cast with `as Prisma.InputJsonValue` to satisfy Prisma 6 strict JSON type constraints.
+**Schema:** Key models: `User`, `Link`, `Gallery`, `Timeline`, `Letter`, `GameCard`, `Admin`.
+- `LinkType` enum: `LOVE`, `LOVE2`, `EVERY`, `IDOL`, `GRAD_PERSONAL`, `GRAD_CLASS`, `GRAD_GROUP`
+- `Link.profile_data` is JSON. Always cast: `profile_data: data as Prisma.InputJsonValue`
 
 ## Architecture
 
-- **Path alias:** `@/*` → `./src/*`
-- **App structure:** Next.js App Router with dynamic `[slug]` routes
-- **Server actions:** `src/app/actions/*` (admin, auth, gallery, game, letter, profile, timeline)
-- **Middleware:** `src/middleware.ts` — session-based auth protection
-  - Admin routes: `/admin/*` require `admin_session` cookie
-  - User edit routes: `/[slug]/edit`, `/[slug]/letters`, `/[slug]/timeline` require `session_{slug}` cookie
-- **Database client:** Singleton at `src/lib/prisma.ts`
-- **Storage:** Supabase client at `src/lib/supabase.ts`
+- Path alias: `@/*` → `./src/*`
+- App Router with dynamic `[slug]` routes
+- Server actions: `src/app/actions/*`
+- Middleware (`src/middleware.ts`): session-based auth
+  - Admin routes `/admin/*` need `admin_session` cookie
+  - Edit routes `/[slug]/edit`, `/[slug]/letters`, `/[slug]/timeline` need `session_{slug}` cookie
+- Database: `src/lib/prisma.ts` (singleton)
+- Storage: `src/lib/supabase.ts`
 
 ## Templates
 
-Each template is **completely decoupled and self-contained** in its own folder under `src/components/templates/`. Templates do NOT share components with each other — each folder has its own copies of `GameSection.tsx` and `LetterBox.tsx` for safe isolated editing.
+Each template is **completely decoupled** under `src/components/templates/`. Each has its own `GameSection.tsx` and `LetterBox.tsx` copies for isolated editing.
 
 ### Template Overview
 
@@ -66,133 +59,76 @@ Each template is **completely decoupled and self-contained** in its own folder u
 
 ### GRAD_GROUP Sub-Themes
 
-The `GRAD_GROUP` template supports 3 sub-themes stored inside `Link.profile_data.theme`:
-
-| `theme` value | Display Name | Visual Style |
-|---|---|---|
-| `caravan` | Chuyến Xe Thanh Xuân | Warm wood, amber, road-trip wanderlust |
-| `scrapbook` | Sổ Tay Polaroid | Kraft paper, polaroid photos, patchwork |
-| `station` | Trạm Ký Ức | Dark neon, violet tram station, cyberpunk |
-
-All 3 sub-themes support both **Night mode** and **Light mode** toggle.
+`GRAD_GROUP` has 3 sub-themes in `Link.profile_data.theme`: `caravan` (wood/amber), `scrapbook` (kraft/polaroid), `station` (neon/cyberpunk). All support Night/Light mode.
 
 ### Night/Light Mode
 
-All templates except the original `LOVE` support Night/Light mode toggle. The toggle state is persisted in `localStorage` under key `theme_mode_${slug}`. Key implementation pattern:
+All templates except `LOVE` support Night/Light toggle. State in `localStorage` key `theme_mode_${slug}`.
 
+**TDZ gotcha:** Initialize `isDark` BEFORE helper functions that reference it:
 ```tsx
-// ALWAYS initialize isDark BEFORE any function that references it (avoid TDZ error)
 const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
-const isDark = overrideDark !== null ? overrideDark : false; // ← must come here
-
-const getThemeProps = () => {
-    // now safe to reference isDark inside
-    return { bgClass: isDark ? "dark-bg" : "light-bg", ... };
-};
+const isDark = overrideDark !== null ? overrideDark : false; // ← before getThemeProps()
+const getThemeProps = () => ({ bgClass: isDark ? "dark" : "light" });
 ```
 
-## Edit Page (`/[slug]/edit`)
+## Edit Page
 
-The edit page (`src/app/[slug]/edit/edit-client.tsx`) auto-detects the link type and applies themed layout:
+`src/app/[slug]/edit/edit-client.tsx` applies themed layout by link type:
+- Love/Love2: white card
+- Idol: holographic stage + neon grid
+- GRAD_*: notebook layout (wood sidebar, lined paper, spiral rings). Colors adapt per sub-theme.
 
-- **Love / Love2:** Standard white card dashboard
-- **Idol:** Holographic stage with neon grid overlay, laser beams, bokeh bubbles
-- **GRAD_PERSONAL / GRAD_CLASS / GRAD_GROUP:** Notebook-style layout — wood sidebar + lined paper content area + spiral ring binder divider decorations. Colors adapt per sub-theme.
+## Limits
 
-**Theme detection in edit-client:**
-```tsx
-const isGrad = linkData.type === "GRAD_PERSONAL" || linkData.type === "GRAD_CLASS" || linkData.type === "GRAD_GROUP";
-let gradTheme = "emerald"; // default for GRAD_PERSONAL
-if (linkData.type === "GRAD_CLASS") gradTheme = "chalkboard";
-else if (linkData.type === "GRAD_GROUP") {
-    const profileData = linkData.profile_data as Record<string, unknown> | null;
-    gradTheme = (profileData?.theme as string) || "caravan";
-}
-```
-
-## Key Constraints
-
-**Media limits** (enforced in components, validated server-side):
-- Gallery: max 20 photos, 5 uploads/batch, target 50KB after compression
+**Media:**
+- Gallery: max 20 photos, 5/batch, 50KB target
 - Timeline: max 10 events
-- Voice recordings: max 300 seconds (5 minutes)
-- Image uploads: compress to 50KB target, max 1920px width, binary search for optimal quality
+- Voice: max 300 seconds
+- Images: 50KB target, 1920px max width, binary search compression
 
-**Text limits:**
+**Text:**
 - Names: 50 chars
-- Letter title: 50 chars, content: 1000 chars
-- Timeline title: 50 chars, description: 300 chars
-- Gallery caption: 50 chars
+- Letter title: 50 / content: 1000
+- Timeline title: 50 / description: 300
+- Gallery caption: 50
 
-**GRAD_GROUP specific limits:**
-- Members: recommended max 12 per group
-- Quiz questions: supports custom badges (perfect/good/normal titles & descriptions)
-- Goals/Roadmap: travel milestones stored in `profile_data.goals[]`
+**GRAD_GROUP:**
+- Members: max 12 recommended
+- Goals/roadmap in `profile_data.goals[]`
 
-## Next.js Configuration
+## Config
 
-**PWA:** Enabled in production via `next-pwa` (next.config.mjs:26-85). Disabled in development. Service worker writes to `public/`.
+- PWA: production only (next.config.mjs:27-86). Service worker in `public/`.
+- Image remotePatterns: `*.supabase.co`, `*.supabase.in`
+- Server actions: 10MB body limit
 
-**Image remotePatterns:** Allows `*.supabase.co` and `*.supabase.in` storage URLs (next.config.mjs:6-17).
+## Gotchas
 
-**Server Actions:** Body size limit raised to 10MB (next.config.mjs:20-23).
-
-## Common Gotchas
-
-1. **Build errors on Windows:** Prisma generate may fail with `EPERM` errors. Run with elevated permissions or in WSL.
-
-2. **Scripts are excluded from TypeScript:** `tsconfig.json` excludes `scripts/` directory. Use `npx tsx` to run scripts directly.
-
-3. **User PIN is 6 digits:** `User.password_hash` is varchar(6) in schema comment but actually stores bcrypt hash. The column itself is not limited to 6 chars.
-
-4. **Session cookies are slug-specific:** Each link has its own session cookie `session_{slug}`, not a global user session.
-
-5. **PWA files regenerate on build:** Don't manually edit `public/sw.js` or `public/workbox-*.js` - they're generated by next-pwa.
-
-6. **Image compression is client-side:** Binary search algorithm in ImageUpload component, not server-side. Uploads may timeout on slow connections.
-
-7. **`isDark` must be initialized before `getThemeProps()`:** In templates that call `isDark` inside a helper function, declare `isDark` immediately after the `overrideDark` state — before the helper function definition — to avoid a TDZ (Temporal Dead Zone) `ReferenceError` at runtime.
-
-8. **Prisma JSON field type:** When updating `profile_data`, always cast the value: `data: { profile_data: newData as Prisma.InputJsonValue }`. Import `Prisma` from `@prisma/client`. Sub-types like `GroupMember[]` are not directly assignable to Prisma's JSON type without this cast.
-
-9. **Sub-themes stored in JSON:** `GRAD_GROUP` sub-theme is stored in `profile_data.theme`, not a dedicated DB column. This avoids migration overhead while allowing full customizability.
+1. **Prisma JSON cast required:** `profile_data: data as Prisma.InputJsonValue` (import from `@prisma/client`)
+2. **TDZ error in templates:** Declare `isDark` before helper functions that reference it
+3. **Session cookies are per-slug:** `session_{slug}`, not global
+4. **PWA files auto-generated:** Don't edit `public/sw.js` or `workbox-*.js`
+5. **Image compression is client-side:** Binary search in ImageUpload component
+6. **Scripts excluded from TS:** `tsconfig.json` excludes `scripts/`. Run with `npx tsx`
+7. **Sub-themes in JSON:** `GRAD_GROUP` theme in `profile_data.theme`, not DB column
+8. **Windows Prisma errors:** Use WSL or elevated permissions for `prisma generate`
 
 ## Verification
 
-No test framework configured. After code changes:
-1. `npm run build` — typechecks and builds
-2. `npm run dev` — manual testing at localhost:3000
-3. Test middleware protection (access `/[slug]/edit` without PIN)
-4. For template changes: test Night/Light toggle persistence, sub-theme switching (GRAD_GROUP)
+No tests. After changes:
+1. `npm run build` — typecheck + build
+2. `npm run dev` — manual test
+3. For templates: test Night/Light toggle, sub-theme switching, middleware protection
 
-## Useful File Locations
+## Key Files
 
-- **Templates:**
-  - `src/components/templates/love/LoveTemplate.tsx` (Original love template)
-  - `src/components/templates/love2/Love2Template.tsx` (New love template - Scrapbook/Polaroid style)
-  - `src/components/templates/grad-personal/GradPersonalTemplate.tsx` (Individual graduation template - Emerald Desk theme)
-  - `src/components/templates/grad-class/GradClassTemplate.tsx` (Class collective yearbook template - Blackboard/Corkboard theme)
-  - `src/components/templates/grad-group/GradGroupTemplate.tsx` (Group graduation template - Chuyến Xe Thanh Xuân theme with caravan, scrapbook, station sub-themes)
-  - `src/components/templates/idol/IdolTemplate.tsx` (Idol fanpage template)
-  *Note:* Each template is completely decoupled and self-contained in its respective folder, containing its own copies of `GameSection.tsx` and `LetterBox.tsx` for easy isolated editing.
-
-- **Profile Edit Forms:**
-  - `src/components/edit/EditProfileForm.tsx` (Standard profile editor routing — dispatches to the correct form by `LinkType`)
-  - `src/components/edit/EditGradProfileForm.tsx` (Individual & class graduation profile editor form)
-  - `src/components/edit/EditGradGroupProfileForm.tsx` (Group graduation profile editor form — sub-theme selector, member cards, badge customizer, travel roadmap)
-  - `src/components/edit/EditIdolProfileForm.tsx` (Idol fanpage profile editor form)
-
-- **Edit Page Client:**
-  - `src/app/[slug]/edit/edit-client.tsx` (Unified edit layout with themed backgrounds per template type)
-
-- **PIN Screen / Lock Screen:**
-  - `src/components/auth/LockScreen.tsx` (PIN screen styling with custom themes per template)
-
-- **Auth middleware:** `src/middleware.ts:60-110`
-- **Server actions:** `src/app/actions/*.ts`
-  - `profile-actions.ts` — exports `updateLinkProfile`, all profile data types (`LoveProfileData`, `IdolProfileData`, `GradPersonalProfileData`, `GradClassProfileData`, `GradGroupProfileData`, `GroupMember`)
-- **Admin panel:**
-  - `src/app/admin/links/links-table.tsx` (Create/manage links, supports all `LinkType` values including `GRAD_GROUP`)
-- **Database schema:** `prisma/schema.prisma`
-- **Full feature spec:** `LOVE_TEMPLATE_REPORT.md` (in Vietnamese)
-- **New template spec & requirements docs:** `docx/` folder
+- Templates: `src/components/templates/{love,love2,idol,grad-personal,grad-class,grad-group}/`
+- Edit forms: `src/components/edit/Edit*ProfileForm.tsx`
+- Edit page: `src/app/[slug]/edit/edit-client.tsx`
+- Lock screen: `src/components/auth/LockScreen.tsx`
+- Middleware: `src/middleware.ts:60-110`
+- Server actions: `src/app/actions/*.ts` (profile-actions.ts has all profile types)
+- Admin panel: `src/app/admin/links/links-table.tsx`
+- Schema: `prisma/schema.prisma`
+- Spec: `LOVE_TEMPLATE_REPORT.md` (Vietnamese), `docx/` folder

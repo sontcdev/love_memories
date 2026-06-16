@@ -55,10 +55,12 @@ export function WelcomeOverlay({
         setIsAnimatingOut(true);
         sessionStorage.setItem(SESSION_KEY, "true");
 
-        // Wait for animation then hide and trigger music
+        // Trigger music immediately within the user interaction call stack to prevent autoplay blocks
+        onOpen();
+
+        // Wait for animation then hide
         setTimeout(() => {
             setIsVisible(false);
-            onOpen();
         }, 600);
     };
 

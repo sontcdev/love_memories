@@ -87,6 +87,11 @@ export function IdolLockScreen({ slug, onSuccess, linkData }: IdolLockScreenProp
 
     // Generate bokeh particles on mount (slightly larger and sharper)
     useEffect(() => {
+        // Clear welcome overlay shown state so it is forced to show when unlocked
+        if (typeof window !== "undefined" && window.sessionStorage) {
+            sessionStorage.removeItem("welcome_shown");
+        }
+
         const generated = Array.from({ length: 15 }).map((_, i) => ({
             id: i,
             size: Math.random() * 30 + 15, // 15px to 45px

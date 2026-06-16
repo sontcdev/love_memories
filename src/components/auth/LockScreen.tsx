@@ -48,6 +48,11 @@ export function LockScreen({ slug, onSuccess, linkData }: LockScreenProps) {
 
     // Generate drift background particles on mount
     useEffect(() => {
+        // Clear welcome overlay shown state so it is forced to show when unlocked
+        if (typeof window !== "undefined" && window.sessionStorage) {
+            sessionStorage.removeItem("welcome_shown");
+        }
+
         const generated = Array.from({ length: 12 }).map((_, i) => ({
             id: i,
             size: Math.random() * 25 + 10, // 10px to 35px

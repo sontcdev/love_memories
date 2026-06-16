@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getLinkData, checkLinkAccess } from "@/app/actions/auth-actions";
+import { cookies } from "next/headers";
+import { getLinkData } from "@/app/actions/auth-actions";
 import { SlugPageClient } from "./page-client";
 
 // Disable caching to always check fresh
@@ -32,8 +33,11 @@ export default async function SlugPage({ params }: PageProps) {
         );
     }
 
-    // Check if the user is already authenticated (has session cookie)
-    const isAuthed = await checkLinkAccess(slug);
+    // Check if user has session cookie (already authenticated)
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get(`session_${slug}`)?.value;
+    const isAuthenticated = !!sessionToken;
+
     const bgColor = linkResult.data.config?.background_color || '#ffffff';
     const accentColor = linkResult.data.config?.accent_color || '#ec4899';
 
@@ -50,7 +54,7 @@ export default async function SlugPage({ params }: PageProps) {
             />
             <SlugPageClient
                 slug={slug}
-                isAuthenticated={isAuthed}
+                isAuthenticated={isAuthenticated}
                 linkData={linkResult.data}
             />
         </>

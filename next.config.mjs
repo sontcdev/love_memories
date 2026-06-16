@@ -21,6 +21,7 @@ const nextConfig = {
             bodySizeLimit: "10mb",
         },
     },
+    allowedDevOrigins: ["100.82.144.128"],
 };
 
 const pwaConfig = withPWA({

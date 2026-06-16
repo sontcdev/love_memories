@@ -40,10 +40,10 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
     // Callback for when user opens the welcome overlay
     const handleWelcomeOpen = useCallback(() => {
         // Start playing music after user interaction (required by browsers)
-        setTimeout(() => {
+        if (linkData?.config?.auto_play) {
             musicPlayerRef.current?.play();
-        }, 300);
-    }, []);
+        }
+    }, [linkData?.config?.auto_play]);
 
     // No data available (should have data after reload)
     if (!linkData) {
@@ -124,16 +124,16 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
 
                     {/* Main Template Content */}
                     {renderTemplate()}
-                </>
-            )}
 
-            {/* Music Player - Preloads on LockScreen to ensure API is ready upon unlock */}
-            {linkData.config?.music_url && (
-                <MusicPlayer
-                    ref={musicPlayerRef}
-                    src={linkData.config.music_url}
-                    autoPlay={true}
-                />
+                    {/* Music Player - appears after overlay is dismissed */}
+                    {linkData.config?.music_url && (
+                        <MusicPlayer
+                            ref={musicPlayerRef}
+                            src={linkData.config.music_url}
+                            autoPlay={linkData.config.auto_play ?? false}
+                        />
+                    )}
+                </>
             )}
         </ThemeWrapper>
     );
