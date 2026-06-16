@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { RotateCcw, CheckCircle2, XCircle, Share2, HelpCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { RotateCcw, Share2, HelpCircle, BarChart2, Loader2 } from "lucide-react";
+import { submitQuizVote, getQuizStats, MemberVoteStat } from "@/app/actions/game-actions";
 
 interface QuizQuestion {
     question: string;
-    options: string[];
-    correctIndex: number;
+    options?: string[];
+    correctIndex?: number;
 }
 
 interface QuizBadges {
@@ -21,58 +22,84 @@ interface QuizBadges {
 }
 
 interface GameSectionProps {
+    slug: string;
     quiz?: QuizQuestion[];
     quizBadges?: QuizBadges;
+    members?: { id: string; name: string }[];
     groupName?: string;
     isDark?: boolean;
     accentColor?: string;
 }
 
 const defaultQuiz: QuizQuestion[] = [
-    {
-        question: "Trong nhóm của chúng mình, ai là người hay 'bùng kèo' phút chót nhất?",
-        options: ["Thành viên A", "Thành viên B", "Thành viên C", "Cả hội đều uy tín"],
-        correctIndex: 1
-    },
-    {
-        question: "Địa điểm tụ tập trà chiều yêu thích nhất của cả nhóm là ở đâu?",
-        options: ["Quán trà sữa cổng trường", "Quán cà phê vỉa hè", "Nhà của một thành viên", "Căng tin trường"],
-        correctIndex: 0
-    },
-    {
-        question: "Biệt danh của nhóm tụi mình là gì?",
-        options: ["Hội báo thủ", "Team đi học muộn", "Bộ sậu ăn quà vặt", "Liên minh huyền thoại"],
-        correctIndex: 0
-    },
-    {
-        question: "Chuyến đi xa đầu tiên cùng nhau của nhóm là đi đâu?",
-        options: ["Đi cắm trại ngoại ô", "Đi du lịch biển", "Đi xem phim rạp", "Chưa đi đâu xa cùng nhau"],
-        correctIndex: 1
-    },
-    {
-        question: "Sau này khi ra trường, điều nhóm mình mong muốn thực hiện nhất là gì?",
-        options: ["Cùng đỗ nguyện vọng 1", "Đi du lịch nước ngoài cùng nhau", "Họp nhóm mỗi năm một lần", "Mãi bên nhau bạn nhé"],
-        correctIndex: 3
-    }
+    { question: "Trong nhóm của chúng mình, ai là người hay 'bùng kèo' phút chót nhất?" },
+    { question: "Ai là người có nhiều biệt danh độc lạ nhất trong nhóm?" },
+    { question: "Ai là 'ông hoàng/bà chúa' nói nhiều nhất hội bạn này?" },
+    { question: "Ai là thủ quỹ đanh đá và luôn đòi nợ dai dẳng nhất?" },
+    { question: "Khi đi du lịch cùng nhau, ai sẽ là người ngủ nướng muộn nhất?" }
 ];
 
-export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDark = false, accentColor = "#d97706" }: GameSectionProps) {
+export function GameSection({ 
+    slug, 
+    quiz, 
+    members = [], 
+    groupName = "Chúng tớ", 
+    isDark = false, 
+    accentColor = "#d97706" 
+}: GameSectionProps) {
     const activeQuiz = quiz && quiz.length > 0 ? quiz : defaultQuiz;
     const [gameState, setGameState] = useState<"start" | "playing" | "ended">("start");
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [score, setScore] = useState(0);
-    const [selectedOption, setSelectedOption] = useState<number | null>(null);
+    const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [showFeedback, setShowFeedback] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [shareCopied, setShareCopied] = useState(false);
+    const [voteStats, setVoteStats] = useState<MemberVoteStat[]>([]);
+    const [allQuizStats, setAllQuizStats] = useState<{ [key: number]: MemberVoteStat[] }>({});
+
+    // Fallback options if no members defined
+    const activeOptions = members.length > 0 ? members : [
+        { id: "m1", name: "Thành viên A" },
+        { id: "m2", name: "Thành viên B" },
+        { id: "m3", name: "Thành viên C" },
+        { id: "m4", name: "Mọi người đều uy tín" }
+    ];
 
     const currentQuestion = activeQuiz[currentIndex];
 
-    const handleOptionSelect = (index: number) => {
-        if (showFeedback) return;
-        setSelectedOption(index);
-        setShowFeedback(true);
-        if (index === currentQuestion.correctIndex) {
-            setScore(prev => prev + 1);
+    // Load saved vote stats on mount or when ending
+    useEffect(() => {
+        if (gameState === "ended") {
+            const fetchAllStats = async () => {
+                const statsMap: { [key: number]: MemberVoteStat[] } = {};
+                for (let i = 0; i < activeQuiz.length; i++) {
+                    const res = await getQuizStats(slug, i);
+                    if (res.success && res.stats) {
+                        statsMap[i] = res.stats;
+                    }
+                }
+                setAllQuizStats(statsMap);
+            };
+            fetchAllStats().catch(console.error);
+        }
+    }, [gameState, slug, activeQuiz.length]);
+
+    const handleVote = async (memberId: string) => {
+        if (showFeedback || isSubmitting) return;
+        setSelectedOption(memberId);
+        setIsSubmitting(true);
+
+        try {
+            const result = await submitQuizVote(slug, currentIndex, memberId);
+            if (result.success && result.stats) {
+                setVoteStats(result.stats);
+                setAllQuizStats(prev => ({ ...prev, [currentIndex]: result.stats || [] }));
+                setShowFeedback(true);
+            }
+        } catch (err) {
+            console.error("Failed to submit vote:", err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -81,6 +108,7 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
             setCurrentIndex(prev => prev + 1);
             setSelectedOption(null);
             setShowFeedback(false);
+            setVoteStats([]);
         } else {
             setGameState("ended");
         }
@@ -88,54 +116,15 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
 
     const resetQuiz = () => {
         setCurrentIndex(0);
-        setScore(0);
         setSelectedOption(null);
         setShowFeedback(false);
+        setVoteStats([]);
         setGameState("start");
         setShareCopied(false);
     };
 
-    const getBadge = (correctScore: number, totalQuestions: number) => {
-        const ratio = correctScore / totalQuestions;
-        if (ratio === 1) {
-            return {
-                title: quizBadges?.perfect_title || "Tri Kỷ Tri Âm",
-                icon: "🏆",
-                desc: quizBadges?.perfect_desc || "Bạn hiểu nhóm tớ tới mức thượng thừa! Xứng đáng làm thành viên danh dự thứ n.",
-                color: "from-yellow-400 via-amber-500 to-orange-500 text-white shadow-yellow-500/25",
-                badgeBorder: "border-yellow-400"
-            };
-        } else if (ratio >= 0.6) {
-            return {
-                title: quizBadges?.good_title || "Đồng Bọn Chí Cốt",
-                icon: "🥇",
-                desc: quizBadges?.good_desc || "Chỉ lệch một chút thôi! Bạn rất biết quan sát nhóm tớ đấy.",
-                color: "from-indigo-400 via-purple-500 to-pink-500 text-white shadow-purple-500/25",
-                badgeBorder: "border-purple-400"
-            };
-        } else if (ratio >= 0.3) {
-            return {
-                title: quizBadges?.average_title || "Bạn Bè Xã Giao",
-                icon: "🤝",
-                desc: quizBadges?.average_desc || "Hiểu sương sương kỷ niệm, mau rủ cả nhóm tụ tập ăn uống chuộc lỗi đi nha!",
-                color: "from-blue-400 via-teal-500 to-emerald-500 text-white shadow-teal-500/25",
-                badgeBorder: "border-teal-400"
-            };
-        } else {
-            return {
-                title: quizBadges?.low_title || "Người Lạ Ghé Chơi",
-                icon: "👤",
-                desc: quizBadges?.low_desc || "Ủa bạn đi lầm ga rồi hả? Vui lòng kết nối lại tình nghĩa với nhóm tớ mau!",
-                color: "from-slate-400 to-slate-600 text-white shadow-slate-500/25",
-                badgeBorder: "border-slate-400"
-            };
-        }
-    };
-
-    const badge = getBadge(score, activeQuiz.length);
-
     const handleShare = () => {
-        const text = `Tớ đạt ${score}/${activeQuiz.length} điểm trong Thử Thách Hiểu Ý Đồng Đội của nhóm ${groupName} và nhận danh hiệu [${badge.title} ${badge.icon}]! Thử sức xem bạn được bao nhiêu điểm nhé: ${window.location.href}`;
+        const text = `Tham gia bình chọn Thử Thách Hiểu Ý Đồng Đội của nhóm bạn ${groupName} ngay tại đây: ${window.location.href}`;
         navigator.clipboard.writeText(text);
         setShareCopied(true);
         setTimeout(() => setShareCopied(false), 2000);
@@ -149,13 +138,13 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
         }`}>
             {gameState === "start" && (
                 <div className="text-center space-y-6 py-6">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-md" style={{ backgroundColor: accentColor }}>
-                        <HelpCircle className="w-8 h-8 text-white animate-pulse" />
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-md animate-pulse" style={{ backgroundColor: accentColor }}>
+                        <HelpCircle className="w-8 h-8 text-white" />
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-xl sm:text-2xl font-serif font-bold">Thử Thách Hiểu Ý Đồng Đội</h3>
-                        <p className={`text-xs sm:text-sm max-w-md mx-auto leading-relaxed ${isDark ? "text-slate-350" : "text-gray-500"}`}>
-                            Nhóm {groupName} đã soạn thảo bộ trắc nghiệm đặc biệt để kiểm tra xem bạn hiểu về tình huynh đệ của chúng tớ đến đâu. Vượt qua thử thách để rinh Huy hiệu tùy chọn nhé!
+                        <h3 className="text-xl sm:text-2xl font-serif font-bold">Thử Thách Bình Chọn Đồng Đội</h3>
+                        <p className={`text-xs sm:text-sm max-w-md mx-auto leading-relaxed ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+                            Hãy cùng tham gia cuộc bình chọn vui xem ai trong nhóm {groupName} phù hợp nhất với các danh hiệu dìm hàng. Kết quả thống kê tỉ lệ bình chọn sẽ hiển thị ngay sau khi bạn vote!
                         </p>
                     </div>
                     <button
@@ -163,7 +152,7 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
                         className="px-8 py-3 rounded-full text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all hover:scale-105"
                         style={{ backgroundColor: accentColor }}
                     >
-                        Bắt đầu chơi 🎮
+                        Bắt đầu bình chọn 📊
                     </button>
                 </div>
             )}
@@ -175,7 +164,7 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
                         <span className="text-xs font-mono font-bold" style={{ color: accentColor }}>
                             CÂU HỎI {currentIndex + 1} / {activeQuiz.length}
                         </span>
-                        <div className="w-32 bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div className="w-32 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
                             <div 
                                 className="h-full transition-all duration-300"
                                 style={{ width: `${((currentIndex + 1) / activeQuiz.length) * 100}%`, backgroundColor: accentColor }}
@@ -191,37 +180,51 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
 
                         {/* Options Grid */}
                         <div className="grid grid-cols-1 gap-3 max-w-md mx-auto pt-2">
-                            {currentQuestion.options.map((option, idx) => {
-                                let optStyle = isDark 
-                                    ? "bg-slate-950 border-slate-850 hover:bg-slate-850/50" 
-                                    : "bg-slate-50 border-slate-100 hover:bg-slate-100/50";
-                                
+                            {activeOptions.map((member) => {
+                                const isSelected = selectedOption === member.id;
+                                const stat = voteStats.find(s => s.memberId === member.id);
+                                const percentage = stat?.percentage || 0;
+                                const voteCount = stat?.count || 0;
+
                                 if (showFeedback) {
-                                    if (idx === currentQuestion.correctIndex) {
-                                        optStyle = "bg-green-500/10 border-green-500 text-green-600 font-semibold";
-                                    } else if (idx === selectedOption) {
-                                        optStyle = "bg-red-500/10 border-red-500 text-red-600 font-semibold";
-                                    } else {
-                                        optStyle = "opacity-50 border-transparent pointer-events-none";
-                                    }
-                                } else if (idx === selectedOption) {
-                                    optStyle = "ring-2 ring-opacity-25";
+                                    return (
+                                        <div
+                                            key={member.id}
+                                            className={`relative w-full p-4 rounded-xl border text-left text-xs sm:text-sm transition-all overflow-hidden ${
+                                                isSelected 
+                                                    ? "border-amber-500 bg-amber-500/5 text-amber-900 dark:text-amber-300 font-semibold" 
+                                                    : "border-gray-200 dark:border-slate-800 text-gray-700 dark:text-slate-300"
+                                            }`}
+                                        >
+                                            {/* Background progress bar representation */}
+                                            <div 
+                                                className="absolute left-0 top-0 bottom-0 bg-amber-500/10 dark:bg-amber-500/20 transition-all duration-1000 ease-out z-0"
+                                                style={{ width: `${percentage}%` }}
+                                            />
+                                            <div className="relative z-10 flex justify-between items-center">
+                                                <span>{member.name}</span>
+                                                <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                                                    {percentage}% ({voteCount} vote{voteCount !== 1 ? "s" : ""})
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
                                 }
 
                                 return (
                                     <button
-                                        key={idx}
-                                        onClick={() => handleOptionSelect(idx)}
-                                        disabled={showFeedback}
-                                        style={(!showFeedback && idx === selectedOption) ? { borderColor: accentColor, boxShadow: `0 0 0 3px ${accentColor}40` } : {}}
-                                        className={`w-full p-4 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-center justify-between gap-3 ${optStyle}`}
+                                        key={member.id}
+                                        onClick={() => handleVote(member.id)}
+                                        disabled={isSubmitting}
+                                        className={`w-full p-4 rounded-xl border text-left text-xs sm:text-sm transition-all hover:scale-[1.01] flex items-center justify-between ${
+                                            isDark 
+                                                ? "bg-slate-950 border-slate-800 hover:bg-slate-800/40 text-slate-300" 
+                                                : "bg-slate-50 border-slate-100 hover:bg-slate-100/60 text-gray-750"
+                                        }`}
                                     >
-                                        <span>{option}</span>
-                                        {showFeedback && idx === currentQuestion.correctIndex && (
-                                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                        )}
-                                        {showFeedback && idx === selectedOption && idx !== currentQuestion.correctIndex && (
-                                            <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                                        <span>{member.name}</span>
+                                        {isSubmitting && selectedOption === member.id && (
+                                            <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
                                         )}
                                     </button>
                                 );
@@ -234,10 +237,10 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
                         <div className="flex justify-center pt-2">
                             <button
                                 onClick={handleNext}
-                                className="px-6 py-2.5 rounded-full text-white font-semibold text-xs transition-all hover:scale-103 shadow"
+                                className="px-6 py-2.5 rounded-full text-white font-semibold text-xs transition-all hover:scale-103 shadow-md"
                                 style={{ backgroundColor: accentColor }}
                             >
-                                {currentIndex < activeQuiz.length - 1 ? "Câu hỏi tiếp theo ➔" : "Xem kết quả nhóm 🎉"}
+                                {currentIndex < activeQuiz.length - 1 ? "Câu hỏi tiếp theo ➔" : "Xem tổng hợp kết quả 📊"}
                             </button>
                         </div>
                     )}
@@ -245,25 +248,42 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
             )}
 
             {gameState === "ended" && (
-                <div className="text-center space-y-6 py-4">
+                <div className="space-y-6 py-4">
                     {/* Badge stickers */}
-                    <div className="relative inline-block">
-                        <div className={`w-28 h-28 rounded-full bg-gradient-to-br ${badge.color} border-4 ${badge.badgeBorder} flex flex-col items-center justify-center mx-auto shadow-xl`}>
-                            <span className="text-4xl mb-1">{badge.icon}</span>
-                            <span className="text-[9px] px-1 font-bold tracking-wider uppercase text-center truncate w-full">{badge.title}</span>
+                    <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto shadow-lg">
+                            <BarChart2 className="w-8 h-8 text-white" />
                         </div>
-                        <div className="absolute -top-1 -right-1 bg-yellow-400 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-full rotate-[12deg] shadow-md border border-white">
-                            {score} / {activeQuiz.length} Đ
-                        </div>
+                        <h3 className="mt-3 text-lg font-serif font-bold">Thống kê bình chọn cả nhóm</h3>
+                        <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+                            Tổng số lượt bình chọn và kết quả thống kê của các thành viên.
+                        </p>
                     </div>
 
                     {/* Result Info */}
-                    <div className="space-y-2 max-w-sm mx-auto">
-                        <h3 className="text-lg font-serif font-bold text-emerald-500">KẾT QUẢ ĐẠT ĐƯỢC</h3>
-                        <p className="text-sm font-semibold italic">{badge.title}</p>
-                        <p className={`text-xs leading-relaxed ${isDark ? "text-slate-350" : "text-gray-500"}`}>
-                            {badge.desc}
-                        </p>
+                    <div className="space-y-3 max-w-md mx-auto text-left">
+                        {activeQuiz.map((q, idx) => {
+                            const questionStats = allQuizStats[idx] || [];
+                            const topVoted = [...questionStats].sort((a, b) => b.count - a.count)[0];
+
+                            return (
+                                <div key={idx} className={`p-4 rounded-xl border ${isDark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50 border-slate-150"}`}>
+                                    <p className="text-xs font-bold font-serif mb-2">Câu {idx + 1}: {q.question}</p>
+                                    {topVoted && topVoted.count > 0 ? (
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span>
+                                                Nhận vote nhiều nhất: <strong className="text-amber-600 dark:text-amber-400">{topVoted.memberName}</strong>
+                                            </span>
+                                            <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+                                                {topVoted.percentage}% ({topVoted.count} vote{topVoted.count !== 1 ? "s" : ""})
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <p className="text-[10px] text-gray-400">Chưa có lượt bình chọn nào.</p>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Actions */}
@@ -274,7 +294,7 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
                             style={{ backgroundColor: accentColor }}
                         >
                             <Share2 className="w-3.5 h-3.5" />
-                            {shareCopied ? "Đã sao chép!" : "Chia sẻ điểm"}
+                            {shareCopied ? "Đã sao chép!" : "Chia sẻ cuộc bình chọn"}
                         </button>
                         <button
                             onClick={resetQuiz}
@@ -285,7 +305,7 @@ export function GameSection({ quiz, quizBadges, groupName = "Chúng tớ", isDar
                             }`}
                         >
                             <RotateCcw className="w-3.5 h-3.5" />
-                            Thử lại
+                            Bình chọn lại
                         </button>
                     </div>
                 </div>

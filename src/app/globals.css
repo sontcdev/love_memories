@@ -56,11 +56,18 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--theme-font), sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 @layer utilities {
+  .font-sans {
+    font-family: var(--theme-font), ui-sans-serif, system-ui, sans-serif !important;
+  }
+  .font-serif {
+    font-family: var(--theme-font), ui-serif, Georgia, serif !important;
+  }
   .text-balance {
     text-wrap: balance;
   }

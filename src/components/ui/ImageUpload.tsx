@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
-import { supabase, STORAGE_BUCKET, generateFilePath, getPublicUrl } from "@/lib/supabase";
 import { Upload, X, Loader2, ImageIcon, Check } from "lucide-react";
 
 interface ImageUploadProps {
@@ -161,31 +160,33 @@ export function ImageUpload({
                 }
             }
 
-            // Upload to Supabase
+            // Upload to API
             setIsUploading(true);
             try {
-                const filePath = generateFilePath(slug, fileToUpload.name);
+                const formData = new FormData();
+                formData.append("file", fileToUpload);
+                formData.append("slug", slug);
+                formData.append("type", "image");
 
-                const { error: uploadError } = await supabase.storage
-                    .from(STORAGE_BUCKET)
-                    .upload(filePath, fileToUpload, {
-                        cacheControl: "3600",
-                        upsert: false,
-                    });
+                const response = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                });
 
-                if (uploadError) {
-                    throw uploadError;
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || "Upload failed");
                 }
 
-                const publicUrl = getPublicUrl(filePath);
-                onUploadComplete(publicUrl);
+                onUploadComplete(result.url);
                 setUploadSuccess(true);
 
                 // Reset success indicator after 2s
                 setTimeout(() => setUploadSuccess(false), 2000);
             } catch (err) {
                 console.error("Upload error:", err);
-                setError("Upload failed. Please try again.");
+                setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
                 setPreview(currentImageUrl || null);
             } finally {
                 setIsUploading(false);

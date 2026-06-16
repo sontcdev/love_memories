@@ -47,6 +47,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
 
     // Form state
     const [newTitle, setNewTitle] = useState("");
+    const [newSender, setNewSender] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [newAudioUrl, setNewAudioUrl] = useState("");
@@ -88,6 +89,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
         setIsCreating(true);
         const result = await createLetter(slug, {
             title: newTitle.trim(),
+            sender: newSender.trim() || undefined,
             content: newContent.trim(),
             video_url: newVideoUrl || undefined,
             audio_url: newAudioUrl || undefined,
@@ -97,6 +99,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
         if (result.success && result.data) {
             setLetters([result.data, ...letters]);
             setNewTitle("");
+            setNewSender("");
             setNewContent("");
             setNewVideoUrl("");
             setNewAudioUrl("");
@@ -247,6 +250,11 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                                     <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow border border-red-700 z-10" />
 
                                     <div className="space-y-1.5 flex-1 overflow-hidden">
+                                        {letter.sender && (
+                                            <div className="text-[9px] font-mono uppercase tracking-wider opacity-60 truncate">
+                                                Từ: {letter.sender}
+                                            </div>
+                                        )}
                                         <div className="flex items-center gap-1 font-serif font-bold text-xs sm:text-sm truncate">
                                             <span>{letter.title}</span>
                                             {isLetterLocked(letter) && (
@@ -286,6 +294,19 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                             </button>
                         </div>
                         <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                            <div>
+                                <label className={`block text-xs font-semibold ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
+                                    Người gửi <span className="text-gray-400 text-[10px]">({newSender.length}/50)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newSender}
+                                    onChange={(e) => setNewSender(e.target.value.slice(0, 50))}
+                                    placeholder="Nhập tên người gửi (tên của bạn hoặc ẩn danh)..."
+                                    maxLength={50}
+                                    className={`w-full px-4 py-2 rounded-lg border border-amber-900/15 ${isDark ? "bg-[#121110] text-white" : "bg-white text-gray-950"} text-sm outline-none mb-3`}
+                                />
+                            </div>
                             <div>
                                 <label className={`block text-xs font-semibold ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     Tiêu đề mảnh giấy <span className="text-gray-400 text-[10px]">({newTitle.length}/50)</span>
@@ -443,9 +464,14 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                                 </button>
 
                                 <div className="border-b border-amber-900/10 pb-3 pr-8 mt-2">
-                                    <div className="flex items-center gap-1 text-[10px] text-amber-800/60 font-mono mb-1">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        <span>{new Date(letter.created_at).toLocaleDateString("vi-VN")}</span>
+                                    <div className="flex items-center justify-between text-[10px] text-amber-800/60 font-mono mb-1">
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            <span>{new Date(letter.created_at).toLocaleDateString("vi-VN")}</span>
+                                        </div>
+                                        {letter.sender && (
+                                            <span className="font-bold text-amber-900">Người gửi: {letter.sender}</span>
+                                        )}
                                     </div>
                                     <h3 className="text-lg font-bold font-serif text-amber-950 flex items-center gap-2">
                                         📌 {letter.title}

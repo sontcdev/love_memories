@@ -26,13 +26,17 @@ type ConfigFormData = z.infer<typeof configSchema>;
 // ============================================================================
 
 const FONT_OPTIONS = [
-    { value: "Inter", label: "Inter (Default)" },
-    { value: "Roboto", label: "Roboto" },
-    { value: "Poppins", label: "Poppins" },
-    { value: "Playfair Display", label: "Playfair Display (Serif)" },
-    { value: "Dancing Script", label: "Dancing Script (Cursive)" },
-    { value: "Quicksand", label: "Quicksand" },
-    { value: "Nunito", label: "Nunito" },
+    { value: "Inter", label: "Inter (Mặc định)" },
+    { value: "Roboto", label: "Roboto (Thanh lịch)" },
+    { value: "Poppins", label: "Poppins (Hiện đại)" },
+    { value: "Playfair Display", label: "Playfair Display (Có chân)" },
+    { value: "Dancing Script", label: "Dancing Script (Viết tay bay bổng)" },
+    { value: "Quicksand", label: "Quicksand (Bo tròn dễ thương)" },
+    { value: "Nunito", label: "Nunito (Trẻ trung)" },
+    { value: "Pacifico", label: "Pacifico (Script nghệ thuật)" },
+    { value: "Montserrat", label: "Montserrat (Mạnh mẽ)" },
+    { value: "Comfortaa", label: "Comfortaa (Bo tròn mập)" },
+    { value: "Caveat", label: "Caveat (Viết tay phóng khoáng)" },
 ];
 
 // ============================================================================

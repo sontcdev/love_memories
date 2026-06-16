@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Coffee, Sun, Moon, Users, Facebook, Instagram } from "lucide-react";
+import { Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Coffee, Sun, Moon, Users, Facebook, Instagram, Calendar } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
@@ -112,7 +112,9 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                     deskTextureOpacity: "opacity-5",
                     woodColor: "from-[#1a103c] via-[#2d1b6b] to-[#1a103c]",
                     ribbonBg: "bg-violet-950/90 text-violet-200 border-violet-800/30",
-                    deskOverlay: "ga-tau"
+                    deskOverlay: "ga-tau",
+                    badgeBg: "bg-violet-500/10",
+                    accentText: "text-violet-500",
                 };
             case "scrapbook":
                 return {
@@ -122,7 +124,9 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                     deskTextureOpacity: "opacity-15",
                     woodColor: "from-[#4a3424] via-[#6e4e37] to-[#4a3424]",
                     ribbonBg: "bg-[#faf3e0]/95 text-[#5c3a21] border-[#855430]/20",
-                    deskOverlay: "kraft"
+                    deskOverlay: "kraft",
+                    badgeBg: "bg-[#855430]/10",
+                    accentText: "text-[#855430]",
                 };
             case "caravan":
             default:
@@ -133,7 +137,9 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                     deskTextureOpacity: "opacity-10",
                     woodColor: "from-[#5c3a21] via-[#855430] to-[#5c3a21]",
                     ribbonBg: "bg-amber-50/90 text-amber-950 border-amber-900/15",
-                    deskOverlay: "xe-phuot"
+                    deskOverlay: "xe-phuot",
+                    badgeBg: "bg-amber-500/10",
+                    accentText: "text-amber-600",
                 };
         }
     };
@@ -195,6 +201,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
         const newDark = !isDark;
         setOverrideDark(newDark);
         localStorage.setItem(`theme_mode_${slug}`, newDark ? "dark" : "light");
+        window.dispatchEvent(new CustomEvent("theme-change", { detail: { isDark: newDark } }));
         
         const root = document.documentElement;
         if (newDark) {
@@ -451,6 +458,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                         {[
                             { id: "members", icon: Users, label: "Thành Viên" },
                             { id: "gallery", icon: ImageIcon, label: "Kỷ Niệm Đẹp" },
+                            { id: "timeline", icon: Calendar, label: "Dòng Thời Gian" },
                             { id: "roadmap", icon: Target, label: "Lộ Trình Nhóm" },
                             { id: "game", icon: Sparkles, label: "Đố Vui Đồng Đội" },
                             { id: "letters", icon: Mail, label: "Bảng Lưu Bút" },
@@ -514,7 +522,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                                 <div 
                                                     key={member.id}
                                                     onClick={() => setFlippedCardId(isFlipped ? null : member.id)}
-                                                    className="w-full h-80 perspective-1000 cursor-pointer group"
+                                                    className="w-full h-64 perspective-1000 cursor-pointer group"
                                                 >
                                                     <div className={`relative w-full h-full duration-700 preserve-3d transition-transform ${isFlipped ? "rotate-y-180" : "md:group-hover:rotate-y-180"}`}>
                                                         
@@ -527,11 +535,11 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                                             
                                                             <div className="space-y-3 pt-2">
                                                                 {/* Avatar image */}
-                                                                <div className="w-24 h-24 rounded-full mx-auto overflow-hidden border-2 border-amber-900/10 bg-slate-50 relative">
+                                                                <div className="w-28 h-28 rounded-2xl mx-auto overflow-hidden border-2 border-amber-900/10 bg-slate-50 relative">
                                                                     {member.avatar ? (
-                                                                        <Image src={member.avatar} alt={member.name} fill className="object-cover" />
+                                                                        <Image src={member.avatar} alt={member.name} fill className="object-cover rounded-2xl" />
                                                                     ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center text-3xl">🧑</div>
+                                                                        <div className="w-full h-full flex items-center justify-center text-4xl">🧑</div>
                                                                     )}
                                                                 </div>
                                                                 
@@ -649,6 +657,71 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                             </section>
                         )}
 
+                        {/* Timeline Section */}
+                        {activeSection === "timeline" && (
+                            <section className="space-y-6">
+                                <h2 className="text-xl sm:text-2xl font-serif font-bold mb-2 flex items-center gap-2">
+                                    <span className={`p-2 rounded-xl ${themeProps.badgeBg} ${themeProps.accentText}`}>⌛</span>
+                                    Dòng Thời Gian Chúng Mình
+                                </h2>
+                                <p className={`text-xs sm:text-sm mb-6 font-serif italic ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+                                    Nhìn lại những cột mốc đáng nhớ cùng nhau đi qua năm tháng...
+                                </p>
+
+                                {data.timelines.length === 0 ? (
+                                    <div className="text-center py-16 text-slate-400 font-serif italic">
+                                        <Calendar className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                        <p>Chưa có sự kiện nào được ghi nhận. Hãy truy cập trang Edit để tạo dòng thời gian.</p>
+                                    </div>
+                                ) : (
+                                    <div className="relative pl-6 border-l-2 ml-4 space-y-8" style={{ borderColor: themeProps.accentColor }}>
+                                        {data.timelines.map((event) => (
+                                            <div key={event.id} className="relative animate-note-pop">
+                                                {/* Connecting Dot */}
+                                                <div 
+                                                    className={`absolute -left-[33px] top-1 w-5 h-5 rounded-full border-4 shadow-md flex items-center justify-center text-[10px] text-white transition-colors duration-300`}
+                                                    style={{ 
+                                                        backgroundColor: themeProps.accentColor,
+                                                        borderColor: isDark ? "#181512" : "#fcfbf9"
+                                                    }}
+                                                >
+                                                    🎓
+                                                </div>
+
+                                                <div className={`border rounded-2xl p-5 shadow-sm transition-all ${
+                                                    isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-850" : "bg-[#fbfbfa] border-slate-250/50 hover:bg-[#f8f8f6]"
+                                                }`}>
+                                                    <div className={`text-xs font-bold mb-1 flex items-center gap-1.5 ${themeProps.accentText}`}>
+                                                        <Calendar className="w-3.5 h-3.5" />
+                                                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                                                            year: "numeric",
+                                                            month: "long",
+                                                            day: "numeric",
+                                                        })}
+                                                    </div>
+                                                    <h3 className="text-base sm:text-lg font-serif font-bold mb-2">
+                                                        {event.title}
+                                                    </h3>
+                                                    
+                                                    {event.description && (
+                                                        <p className={`text-sm leading-relaxed mb-4 whitespace-pre-wrap ${isDark ? "text-slate-300" : "text-gray-600"}`}>
+                                                            {event.description}
+                                                        </p>
+                                                    )}
+
+                                                    {event.image_url && (
+                                                        <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-inner border ${isDark ? "border-zinc-800" : "border-slate-100"}`}>
+                                                            <Image src={event.image_url} alt={event.title} fill className="object-cover" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
                         {/* Gói 4: Bản Đồ Lộ Trình Nhóm */}
                         {activeSection === "roadmap" && (
                             <section className="space-y-6">
@@ -725,8 +798,10 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                     Thử Thách Độ Hiểu Đồng Đội
                                 </h2>
                                 <GameSection 
+                                    slug={slug}
                                     quiz={profileData?.quiz} 
                                     quizBadges={profileData?.quiz_badges}
+                                    members={profileData?.members}
                                     groupName={groupName} 
                                     isDark={isDark} 
                                     accentColor={themeProps.accentColor}

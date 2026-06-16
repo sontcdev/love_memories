@@ -168,6 +168,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
         const newDark = !isDark;
         setOverrideDark(newDark);
         localStorage.setItem(`theme_mode_${slug}`, newDark ? "dark" : "light");
+        window.dispatchEvent(new CustomEvent("theme-change", { detail: { isDark: newDark } }));
         
         const root = document.documentElement;
         if (newDark) {

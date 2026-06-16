@@ -40,28 +40,10 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
     // Callback for when user opens the welcome overlay
     const handleWelcomeOpen = useCallback(() => {
         // Start playing music after user interaction (required by browsers)
-        if (linkData?.config?.auto_play) {
-            setTimeout(() => {
-                musicPlayerRef.current?.play();
-            }, 300);
-        }
-    }, [linkData?.config?.auto_play]);
-
-    // Show lock screen if not authenticated
-    if (!authenticated) {
-        if (linkData?.type === "IDOL") {
-            return (
-                <ThemeWrapper config={linkData?.config || null}>
-                    <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
-                </ThemeWrapper>
-            );
-        }
-        return (
-            <ThemeWrapper config={linkData?.config || null}>
-                <LockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
-            </ThemeWrapper>
-        );
-    }
+        setTimeout(() => {
+            musicPlayerRef.current?.play();
+        }, 300);
+    }, []);
 
     // No data available (should have data after reload)
     if (!linkData) {
@@ -99,20 +81,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
         }
     };
 
-    // Map link type to theme
-    const getTheme = (): "love" | "every" | "idol" | "grad_personal" | "grad_class" => {
-        switch (linkData.type) {
-            case "LOVE": return "love";
-            case "LOVE2": return "love";
-            case "EVERY": return "every";
-            case "IDOL": return "idol";
-            case "GRAD_PERSONAL": return "grad_personal";
-            case "GRAD_CLASS": return "grad_class";
-            case "GRAD_GROUP": return "every";
-            default: return "love";
-        }
-    };
-
     // Render template based on link type
     const renderTemplate = () => {
         switch (linkData.type) {
@@ -129,7 +97,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
             case "GRAD_GROUP":
                 return <GradGroupTemplate data={linkData} slug={slug} />;
             case "EVERY":
-                // TODO: EveryTemplate - using Love for now
                 return <LoveTemplate data={linkData} slug={slug} />;
             default:
                 return <LoveTemplate data={linkData} slug={slug} />;
@@ -137,24 +104,37 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
     };
 
     return (
-        <ThemeWrapper config={linkData.config}>
-            {/* Welcome Overlay - shows on first visit */}
-            <WelcomeOverlay
-                title={getWelcomeTitle()}
-                buttonText="Enter ✨"
-                theme={getTheme()}
-                onOpen={handleWelcomeOpen}
-            />
+        <ThemeWrapper config={linkData.config} type={linkData.type}>
+            {!authenticated ? (
+                linkData.type === "IDOL" ? (
+                    <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
+                ) : (
+                    <LockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
+                )
+            ) : (
+                <>
+                    {/* Welcome Overlay - shows on first visit */}
+                    <WelcomeOverlay
+                        title={getWelcomeTitle()}
+                        buttonText="Enter ✨"
+                        type={linkData.type}
+                        profileData={linkData.profile_data as Record<string, unknown> | null}
+                        onOpen={handleWelcomeOpen}
+                    />
 
-            {/* Main Template Content */}
-            {renderTemplate()}
+                    {/* Main Template Content */}
+                    {renderTemplate()}
+                </>
+            )}
 
-            {/* Music Player - appears after overlay is dismissed */}
-            <MusicPlayer
-                ref={musicPlayerRef}
-                src={linkData.config?.music_url}
-                autoPlay={linkData.config?.auto_play ?? false}
-            />
+            {/* Music Player - Preloads on LockScreen to ensure API is ready upon unlock */}
+            {linkData.config?.music_url && (
+                <MusicPlayer
+                    ref={musicPlayerRef}
+                    src={linkData.config.music_url}
+                    autoPlay={true}
+                />
+            )}
         </ThemeWrapper>
     );
 }

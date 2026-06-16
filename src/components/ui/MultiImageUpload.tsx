@@ -2,7 +2,6 @@
  
 import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
-import { supabase, STORAGE_BUCKET, generateFilePath, getPublicUrl } from "@/lib/supabase";
 import { Upload, X, Loader2, ImageIcon, Check, AlertCircle } from "lucide-react";
 
 interface MultiImageUploadProps {
@@ -146,21 +145,24 @@ export function MultiImageUpload({
                     i === index ? { ...f, status: "uploading" } : f
                 ));
 
-                // Upload to Supabase
-                const filePath = generateFilePath(slug, fileToUpload.name);
-                const { error: uploadError } = await supabase.storage
-                    .from(STORAGE_BUCKET)
-                    .upload(filePath, fileToUpload, {
-                        cacheControl: "3600",
-                        upsert: true, // Allow overwrite if file exists
-                    });
+                // Upload to API
+                const formData = new FormData();
+                formData.append("file", fileToUpload);
+                formData.append("slug", slug);
+                formData.append("type", "gallery");
 
-                if (uploadError) {
-                    console.error("Supabase upload error:", uploadError);
-                    throw new Error(uploadError.message);
+                const response = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || "Upload failed");
                 }
 
-                const publicUrl = getPublicUrl(filePath);
+                const publicUrl = result.url;
 
                 // Update status to done
                 setFiles(prev => prev.map((f, i) =>

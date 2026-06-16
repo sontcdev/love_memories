@@ -193,7 +193,7 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
     // Quiz Handlers
     const addQuizQuestion = () => {
         if (quiz.length >= 10) return;
-        setQuiz(prev => [...prev, { question: "", options: ["", "", "", ""], correctIndex: 0 }]);
+        setQuiz(prev => [...prev, { question: "", options: [], correctIndex: 0 }]);
     };
 
     const removeQuizQuestion = (idx: number) => {
@@ -204,28 +204,13 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
         setQuiz(prev => prev.map((q, i) => i === idx ? { ...q, question: val } : q));
     };
 
-    const updateOptionText = (qIdx: number, oIdx: number, val: string) => {
-        setQuiz(prev => prev.map((q, i) => {
-            if (i === qIdx) {
-                const updatedOptions = [...q.options];
-                updatedOptions[oIdx] = val;
-                return { ...q, options: updatedOptions };
-            }
-            return q;
-        }));
-    };
-
-    const updateCorrectIndex = (qIdx: number, val: number) => {
-        setQuiz(prev => prev.map((q, i) => i === qIdx ? { ...q, correctIndex: val } : q));
-    };
-
     const loadSampleQuiz = () => {
         setQuiz([
-            { question: "Trong nhóm tụi mình, ai là người hay 'bùng kèo' phút chót nhất?", options: ["Lớp trưởng", "Thủ quỹ", "Cặp đôi A-B", "Mọi người đều đi đầy đủ"], correctIndex: 1 },
-            { question: "Địa điểm lê la trà sữa cổng trường quen thuộc của nhóm là ở đâu?", options: ["Quán Trà Gầm Cầu", "Trà sữa DingTea", "Hàng nước mía vỉa hè", "Căng tin trường"], correctIndex: 0 },
-            { question: "Biệt danh hài hước của nhóm bạn tụi mình là gì?", options: ["Hội báo thủ học đường", "Team học sinh ngoan", "Liên minh trà sữa", "Hội không say không về"], correctIndex: 0 },
-            { question: "Trong chuyến đi dã ngoại vừa qua, ai là người đã quên mang ví?", options: ["Bạn A", "Bạn B", "Bạn C", "Không có ai cả"], correctIndex: 2 },
-            { question: "Lời hứa thanh xuân mà cả nhóm cam kết cùng nhau thực hiện là gì?", options: ["Đi du lịch cùng nhau hàng năm", "Đỗ hết nguyện vọng 1", "Nhất định sẽ đi đám cưới nhau đầy đủ", "Mãi bên nhau bạn nhé"], correctIndex: 3 }
+            { question: "Ai là người hay 'bùng kèo' phút chót nhất trong nhóm?", options: [], correctIndex: 0 },
+            { question: "Ai là người có nhiều biệt danh độc lạ nhất nhóm?", options: [], correctIndex: 0 },
+            { question: "Ai là 'ông hoàng/bà chúa' nói nhiều nhất hội bạn?", options: [], correctIndex: 0 },
+            { question: "Ai là thủ quỹ đanh đá và luôn đòi nợ dai dẳng nhất?", options: [], correctIndex: 0 },
+            { question: "Khi đi chơi xa cùng nhau, ai sẽ là người ngủ nướng muộn nhất?", options: [], correctIndex: 0 }
         ]);
     };
 
@@ -677,28 +662,6 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                                         placeholder="Nhập câu hỏi đố vui về kỷ niệm nhóm..."
                                         className={`w-full px-3 py-1.5 rounded border text-sm outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white focus:border-amber-500" : "border-gray-300"}`}
                                     />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                                    {item.options.map((opt, oIdx) => (
-                                        <div key={oIdx} className="flex items-center gap-2">
-                                            <input
-                                                type="radio"
-                                                name={`correct-${qIdx}`}
-                                                checked={item.correctIndex === oIdx}
-                                                onChange={() => updateCorrectIndex(qIdx, oIdx)}
-                                                className="focus:ring-amber-500 w-4 h-4 cursor-pointer"
-                                                title="Đánh dấu đáp án đúng"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={opt}
-                                                onChange={(e) => updateOptionText(qIdx, oIdx, e.target.value)}
-                                                placeholder={`Đáp án ${oIdx + 1}`}
-                                                className={`flex-1 px-3 py-1 rounded border text-xs outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white focus:border-amber-500" : "border-gray-300"}`}
-                                            />
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
                         ))}

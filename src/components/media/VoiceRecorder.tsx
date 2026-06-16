@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { supabase, STORAGE_BUCKET, getPublicUrl } from "@/lib/supabase";
 import { Mic, Square, Trash2, Check, Loader2, Play, Pause } from "lucide-react";
 
 interface VoiceRecorderProps {
@@ -23,7 +22,7 @@ function getSupportedMimeType(): { mimeType: string; extension: string } {
     ];
 
     for (const type of types) {
-        if (MediaRecorder.isTypeSupported(type.mimeType)) {
+        if (typeof window !== "undefined" && window.MediaRecorder && MediaRecorder.isTypeSupported(type.mimeType)) {
             return type;
         }
     }
@@ -32,11 +31,6 @@ function getSupportedMimeType(): { mimeType: string; extension: string } {
     return { mimeType: "", extension: "webm" };
 }
 
-// Generate file path for voice recording
-function generateVoiceFilePath(slug: string, ext: string): string {
-    const timestamp = Date.now();
-    return `voice/${slug}/${timestamp}.${ext}`;
-}
 
 // Format seconds to MM:SS
 function formatTime(seconds: number): string {
@@ -233,25 +227,30 @@ export function VoiceRecorder({
                 type: audioBlob.type,
             });
 
-            const filePath = generateVoiceFilePath(slug, ext);
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("slug", slug);
+            formData.append("type", "voice");
 
-            const { error: uploadError } = await supabase.storage
-                .from(STORAGE_BUCKET)
-                .upload(filePath, file, {
-                    cacheControl: "3600",
-                    upsert: false,
-                });
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
 
-            if (uploadError) throw uploadError;
+            const result = await response.json();
 
-            const publicUrl = getPublicUrl(filePath);
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || "Upload failed");
+            }
+
+            const publicUrl = result.url;
             onUploadComplete(publicUrl);
 
             // Cleanup
             deleteRecording();
         } catch (err) {
             console.error("Upload failed:", err);
-            setError("Failed to upload recording. Please try again.");
+            setError(err instanceof Error ? err.message : "Failed to upload recording. Please try again.");
             setState("review");
         }
     }, [audioBlob, slug, onUploadComplete, deleteRecording]);

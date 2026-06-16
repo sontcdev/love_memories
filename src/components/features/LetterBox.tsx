@@ -82,6 +82,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
 
     // Form state
     const [newTitle, setNewTitle] = useState("");
+    const [newSender, setNewSender] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [newAudioUrl, setNewAudioUrl] = useState("");
@@ -152,6 +153,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         setIsCreating(true);
         const result = await createLetter(slug, {
             title: newTitle.trim(),
+            sender: newSender.trim() || undefined,
             content: newContent.trim(),
             video_url: newVideoUrl || undefined,
             audio_url: newAudioUrl || undefined,
@@ -161,6 +163,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         if (result.success && result.data) {
             setLetters([result.data, ...letters]);
             setNewTitle("");
+            setNewSender("");
             setNewContent("");
             setNewVideoUrl("");
             setNewAudioUrl("");
@@ -250,6 +253,19 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                             </div>
                         </div>
                         <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                            <div>
+                                <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
+                                    Người gửi <span className="text-gray-400 text-xs ml-1">({newSender.length}/50)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newSender}
+                                    onChange={(e) => setNewSender(e.target.value.slice(0, 50))}
+                                    placeholder="Nhập tên người gửi (tên của bạn hoặc ẩn danh)..."
+                                    maxLength={50}
+                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white focus:ring-rose-500/20" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none mb-3`}
+                                />
+                            </div>
                             <div>
                                 <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     Tiêu đề <span className="text-gray-400 text-xs">({newTitle.length}/50)</span>
@@ -443,6 +459,11 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                 >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
+                                        {letter.sender && (
+                                            <div className="text-[10px] font-medium uppercase tracking-wider opacity-60 mb-0.5">
+                                                Từ: {letter.sender}
+                                            </div>
+                                        )}
                                         <div className="flex items-center gap-2">
                                             <h3 className={`font-semibold break-words ${isDark ? "text-slate-100" : "text-gray-800"}`}>{letter.title}</h3>
                                             {isLetterLocked(letter) && (

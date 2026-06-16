@@ -48,6 +48,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
 
     // Form state
     const [newTitle, setNewTitle] = useState("");
+    const [newSender, setNewSender] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [newAudioUrl, setNewAudioUrl] = useState("");
@@ -89,6 +90,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
         setIsCreating(true);
         const result = await createLetter(slug, {
             title: newTitle.trim(),
+            sender: newSender.trim() || undefined,
             content: newContent.trim(),
             video_url: newVideoUrl || undefined,
             audio_url: newAudioUrl || undefined,
@@ -98,6 +100,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
         if (result.success && result.data) {
             setLetters([result.data, ...letters]);
             setNewTitle("");
+            setNewSender("");
             setNewContent("");
             setNewVideoUrl("");
             setNewAudioUrl("");
@@ -294,8 +297,9 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                                                     <span className={`text-[10px] truncate max-w-[75px] mt-1 font-serif ${isDark ? "text-slate-350" : "text-amber-950"} font-medium`}>
                                                         {letter.title}
                                                     </span>
-                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 bg-black/85 text-white text-[9px] px-2 py-0.5 rounded whitespace-nowrap transition-all z-20 pointer-events-none">
-                                                        {letter.title} {isLetterLocked(letter) ? "(🔒)" : ""}
+                                                    <span className="absolute -top-12 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 bg-black/85 text-white text-[9px] px-2 py-1 rounded whitespace-nowrap transition-all z-20 pointer-events-none flex flex-col items-center">
+                                                        {letter.sender && <span className="font-bold text-amber-300">Từ: {letter.sender}</span>}
+                                                        <span>{letter.title} {isLetterLocked(letter) ? "(🔒)" : ""}</span>
                                                     </span>
                                                 </button>
                                             ))}
@@ -323,6 +327,19 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                             </div>
                         </div>
                         <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                            <div>
+                                <label className={`block text-xs font-semibold ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
+                                    Người gửi <span className="text-gray-400 text-[10px]">({newSender.length}/50)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newSender}
+                                    onChange={(e) => setNewSender(e.target.value.slice(0, 50))}
+                                    placeholder="Nhập tên người gửi (tên của bạn hoặc ẩn danh)..."
+                                    maxLength={50}
+                                    className={`w-full px-4 py-2 rounded-lg border border-amber-900/15 ${isDark ? "bg-[#121110] text-white focus:ring-amber-500/20" : "bg-white text-gray-950"} focus:ring-2 focus:ring-amber-300 outline-none text-sm mb-3`}
+                                />
+                            </div>
                             <div>
                                 <label className={`block text-xs font-semibold ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     Tiêu đề điều ước <span className="text-gray-400 text-[10px]">({newTitle.length}/50)</span>
@@ -499,9 +516,14 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                                     </button>
 
                                     <div className="border-b border-[#dacdbf] pb-3 pr-8">
-                                        <div className="flex items-center gap-1.5 text-xs text-[#8c6239] font-mono mb-1">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            <span>{new Date(letter.created_at).toLocaleDateString("vi-VN")}</span>
+                                        <div className="flex items-center justify-between text-xs text-[#8c6239] font-mono mb-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                <span>{new Date(letter.created_at).toLocaleDateString("vi-VN")}</span>
+                                            </div>
+                                            {letter.sender && (
+                                                <span className="font-semibold text-amber-800">Người gửi: {letter.sender}</span>
+                                            )}
                                         </div>
                                         <h3 className="text-xl font-bold font-serif text-[#4a2e1b] leading-tight flex items-center gap-2">
                                             📜 {letter.title}

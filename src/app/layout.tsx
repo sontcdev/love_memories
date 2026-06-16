@@ -8,7 +8,10 @@ import {
   Dancing_Script,
   Quicksand,
   Nunito,
-  Pacifico
+  Pacifico,
+  Montserrat,
+  Comfortaa,
+  Caveat
 } from "next/font/google";
 import { Suspense } from "react";
 import { LoadingProvider, NavigationProgress } from "@/components/providers";
@@ -54,8 +57,23 @@ const nunito = Nunito({
 });
 const pacifico = Pacifico({
   weight: "400",
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-pacifico",
+  display: "swap",
+});
+const montserrat = Montserrat({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+const comfortaa = Comfortaa({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-comfortaa",
+  display: "swap",
+});
+const caveat = Caveat({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-caveat",
   display: "swap",
 });
 
@@ -124,13 +142,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body
-        className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
+        className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${montserrat.variable} ${comfortaa.variable} ${caveat.variable} ${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
         <LoadingProvider>
           <Suspense fallback={null}>

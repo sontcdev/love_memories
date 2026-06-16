@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getLinkData } from "@/app/actions/auth-actions";
+import { getLinkData, checkLinkAccess } from "@/app/actions/auth-actions";
 import { SlugPageClient } from "./page-client";
 
 // Disable caching to always check fresh
@@ -32,8 +32,8 @@ export default async function SlugPage({ params }: PageProps) {
         );
     }
 
-    // Always require PIN on page load - pass isAuthenticated=false
-    // After PIN verification, user can navigate to edit page
+    // Check if the user is already authenticated (has session cookie)
+    const isAuthed = await checkLinkAccess(slug);
     const bgColor = linkResult.data.config?.background_color || '#ffffff';
     const accentColor = linkResult.data.config?.accent_color || '#ec4899';
 
@@ -50,7 +50,7 @@ export default async function SlugPage({ params }: PageProps) {
             />
             <SlugPageClient
                 slug={slug}
-                isAuthenticated={false}
+                isAuthenticated={isAuthed}
                 linkData={linkResult.data}
             />
         </>

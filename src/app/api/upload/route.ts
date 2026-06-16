@@ -4,7 +4,14 @@ import { cookies } from "next/headers";
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const isPlaceholder = (key: string | undefined) => {
+    return !key || key.includes("placeholder") || key.includes("service-role-key-here") || key.startsWith("prod-") || key.startsWith("dev-");
+};
+const supabaseKey = isPlaceholder(process.env.SUPABASE_SERVICE_ROLE_KEY)
+    ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    : process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const supabaseBucket = "memories"; // Matches STORAGE_BUCKET in src/lib/supabase.ts
 
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -67,7 +74,7 @@ export async function POST(request: NextRequest) {
 
         // Upload to Supabase Storage
         const { data, error } = await supabase.storage
-            .from("uploads")
+            .from(supabaseBucket)
             .upload(filename, buffer, {
                 contentType: file.type || "image/jpeg",
                 upsert: true,
@@ -83,7 +90,7 @@ export async function POST(request: NextRequest) {
 
         // Get public URL
         const { data: urlData } = supabase.storage
-            .from("uploads")
+            .from(supabaseBucket)
             .getPublicUrl(data.path);
 
         return NextResponse.json({

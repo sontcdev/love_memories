@@ -88,6 +88,7 @@ model Link {
   galleries Gallery[]
   timelines Timeline[]
   letters   Letter[]
+  quiz_votes QuizVote[]
 
   @@index([slug])
   @@map("links")
@@ -169,6 +170,7 @@ model Letter {
   id          String    @id @default(cuid())
   link_id     String
   title       String
+  sender      String?
   content     String    @db.Text
   image_url   String?
   video_url   String?   // YouTube/TikTok URL
@@ -219,4 +221,23 @@ model GameCard {
   @@index([level])
   @@index([level, is_active])
   @@map("game_cards")
+}
+
+// ============================================================================
+// QUIZ VOTE MODEL (Many-to-1 with Link)
+// ============================================================================
+
+model QuizVote {
+  id              String   @id @default(cuid())
+  link_id         String
+  question_index  Int      // 0-based index of the question
+  voted_member_id String   // ID of the GroupMember voted for
+  created_at      DateTime @default(now())
+
+  // Relations
+  link            Link     @relation(fields: [link_id], references: [id], onDelete: Cascade)
+
+  @@index([link_id])
+  @@index([link_id, question_index])
+  @@map("quiz_votes")
 }

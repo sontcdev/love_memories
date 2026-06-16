@@ -78,3 +78,116 @@ export async function getCardCounts() {
         return acc;
     }, {} as Record<GameLevel, number>);
 }
+
+export interface MemberVoteStat {
+    memberId: string;
+    memberName: string;
+    count: number;
+    percentage: number;
+}
+
+export async function submitQuizVote(
+    slug: string,
+    questionIndex: number,
+    votedMemberId: string
+) {
+    try {
+        // 1. Find Link by slug
+        const link = await prisma.link.findUnique({
+            where: { slug },
+            select: { id: true, is_active: true, profile_data: true }
+        });
+
+        if (!link) {
+            return { success: false, error: "Link không tồn tại" };
+        }
+
+        if (!link.is_active) {
+            return { success: false, error: "Link này không hoạt động" };
+        }
+
+        // 2. Ghi nhận lượt bình chọn mới vào DB
+        await prisma.quizVote.create({
+            data: {
+                link_id: link.id,
+                question_index: questionIndex,
+                voted_member_id: votedMemberId,
+            }
+        });
+
+        // 3. Truy vấn tất cả lượt bình chọn hiện tại của câu hỏi này
+        const allVotes = await prisma.quizVote.findMany({
+            where: {
+                link_id: link.id,
+                question_index: questionIndex
+            },
+            select: {
+                voted_member_id: true
+            }
+        });
+
+        // 4. Trích xuất danh sách thành viên từ profile_data
+        const profileData = link.profile_data as { members?: { id: string; name: string }[] } | null;
+        const members = profileData?.members || [];
+
+        // 5. Tính toán số lượng và tỷ lệ phần trăm cho từng thành viên
+        const totalVotes = allVotes.length;
+        const stats: MemberVoteStat[] = members.map((member) => {
+            const count = allVotes.filter(v => v.voted_member_id === member.id).length;
+            const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+            return {
+                memberId: member.id,
+                memberName: member.name,
+                count,
+                percentage
+            };
+        });
+
+        return {
+            success: true,
+            totalVotes,
+            stats
+        };
+    } catch (error) {
+        console.error("Lỗi khi submit vote:", error);
+        return { success: false, error: "Không thể gửi bình chọn" };
+    }
+}
+
+export async function getQuizStats(slug: string, questionIndex: number) {
+    try {
+        const link = await prisma.link.findUnique({
+            where: { slug },
+            select: { id: true, profile_data: true }
+        });
+
+        if (!link) return { success: false, error: "Link không tồn tại" };
+
+        const allVotes = await prisma.quizVote.findMany({
+            where: {
+                link_id: link.id,
+                question_index: questionIndex
+            }
+        });
+
+        const profileData = link.profile_data as { members?: { id: string; name: string }[] } | null;
+        const members = profileData?.members || [];
+        const totalVotes = allVotes.length;
+
+        const stats: MemberVoteStat[] = members.map((member) => {
+            const count = allVotes.filter(v => v.voted_member_id === member.id).length;
+            const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+            return {
+                memberId: member.id,
+                memberName: member.name,
+                count,
+                percentage
+            };
+        });
+
+        return { success: true, totalVotes, stats };
+    } catch (error) {
+        console.error("Lỗi lấy thống kê:", error);
+        return { success: false, error: "Lỗi lấy thống kê" };
+    }
+}
