@@ -146,12 +146,15 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
         const [isMuted, setIsMuted] = useState(false);
         // YouTube error state — e.g. error 150 means video is not embeddable
         const [ytError, setYtError] = useState<number | null>(null);
+        const [dismissError, setDismissError] = useState(false);
 
         const youtubeId = src ? getYouTubeId(src) : null;
         const isYouTube = !!youtubeId;
 
         // ── Initialise YouTube IFrame API player (once per youtubeId) ──────
         useEffect(() => {
+            setYtError(null);
+            setDismissError(false);
             if (!isYouTube || !youtubeId) return;
 
             let destroyed = false;
@@ -463,6 +466,28 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
 
                 {/* ── Floating controls ────────────────────────────────────── */}
                 <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2">
+                    {/* Error message bubble */}
+                    {ytError && !dismissError && (
+                        <div className="bg-amber-600/95 backdrop-blur-sm text-white text-[11px] md:text-xs px-3 py-2 rounded-xl shadow-lg border border-amber-500/30 flex flex-col gap-0.5 max-w-[180px] md:max-w-[240px] relative pr-6">
+                            <div className="font-bold flex items-center gap-1">
+                                <span>⚠️</span>
+                                <span>Lỗi phát nhạc</span>
+                            </div>
+                            <span className="text-white/95 leading-tight">
+                                {ytError === 150 || ytError === 101
+                                    ? "Video này không cho phép nhúng. Vui lòng dùng link YouTube khác."
+                                    : `Lỗi YouTube (mã ${ytError}). Hãy thử link khác.`}
+                            </span>
+                            <button
+                                onClick={() => setDismissError(true)}
+                                className="absolute top-1 right-1.5 text-white/70 hover:text-white text-[10px] font-bold p-0.5"
+                                title="Đóng"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    )}
+
                     {/* Vinyl play/pause button */}
                     <button
                         onClick={togglePlay}
