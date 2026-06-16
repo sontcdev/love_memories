@@ -301,7 +301,7 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                             }`}>
                                                 <div className={`w-16 h-16 rounded-full p-0.5 mb-3 relative overflow-hidden ${isDark ? "bg-zinc-800" : "bg-slate-200"}`}>
                                                     {member.avatar ? (
-                                                        <Image src={member.avatar} alt={member.name} fill className="object-cover rounded-full" />
+                                                        <Image src={member.avatar} alt={member.name} fill sizes="80px" className="object-cover rounded-full" />
                                                     ) : (
                                                         <div className="w-full h-full bg-white flex items-center justify-center text-lg font-bold text-slate-400 rounded-full">
                                                             {member.name.charAt(0)}
@@ -369,7 +369,7 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                             </div>
                                             
                                             <div className="aspect-square relative overflow-hidden bg-slate-50 border border-slate-100 rounded-sm">
-                                                <Image src={item.image_url} alt={item.caption || "Class moment"} fill className="object-cover" />
+                                                <Image src={item.image_url} alt={item.caption || "Class moment"} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                                             </div>
                                             
                                             {item.caption && (
@@ -432,7 +432,7 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
 
                                             {event.image_url && (
                                                 <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-inner border ${isDark ? "border-zinc-800" : "border-slate-100"}`}>
-                                                    <Image src={event.image_url} alt={event.title} fill className="object-cover" />
+                                                    <Image src={event.image_url} alt={event.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                                                 </div>
                                             )}
                                         </div>
@@ -495,7 +495,7 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                         <div className="text-center space-y-4">
                             <div className={`w-20 h-20 rounded-full p-0.5 mx-auto relative overflow-hidden shadow-md ${isDark ? "bg-zinc-800" : "bg-slate-100"}`}>
                                 {selectedMember.avatar ? (
-                                    <Image src={selectedMember.avatar} alt={selectedMember.name} fill className="object-cover rounded-full" />
+                                    <Image src={selectedMember.avatar} alt={selectedMember.name} fill sizes="120px" className="object-cover rounded-full" />
                                 ) : (
                                     <div className={`w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold ${
                                         isDark ? "text-emerald-400" : "text-emerald-500"

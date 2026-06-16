@@ -373,7 +373,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
 
                                             {event.image_url && (
                                                 <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-md border ${isDark ? "border-rose-950/20" : "border-rose-100/40"}`}>
-                                                    <Image src={event.image_url} alt={event.title} fill className="object-cover" />
+                                                    <Image src={event.image_url} alt={event.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                                                 </div>
                                             )}
                                         </div>

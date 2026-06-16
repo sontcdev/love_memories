@@ -25,6 +25,7 @@ export interface MusicPlayerRef {
 // ─── YouTube IFrame API types ──────────────────────────────────────────────
 interface YTPlayerOptions {
     videoId: string;
+    host?: string;
     playerVars?: Record<string, string | number>;
     events?: {
         onReady?: (event: { target: YTPlayer }) => void;
@@ -143,6 +144,8 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
 
         const [isPlaying, setIsPlaying] = useState(false);
         const [isMuted, setIsMuted] = useState(false);
+        // YouTube error state — e.g. error 150 means video is not embeddable
+        const [ytError, setYtError] = useState<number | null>(null);
 
         const youtubeId = src ? getYouTubeId(src) : null;
         const isYouTube = !!youtubeId;
@@ -186,15 +189,23 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
                             modestbranding: 1,
                             iv_load_policy: 3,  // hide annotations
                             mute: 1,            // start muted; unMute() after user plays
+                            // enablejsapi is CRITICAL — without it, postMessage commands
+                            // (playVideo, pauseVideo, mute, unMute) are silently ignored
+                            enablejsapi: 1,
                             // 'origin' tells YouTube which origin to accept postMessages
-                            // from — fixes the cross-origin postMessage error.
+                            // from — reduces (but can't fully eliminate) the cross-origin
+                            // postMessage warning on LAN IPs (http://192.168.x.x).
+                            // That warning is cosmetic and does NOT block playback.
                             origin: window.location.origin,
+                            // widget_referrer helps YouTube validate the embedding page
+                            widget_referrer: window.location.href,
                         },
                         events: {
                             onReady: (event) => {
                                 if (destroyed) return;
                                 // Only HERE the player has all methods available
                                 ytPlayerRef.current = event.target;
+                                setYtError(null); // clear any previous error
                                 if (pendingPlayRef.current) {
                                     pendingPlayRef.current = false;
                                     event.target.unMute();
@@ -203,8 +214,29 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
                                     setIsMuted(false);
                                 }
                             },
-                            // onError: video-level errors (not embeddable, private, etc.)
-                            // These are NOT the same as the API being blocked — ignore silently.
+                            onStateChange: (event) => {
+                                if (destroyed) return;
+                                // Sync React state with actual player state
+                                // YT.PlayerState: ENDED=0, PLAYING=1, PAUSED=2, BUFFERING=3
+                                if (event.data === 0) {
+                                    // ENDED — loop should restart, but sync state just in case
+                                    setIsPlaying(false);
+                                } else if (event.data === 1) {
+                                    setIsPlaying(true);
+                                } else if (event.data === 2) {
+                                    setIsPlaying(false);
+                                }
+                            },
+                            onError: (event) => {
+                                if (destroyed) return;
+                                // Error codes:
+                                //   2 = invalid videoId
+                                //   5 = HTML5 player error
+                                //   100 = video not found / removed
+                                //   101/150 = video owner does not allow embedded playback
+                                console.warn("[MusicPlayer] YouTube player error code:", event.data);
+                                setYtError(event.data);
+                            },
                         },
                     });
                     // Do NOT assign ytPlayerRef.current here — player is not ready yet
@@ -437,36 +469,52 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
                         className={`relative w-14 h-14 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 shadow-xl flex items-center justify-center transition-transform hover:scale-105 ${
                             isPlaying ? "animate-spin-slow" : ""
                         }`}
-                        title={isPlaying ? "Tạm dừng" : "Phát nhạc"}
+                        title={
+                            ytError
+                                ? ytError === 150 || ytError === 101
+                                    ? "Video này không cho phép nhúng. Vui lòng dùng link YouTube khác."
+                                    : `Lỗi YouTube (code ${ytError})`
+                                : isPlaying ? "Tạm dừng" : "Phát nhạc"
+                        }
                     >
                         <div className="absolute inset-1 rounded-full border border-gray-600 opacity-30" />
                         <div className="absolute inset-2 rounded-full border border-gray-600 opacity-30" />
                         <div className="absolute inset-3 rounded-full border border-gray-600 opacity-30" />
                         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center">
-                            {isPlaying ? (
+                            {ytError ? (
+                                <span className="text-white text-xs font-bold">!</span>
+                            ) : isPlaying ? (
                                 <Pause className="w-3 h-3 text-white fill-white" />
                             ) : (
                                 <Play className="w-3 h-3 text-white fill-white ml-0.5" />
                             )}
                         </div>
-                    </button>
-
-                    {/* Mute button */}
-                    <button
-                        onClick={toggleMute}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg ${
-                            isMuted
-                                ? "bg-gray-200 text-gray-500"
-                                : "bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                        title={isMuted ? "Bật âm" : "Tắt âm"}
-                    >
-                        {isMuted ? (
-                            <VolumeX className="w-5 h-5" />
-                        ) : (
-                            <Volume2 className="w-5 h-5" />
+                        {/* Error indicator badge */}
+                        {ytError && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center shadow-md">
+                                <span className="text-white text-[8px] font-bold">!</span>
+                            </div>
                         )}
                     </button>
+
+                    {/* Mute button — hide when YouTube has error */}
+                    {!ytError && (
+                        <button
+                            onClick={toggleMute}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg ${
+                                isMuted
+                                    ? "bg-gray-200 text-gray-500"
+                                    : "bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                            title={isMuted ? "Bật âm" : "Tắt âm"}
+                        >
+                            {isMuted ? (
+                                <VolumeX className="w-5 h-5" />
+                            ) : (
+                                <Volume2 className="w-5 h-5" />
+                            )}
+                        </button>
+                    )}
                 </div>
 
                 <style jsx>{`

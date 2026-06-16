@@ -699,7 +699,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                                 }`}
                                             >
                                                 <div className="relative aspect-square rounded overflow-hidden">
-                                                    <Image src={item.image_url} alt={item.caption || "Moments"} fill className="object-cover transition-transform duration-300" />
+                                                    <Image src={item.image_url} alt={item.caption || "Moments"} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-300" />
                                                 </div>
                                                 {item.caption && (
                                                     <div className="mt-2 px-1 text-center">

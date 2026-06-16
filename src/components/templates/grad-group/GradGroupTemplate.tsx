@@ -537,7 +537,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                                                 {/* Avatar image */}
                                                                 <div className="w-28 h-28 rounded-2xl mx-auto overflow-hidden border-2 border-amber-900/10 bg-slate-50 relative">
                                                                     {member.avatar ? (
-                                                                        <Image src={member.avatar} alt={member.name} fill className="object-cover rounded-2xl" />
+                                                                        <Image src={member.avatar} alt={member.name} fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover rounded-2xl" />
                                                                     ) : (
                                                                         <div className="w-full h-full flex items-center justify-center text-4xl">🧑</div>
                                                                     )}
@@ -711,7 +711,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
 
                                                     {event.image_url && (
                                                         <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-inner border ${isDark ? "border-zinc-800" : "border-slate-100"}`}>
-                                                            <Image src={event.image_url} alt={event.title} fill className="object-cover" />
+                                                            <Image src={event.image_url} alt={event.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                                                         </div>
                                                     )}
                                                 </div>
