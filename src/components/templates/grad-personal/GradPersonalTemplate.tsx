@@ -71,6 +71,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
     const [activeSection, setActiveSection] = useState<string>("gallery");
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as GradPersonalProfileData | null;
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
@@ -167,8 +168,8 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
     };
 
     // Lightbox navigation
-    const openLightbox = (index: number) => setLightboxIndex(index);
-    const closeLightbox = () => setLightboxIndex(null);
+    const openLightbox = (index: number) => { setLightboxIndex(index); setIsPopupOpen(true); };
+    const closeLightbox = () => { setLightboxIndex(null); setIsPopupOpen(false); };
     const nextImage = useCallback(() => {
         if (lightboxIndex !== null && data.galleries.length > 0) {
             setLightboxIndex((lightboxIndex + 1) % data.galleries.length);
@@ -290,35 +291,39 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-10 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]" />
 
             {/* Theme Toggle Button */}
-            <button
-                onClick={handleThemeToggle}
-                className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
-                    isDark 
-                        ? "bg-[#25201b]/95 text-yellow-400 border border-amber-900/30 hover:bg-[#332e28]" 
-                        : "bg-white/95 text-amber-900 hover:bg-white border border-amber-900/10"
-                }`}
-                title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
-            >
-                {isDark ? (
-                    <Sun className="w-5 h-5" />
-                ) : (
-                    <Moon className="w-5 h-5" />
-                )}
-            </button>
+            {!isPopupOpen && (
+                <button
+                    onClick={handleThemeToggle}
+                    className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
+                        isDark 
+                            ? "bg-[#25201b]/95 text-yellow-400 border border-amber-900/30 hover:bg-[#332e28]" 
+                            : "bg-white/95 text-amber-900 hover:bg-white border border-amber-900/10"
+                    }`}
+                    title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+                >
+                    {isDark ? (
+                        <Sun className="w-5 h-5" />
+                    ) : (
+                        <Moon className="w-5 h-5" />
+                    )}
+                </button>
+            )}
 
             {/* Edit Button */}
-            <Link
-                href={`/${slug}/edit`}
-                className={`fixed top-4 right-4 z-30 p-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all border ${
-                    isDark 
-                        ? "bg-[#25201b]/95 border-amber-900/30 text-amber-200 hover:bg-[#332e28]" 
-                        : "bg-[#fefefe]/95 border-amber-900/10 text-[#3a2213] hover:bg-white"
-                }`}
-                title="Chỉnh sửa trang"
-                aria-label="Chỉnh sửa trang"
-            >
-                <Settings className="w-5 h-5" />
-            </Link>
+            {!isPopupOpen && (
+                <Link
+                    href={`/${slug}/edit`}
+                    className={`fixed top-4 right-4 z-30 p-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all border ${
+                        isDark 
+                            ? "bg-[#25201b]/95 border-amber-900/30 text-amber-200 hover:bg-[#332e28]" 
+                            : "bg-[#fefefe]/95 border-amber-900/10 text-[#3a2213] hover:bg-white"
+                    }`}
+                    title="Chỉnh sửa trang"
+                    aria-label="Chỉnh sửa trang"
+                >
+                    <Settings className="w-5 h-5" />
+                </Link>
+            )}
 
             {/* Desk items layout (Only visible on PC for premium look) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 hidden lg:block opacity-75">
@@ -509,7 +514,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                                 {/* Wax stamp dot style */}
                                                 <div className={`absolute -left-[31px] top-1.5 w-4 h-4 rounded-full shadow-md border-4 bg-amber-700 ${isDark ? "border-[#181512] bg-amber-500" : "border-white bg-amber-700"}`} />
 
-                                                <div className={`transition-all rounded-2xl p-4 sm:p-5 border shadow-sm ${isDark ? "bg-zinc-900/40 hover:bg-[#201c18] border-zinc-850 text-slate-200" : "bg-slate-50/50 hover:bg-slate-50 border-slate-100 text-slate-800"}`}>
+                                                <div className={`transition-all rounded-2xl p-4 sm:p-5 border shadow-sm ${isDark ? "bg-zinc-900/40 hover:bg-[#201c18] border-zinc-700 text-slate-200" : "bg-slate-50/50 hover:bg-slate-50 border-slate-100 text-slate-800"}`}>
                                                     <span className={`text-xs font-semibold font-mono ${isDark ? "text-amber-300" : "text-amber-700"}`}>
                                                         {new Date(event.date).toLocaleDateString("vi-VN", {
                                                             month: "long",
@@ -526,7 +531,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                                     )}
 
                                                     {event.image_url && (
-                                                        <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-inner border ${isDark ? "border-zinc-850" : "border-slate-200/50"}`}>
+                                                        <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-inner border ${isDark ? "border-zinc-700" : "border-slate-200/50"}`}>
                                                             <Image
                                                                 src={event.image_url}
                                                                 alt={event.title}
@@ -576,7 +581,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                                     <div className={`absolute left-6 md:left-1/2 w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 -translate-x-1/2 transition-all duration-300 ${
                                                         isDone 
                                                             ? "bg-emerald-500 border-emerald-200 text-white shadow-lg shadow-emerald-500/20" 
-                                                            : "bg-slate-200 border-slate-350 text-slate-550"
+                                                            : "bg-slate-200 border-slate-300 text-slate-500"
                                                     }`}>
                                                         {isDone ? "✓" : idx + 1}
                                                     </div>
@@ -586,7 +591,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                                         <div className={`p-5 rounded-2xl border transition-all hover:shadow-md ${
                                                             isDone 
                                                                 ? (isDark ? "bg-emerald-950/20 border-emerald-900/30 text-slate-100" : "bg-emerald-50/50 border-emerald-100 text-slate-800")
-                                                                : (isDark ? "bg-zinc-900/40 border-zinc-800 text-slate-400" : "bg-slate-50 border-slate-100 text-slate-650")
+                                                                : (isDark ? "bg-zinc-900/40 border-zinc-800 text-slate-400" : "bg-slate-50 border-slate-100 text-slate-600")
                                                         }`}>
                                                             <div className={`flex items-center gap-2 mb-1.5 ${idx % 2 === 0 ? "md:justify-end" : "md:justify-start"}`}>
                                                                 <h4 className="font-serif font-bold text-sm sm:text-base leading-tight">
@@ -638,76 +643,69 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                 <p className={`text-xs sm:text-sm mb-6 font-serif italic ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                                     Để lại những dòng lưu bút gửi gắm lời chúc ấm áp và cảm động dành cho {studentName}.
                                 </p>
-                                <LetterBox initialLetters={data.letters} slug={slug} theme="every" isDark={isDark} />
+                                <LetterBox initialLetters={data.letters} slug={slug} theme="every" isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
                             </section>
                         )}
                     </div>
                 </div>
             </main>
 
-            {/* Lightbox Modal */}
+            {/* Gallery Lightbox */}
             {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                <div
-                    {...swipeHandlers}
-                    className="fixed inset-0 z-50 bg-slate-950/98 flex flex-col items-center justify-center p-4 animate-fade-in"
-                    onClick={closeLightbox}
-                >
-                    <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 z-20">
-                        <span className="text-slate-300 text-sm font-medium">
-                            {lightboxIndex + 1} / {data.galleries.length}
-                        </span>
-                        <button
-                            onClick={closeLightbox}
-                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                            aria-label="Đóng"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-                    </div>
-
-                    <div className="relative w-full max-w-4xl flex-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="relative w-full h-[70vh] aspect-[3/4] sm:aspect-[4/3] max-h-[75vh]">
-                            <Image
-                                src={data.galleries[lightboxIndex].image_url}
-                                alt={data.galleries[lightboxIndex].caption || "Kỷ niệm"}
-                                fill
-                                className="object-contain"
-                                priority
-                            />
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={closeLightbox}>
+                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#181512] text-slate-100 border border-amber-900/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-amber-500 to-[#3a2213] p-4 text-white flex-shrink-0">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">
+                                    {lightboxIndex + 1} / {data.galleries.length}
+                                </span>
+                                <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
-
-                        {data.galleries.length > 1 && (
-                            <>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                    className="absolute left-2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                                    aria-label="Ảnh trước"
-                                >
-                                    <ChevronLeft className="w-6 h-6" />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                    className="absolute right-2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                                    aria-label="Ảnh kế tiếp"
-                                >
-                                    <ChevronRight className="w-6 h-6" />
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    {data.galleries[lightboxIndex].caption && (
-                        <div className="w-full max-w-2xl text-center py-4 px-6 text-white z-10 font-serif italic">
-                            <p className="text-sm sm:text-base font-light">
+                        {/* Image */}
+                        <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
+                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                                <Image
+                                    src={data.galleries[lightboxIndex].image_url}
+                                    alt={data.galleries[lightboxIndex].caption || "Kỷ niệm"}
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
+                            </div>
+                        </div>
+                        {/* Caption */}
+                        {data.galleries[lightboxIndex].caption && (
+                            <div className={`px-4 py-2 text-center text-sm font-serif italic ${isDark ? "text-slate-300" : "text-gray-600"}`}>
                                 {data.galleries[lightboxIndex].caption}
-                            </p>
+                            </div>
+                        )}
+                        {/* Navigation */}
+                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-amber-900/20" : "border-gray-100"}`}>
+                            <button
+                                onClick={prevImage}
+                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-amber-950/30 text-amber-400 hover:bg-amber-950/50" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}
+                                aria-label="Ảnh trước"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={nextImage}
+                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-amber-950/30 text-amber-400 hover:bg-amber-950/50" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}
+                                aria-label="Ảnh tiếp theo"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
             )}
 
             {/* Scroll To Top */}
-            {showScrollTop && (
+            {showScrollTop && !isPopupOpen && (
                 <button
                     onClick={scrollToTop}
                     className="fixed bottom-6 right-6 z-30 p-3 bg-gradient-to-r from-amber-500 to-[#3a2213] text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { updateLinkProfile, GradGroupProfileData, GroupMember } from "@/app/actions/profile-actions";
-import { Save, Loader2, Users, Camera, Plus, Trash2, HelpCircle, Map, ChevronDown, ChevronUp, Sparkles, CheckCircle2 } from "lucide-react";
+import { Save, Loader2, Users, Camera, Plus, Trash2, HelpCircle, Map, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 
 const groupProfileSchema = z.object({
     group_name: z.string().min(1, "Bắt buộc").max(50),
@@ -100,12 +100,12 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
     const [theme, setTheme] = useState<Required<GradGroupProfileData>["theme"]>(castData.theme || "caravan");
     const [members, setMembers] = useState<GroupMember[]>(castData.members || []);
     const [quiz, setQuiz] = useState<Required<GradGroupProfileData>["quiz"]>(castData.quiz || []);
-    const [quizBadges, setQuizBadges] = useState<Required<GradGroupProfileData>["quiz_badges"]>(
+    const [quizBadges] = useState<Required<GradGroupProfileData>["quiz_badges"]>(
         castData.quiz_badges || {
             perfect_title: "Tri Kỷ Tri Âm", perfect_desc: "Hiểu nhau đến từng chân tơ kẽ tóc!",
             good_title: "Đồng Bọn Chí Cốt", good_desc: "Hiểu nhau đến 80% thế này là quá tuyệt vời rồi!",
             average_title: "Bạn Bè Xã Giao", average_desc: "Cũng tạm hiểu sương sương đấy!",
-            low_title: "Người Lạ Ghé Chơi", low_desc: "Mau rủ nhóm tụ tập uống trà sữa chuộc tội đi nha!"
+            low_title: "Người Dưng Nước Lã", low_desc: "Mới quen nhau hả bạn?",
         }
     );
     const [goals, setGoals] = useState<Required<GradGroupProfileData>["goals"]>(castData.goals || []);
@@ -291,7 +291,7 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                     <div className="mt-4 space-y-4">
                         {/* Group Avatar upload */}
                         <div className="flex flex-col items-center mb-4">
-                            <label className={`block text-xs font-semibold mb-2 ${isDark ? "text-slate-350" : "text-gray-700"}`}>
+                            <label className={`block text-xs font-semibold mb-2 ${isDark ? "text-slate-400" : "text-gray-700"}`}>
                                 Ảnh tập thể đại diện nhóm
                             </label>
                             <div className="relative group">
@@ -420,7 +420,7 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                                 <div className="flex flex-col sm:flex-row items-center gap-4">
                                     {/* Member Avatar */}
                                     <div className="relative group shrink-0">
-                                        <div className="w-20 h-20 rounded-full border border-dashed border-slate-350 p-0.5 flex items-center justify-center overflow-hidden bg-slate-50">
+                                        <div className="w-20 h-20 rounded-full border border-dashed border-slate-300 p-0.5 flex items-center justify-center overflow-hidden bg-slate-50">
                                             {member.avatar ? (
                                                 // eslint-disable-next-line @next/next/no-img-element
                                                 <img src={member.avatar} alt="Member avatar" className="w-full h-full object-cover rounded-full" />
@@ -535,7 +535,7 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                 )}
             </div>
 
-            {/* Panel 3: Trắc nghiệm & Tùy chỉnh danh hiệu */}
+            {/* Panel 3: Câu hỏi bình chọn */}
             <div className={`border rounded-2xl p-4 transition-all ${isDark ? "border-slate-800 bg-slate-900/40" : "border-gray-200 bg-gray-50/50"}`}>
                 <button
                     type="button"
@@ -543,95 +543,16 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                     className="w-full flex items-center justify-between font-semibold text-sm"
                 >
                     <span className="flex items-center gap-2" style={{ color: buttonBgColor }}>
-                        <HelpCircle className="w-4 h-4" /> Trắc nghiệm & Tùy chỉnh Huy hiệu danh hiệu
+                        <HelpCircle className="w-4 h-4" /> Câu hỏi bình chọn
                     </span>
                     {activePanel === "quiz" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
 
                 {activePanel === "quiz" && (
                     <div className="mt-4 space-y-4">
-                        {/* Custom Badges Editor */}
-                        <div className={`p-4 rounded-xl border ${isDark ? "bg-slate-950 border-slate-850" : "bg-white border-gray-150"} space-y-3`}>
-                            <h4 className="text-xs font-bold flex items-center gap-1" style={{ color: buttonBgColor }}>
-                                <CheckCircle2 className="w-4 h-4" /> Tùy chỉnh Huy hiệu kết quả chơi
-                            </h4>
-                            <p className="text-[10px] text-gray-400">Điều chỉnh tên huy hiệu và nội dung mô tả trao tặng người chơi khi kết thúc trắc nghiệm.</p>
-                            
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <label className="block text-[9px] font-bold text-yellow-500 uppercase">Huy hiệu Đạt 100% đúng (Vàng 🏆)</label>
-                                    <input
-                                        type="text"
-                                        value={quizBadges.perfect_title || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, perfect_title: e.target.value }))}
-                                        placeholder="Ví dụ: Tri Kỷ Tri Âm"
-                                        className={`w-full px-2 py-1 rounded border text-xs outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                    <input
-                                        type="text"
-                                        value={quizBadges.perfect_desc || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, perfect_desc: e.target.value }))}
-                                        placeholder="Lời khen..."
-                                        className={`w-full px-2 py-1 rounded border text-[10px] outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="block text-[9px] font-bold text-purple-500 uppercase">Huy hiệu Đạt từ 60% đúng (Bạc 🥇)</label>
-                                    <input
-                                        type="text"
-                                        value={quizBadges.good_title || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, good_title: e.target.value }))}
-                                        placeholder="Ví dụ: Đồng Bọn Chí Cốt"
-                                        className={`w-full px-2 py-1 rounded border text-xs outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                    <input
-                                        type="text"
-                                        value={quizBadges.good_desc || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, good_desc: e.target.value }))}
-                                        placeholder="Lời khen..."
-                                        className={`w-full px-2 py-1 rounded border text-[10px] outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="block text-[9px] font-bold text-teal-500 uppercase">Huy hiệu Đạt từ 30% đúng (Đồng 🤝)</label>
-                                    <input
-                                        type="text"
-                                        value={quizBadges.average_title || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, average_title: e.target.value }))}
-                                        placeholder="Ví dụ: Bạn Bè Xã Giao"
-                                        className={`w-full px-2 py-1 rounded border text-xs outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                    <input
-                                        type="text"
-                                        value={quizBadges.average_desc || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, average_desc: e.target.value }))}
-                                        placeholder="Mô tả..."
-                                        className={`w-full px-2 py-1 rounded border text-[10px] outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="block text-[9px] font-bold text-slate-500 uppercase">Huy hiệu Thấp dưới 30% đúng (👤)</label>
-                                    <input
-                                        type="text"
-                                        value={quizBadges.low_title || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, low_title: e.target.value }))}
-                                        placeholder="Ví dụ: Người Lạ Ghé Chơi"
-                                        className={`w-full px-2 py-1 rounded border text-xs outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                    <input
-                                        type="text"
-                                        value={quizBadges.low_desc || ""}
-                                        onChange={(e) => setQuizBadges(prev => ({ ...prev, low_desc: e.target.value }))}
-                                        placeholder="Mô tả..."
-                                        className={`w-full px-2 py-1 rounded border text-[10px] outline-none ${isDark ? "bg-slate-900 border-slate-700 text-white" : "border-gray-200"}`}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Quiz Questions List */}
                         <div className="flex justify-between items-center border-t pt-3 border-amber-900/10">
-                            <span className="text-xs text-gray-400">Danh sách câu hỏi đố vui đồng đội.</span>
+                            <span className="text-xs text-gray-400">Danh sách câu hỏi bình chọn vui cho nhóm.</span>
                             <button
                                 type="button"
                                 onClick={loadSampleQuiz}
@@ -647,7 +568,7 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                                 <button
                                     type="button"
                                     onClick={() => removeQuizQuestion(qIdx)}
-                                    className="absolute top-2 right-2 text-red-500 hover:text-red-750 p-1"
+                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
                                     title="Xóa câu hỏi"
                                 >
                                     <Trash2 className="w-4 h-4" />

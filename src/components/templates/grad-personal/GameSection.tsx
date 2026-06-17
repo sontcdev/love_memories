@@ -180,7 +180,7 @@ export function GameSection({ quiz, studentName = "tôi", isDark = false }: Game
                         <div className="grid grid-cols-1 gap-3 max-w-md mx-auto pt-2">
                             {currentQuestion.options.map((option, idx) => {
                                 let optStyle = isDark 
-                                    ? "bg-slate-950 border-slate-850 hover:bg-slate-850/50" 
+                                    ? "bg-slate-950 border-slate-700 hover:bg-slate-700/50" 
                                     : "bg-slate-50 border-slate-100 hover:bg-slate-100/50";
                                 
                                 if (showFeedback) {

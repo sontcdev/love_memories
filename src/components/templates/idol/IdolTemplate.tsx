@@ -27,6 +27,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
     const [activeSection, setActiveSection] = useState<string>("home");
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
     const [heartsCount, setHeartsCount] = useState(0);
     const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -95,8 +96,8 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
     };
 
     // Lightbox navigation
-    const openLightbox = (index: number) => setLightboxIndex(index);
-    const closeLightbox = () => setLightboxIndex(null);
+    const openLightbox = (index: number) => { setLightboxIndex(index); setIsPopupOpen(true); };
+    const closeLightbox = () => { setLightboxIndex(null); setIsPopupOpen(false); };
     const nextImage = useCallback(() => {
         if (lightboxIndex !== null && data.galleries.length > 0) {
             setLightboxIndex((lightboxIndex + 1) % data.galleries.length);
@@ -241,34 +242,38 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
             </div>
 
             {/* Theme Toggle Button - Fixed */}
-            <button
-                onClick={handleThemeToggle}
-                className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
-                    isDark 
-                        ? "bg-slate-900/90 text-yellow-400 border border-purple-500/30 hover:bg-slate-800" 
-                        : "bg-white/90 text-indigo-600 hover:bg-white border border-gray-100"
-                }`}
-                title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
-            >
-                {isDark ? (
-                    <Sun className="w-5 h-5" />
-                ) : (
-                    <Moon className="w-5 h-5" />
-                )}
-            </button>
+            {!isPopupOpen && (
+                <button
+                    onClick={handleThemeToggle}
+                    className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
+                        isDark 
+                            ? "bg-slate-900/90 text-yellow-400 border border-purple-500/30 hover:bg-slate-800" 
+                            : "bg-white/90 text-indigo-600 hover:bg-white border border-gray-100"
+                    }`}
+                    title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+                >
+                    {isDark ? (
+                        <Sun className="w-5 h-5" />
+                    ) : (
+                        <Moon className="w-5 h-5" />
+                    )}
+                </button>
+            )}
 
             {/* Edit Button - Fixed */}
-            <Link
-                href={`/${slug}/edit`}
-                className={`fixed top-4 right-4 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
-                    isDark 
-                        ? "bg-slate-900/90 text-purple-400 border border-purple-500/30 hover:bg-slate-800" 
-                        : "bg-white/90 text-gray-600 hover:bg-white"
-                }`}
-                title="Edit Page"
-            >
-                <Settings className="w-5 h-5" />
-            </Link>
+            {!isPopupOpen && (
+                <Link
+                    href={`/${slug}/edit`}
+                    className={`fixed top-4 right-4 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
+                        isDark 
+                            ? "bg-slate-900/90 text-purple-400 border border-purple-500/30 hover:bg-slate-800" 
+                            : "bg-white/90 text-gray-600 hover:bg-white"
+                    }`}
+                    title="Edit Page"
+                >
+                    <Settings className="w-5 h-5" />
+                </Link>
+            )}
 
             {/* Banner & Profile Section */}
             <div className="max-w-6xl mx-auto px-4 pt-6 relative z-10">
@@ -810,51 +815,55 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
 
                 {/* Gallery Lightbox */}
                 {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={closeLightbox}>
-                        {/* Close button */}
-                        <button
-                            onClick={closeLightbox}
-                            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors"
-                        >
-                            <X className="w-8 h-8" />
-                        </button>
-
-                        {/* Previous button */}
-                        <button
-                            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-                        >
-                            <ChevronLeft className="w-8 h-8" />
-                        </button>
-
-                        {/* Image */}
-                        <div className="relative max-w-4xl max-h-[80vh] mx-16" onClick={(e) => e.stopPropagation()}>
-                            <Image
-                                src={data.galleries[lightboxIndex].image_url}
-                                alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                width={1200}
-                                height={800}
-                                className="max-h-[80vh] w-auto object-contain rounded-lg shadow-2xl border border-white/10"
-                            />
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
+                        <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-slate-900 text-white border border-purple-500/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white flex-shrink-0">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium">
+                                        {lightboxIndex + 1} / {data.galleries.length}
+                                    </span>
+                                    <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                            {/* Image */}
+                            <div className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
+                                <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                                    <Image
+                                        src={data.galleries[lightboxIndex].image_url}
+                                        alt={data.galleries[lightboxIndex].caption || "Photo"}
+                                        fill
+                                        className="object-contain"
+                                        priority
+                                    />
+                                </div>
+                            </div>
                             {/* Caption */}
                             {data.galleries[lightboxIndex].caption && (
-                                <p className="text-center text-white mt-4 text-lg font-medium">
+                                <div className={`px-4 py-2 text-center text-sm ${isDark ? "text-purple-200" : "text-gray-600"}`}>
                                     {data.galleries[lightboxIndex].caption}
-                                </p>
+                                </div>
                             )}
-                            {/* Counter */}
-                            <p className="text-center text-white/60 mt-2 text-sm">
-                                {lightboxIndex + 1} / {data.galleries.length}
-                            </p>
+                            {/* Navigation */}
+                            <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-purple-500/20" : "border-gray-100"}`}>
+                                <button
+                                    onClick={prevImage}
+                                    className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-purple-950/30 text-purple-400 hover:bg-purple-950/50" : "bg-purple-50 text-purple-500 hover:bg-purple-100"}`}
+                                    aria-label="Ảnh trước"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={nextImage}
+                                    className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-purple-950/30 text-purple-400 hover:bg-purple-950/50" : "bg-purple-50 text-purple-500 hover:bg-purple-100"}`}
+                                    aria-label="Ảnh tiếp theo"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
-
-                        {/* Next button */}
-                        <button
-                            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-                        >
-                            <ChevronRight className="w-8 h-8" />
-                        </button>
                     </div>
                 )}
 
@@ -1003,7 +1012,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                 {/* Letters Section */}
                 {activeSection === "letters" && (
                     <section className="max-w-2xl mx-auto py-12 relative z-10">
-                        <LetterBox slug={slug} initialLetters={data.letters} theme="idol" isDark={isDark} />
+                        <LetterBox slug={slug} initialLetters={data.letters} theme="idol" isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
                     </section>
                 )}
 
@@ -1025,7 +1034,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                 </footer>
 
                 {/* Scroll to Top Button */}
-                {showScrollTop && (
+                {showScrollTop && !isPopupOpen && (
                     <button
                         onClick={scrollToTop}
                         className={`fixed bottom-24 right-6 z-40 p-3 rounded-full shadow-lg border transition-all hover:scale-110 ${

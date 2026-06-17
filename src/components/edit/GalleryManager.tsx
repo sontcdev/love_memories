@@ -342,7 +342,7 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
 
             {/* Add New Photos Modal */}
             {isAddingNew && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
                     <div className={`rounded-2xl p-6 w-full max-w-md border transition-all ${
                         isDark 
                             ? "bg-slate-900 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.2)] text-white" 
@@ -426,7 +426,7 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
 
             {/* Edit Caption Dialog */}
             {editingImage && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
                     <div className={`rounded-2xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] flex flex-col border transition-all ${
                         isDark 
                             ? "bg-slate-900 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.2)] text-white" 

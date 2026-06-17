@@ -32,13 +32,17 @@ interface LetterBoxProps {
     initialLetters: LetterWithReplies[];
     theme?: "love" | "every" | "idol";
     isDark?: boolean;
+    onPopupOpenChange?: (isOpen: boolean) => void;
 }
 
-export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxProps) {
+export function LetterBox({ slug, initialLetters, isDark = false, onPopupOpenChange }: LetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
 
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    useEffect(() => {
+        onPopupOpenChange?.(showCreateForm);
+    }, [showCreateForm, onPopupOpenChange]);
     const [isCreating, setIsCreating] = useState(false);
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyContent, setReplyContent] = useState("");
@@ -192,7 +196,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
 
             {/* Gói 2: Wish Jar Section */}
             <div className={`rounded-2xl p-6 transition-all border ${
-                isDark ? "bg-zinc-900/50 border-zinc-850" : "bg-amber-50/20 border-amber-900/10"
+                isDark ? "bg-zinc-900/50 border-zinc-700" : "bg-amber-50/20 border-amber-900/10"
             }`}>
                 <div className="flex flex-col md:flex-row items-center justify-center gap-8 py-4">
                     {/* Glass Wish Jar Visual */}
@@ -253,7 +257,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                         <h4 className={`text-base font-serif font-bold ${isDark ? "text-amber-300" : "text-amber-900"}`}>
                             Gửi Gắm Yêu Thương Vào Hũ
                         </h4>
-                        <p className={`text-xs leading-relaxed ${isDark ? "text-slate-300" : "text-slate-650"}`}>
+                        <p className={`text-xs leading-relaxed ${isDark ? "text-slate-300" : "text-slate-600"}`}>
                             Mỗi bức thư lưu bút được cuộn tròn lại như một cuộn sớ cổ phong nằm trong hũ thủy tinh này. Hãy gửi gắm những ước mơ, lời chúc tốt đẹp nhất gửi tới bạn mình nhé!
                         </p>
                         <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-1">
@@ -294,7 +298,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <span className={`text-[10px] truncate max-w-[75px] mt-1 font-serif ${isDark ? "text-slate-350" : "text-amber-950"} font-medium`}>
+                                                    <span className={`text-[10px] truncate max-w-[75px] mt-1 font-serif ${isDark ? "text-slate-400" : "text-amber-950"} font-medium`}>
                                                         {letter.title}
                                                     </span>
                                                     <span className="absolute -top-12 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 bg-black/85 text-white text-[9px] px-2 py-1 rounded whitespace-nowrap transition-all z-20 pointer-events-none flex flex-col items-center">
@@ -378,7 +382,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                                         <VideoPlayer url={newVideoUrl} className="rounded-lg" />
                                         <button
                                             onClick={() => setNewVideoUrl("")}
-                                            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-650 font-semibold"
+                                            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-semibold"
                                         >
                                             <X className="w-3.5 h-3.5" />
                                             Xóa video
@@ -649,7 +653,7 @@ export function LetterBox({ slug, initialLetters, isDark = false }: LetterBoxPro
                                     <div className="flex justify-end pt-2">
                                         <button
                                             onClick={() => setDeleteConfirm({ type: "letter", id: letter.id })}
-                                            className="flex items-center gap-1 text-[10px] text-red-700 hover:text-red-955 font-sans hover:underline"
+                                            className="flex items-center gap-1 text-[10px] text-red-700 hover:text-red-900 font-sans hover:underline"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" /> Xóa điều ước này
                                         </button>

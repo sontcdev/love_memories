@@ -210,7 +210,7 @@ export function GameSection({
                                         className={`w-full p-4 rounded-xl border text-left text-xs sm:text-sm transition-all hover:scale-[1.01] flex items-center justify-between ${
                                             isDark 
                                                 ? "bg-slate-950 border-slate-800 hover:bg-slate-800/40 text-slate-300" 
-                                                : "bg-slate-50 border-slate-100 hover:bg-slate-100/60 text-gray-750"
+                                                : "bg-slate-50 border-slate-100 hover:bg-slate-100/60 text-gray-700"
                                         }`}
                                     >
                                         <span>{member.name}</span>
@@ -258,7 +258,7 @@ export function GameSection({
                             const topVoted = [...questionStats].sort((a, b) => b.count - a.count)[0];
 
                             return (
-                                <div key={idx} className={`p-4 rounded-xl border ${isDark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50 border-slate-150"}`}>
+                                <div key={idx} className={`p-4 rounded-xl border ${isDark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
                                     <p className="text-xs font-bold font-serif mb-2">Câu {idx + 1}: {q.question}</p>
                                     {topVoted && topVoted.count > 0 ? (
                                         <div className="flex justify-between items-center text-xs">
@@ -283,7 +283,7 @@ export function GameSection({
                             onClick={resetQuiz}
                             className={`px-5 py-2.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 transition-all hover:scale-103 ${
                                 isDark 
-                                    ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750" 
+                                    ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-800" 
                                     : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                             }`}
                         >

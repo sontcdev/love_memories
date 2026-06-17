@@ -32,12 +32,16 @@ interface LetterBoxProps {
     initialLetters: LetterWithReplies[];
     isDark?: boolean;
     accentColor?: string;
+    onPopupOpenChange?: (isOpen: boolean) => void;
 }
 
-export function LetterBox({ slug, initialLetters, isDark = false, accentColor = "#d97706" }: LetterBoxProps) {
+export function LetterBox({ slug, initialLetters, isDark = false, accentColor = "#d97706", onPopupOpenChange }: LetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    useEffect(() => {
+        onPopupOpenChange?.(showCreateForm);
+    }, [showCreateForm, onPopupOpenChange]);
     const [isCreating, setIsCreating] = useState(false);
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyContent, setReplyContent] = useState("");
@@ -345,7 +349,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                                         <VideoPlayer url={newVideoUrl} className="rounded-lg" />
                                         <button
                                             onClick={() => setNewVideoUrl("")}
-                                            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-655 font-semibold"
+                                            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-semibold"
                                         >
                                             <X className="w-3.5 h-3.5" /> Xóa video
                                         </button>
@@ -366,7 +370,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                                         <audio src={newAudioUrl} controls className="w-full h-10" />
                                         <button
                                             onClick={() => setNewAudioUrl("")}
-                                            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-655 font-semibold"
+                                            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-semibold"
                                         >
                                             <X className="w-3.5 h-3.5" /> Xóa ghi âm
                                         </button>
@@ -484,7 +488,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                                         <div className="bg-amber-100/30 rounded-xl p-6 text-center border border-amber-900/10">
                                             <Lock className="w-10 h-10 mx-auto mb-3 text-amber-700" />
                                             <h4 className="font-bold text-amber-950 mb-1">Mảnh ghim chưa mở</h4>
-                                            <p className="text-xs text-amber-850">
+                                            <p className="text-xs text-amber-800">
                                                 Cần đợi đến ngày <span className="font-bold">{formatUnlockDate(letter.unlock_date!)}</span> để ghim hé lộ thông tin.
                                             </p>
                                         </div>
@@ -501,7 +505,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, accentColor = 
                                                 <VideoPlayer url={letter.video_url} className="rounded-xl border border-amber-900/10" />
                                             )}
                                             {letter.audio_url && (
-                                                <div className="bg-amber-150/40 p-3 rounded-xl border border-amber-900/5 shadow-inner">
+                                                <div className="bg-amber-100/40 p-3 rounded-xl border border-amber-900/5 shadow-inner">
                                                     <div className="flex items-center gap-1.5 mb-1.5">
                                                         <Mic className="w-4 h-4 text-amber-700" />
                                                         <span className="text-xs font-bold text-amber-900">Ghi âm kèm theo</span>

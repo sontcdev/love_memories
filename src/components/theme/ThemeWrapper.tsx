@@ -96,6 +96,16 @@ function hslToHex(h: number, s: number, l: number): string {
     return `#${rHex}${gHex}${bHex}`;
 }
 
+// Determine contrasting text color based on background lightness
+function getContrastColor(bgHex: string, darkText = "#1f2937", lightText = "#f1f5f9"): string {
+    try {
+        const { l } = hexToHsl(bgHex);
+        return l > 50 ? darkText : lightText;
+    } catch {
+        return darkText;
+    }
+}
+
 // Optimize accent color for proper contrast
 function optimizeColor(hexColor: string, isDark: boolean): string {
     try {
@@ -124,7 +134,6 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
     const bgColor = config?.background_color || DEFAULT_THEME.background_color;
     const fontFamily = config?.font_family || DEFAULT_THEME.font_family;
     const accentColor = config?.accent_color || DEFAULT_THEME.accent_color;
-    const textColor = config?.text_color || DEFAULT_THEME.text_color;
 
     const resolvedFont = FONT_FAMILIES[fontFamily] || fontFamily;
 
@@ -208,7 +217,7 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
     const darkBgColor = getDarkBgColor();
     const resolvedBgColor = isDark ? darkBgColor : bgColor;
     const resolvedAccentColor = optimizeColor(accentColor, isDark);
-    const resolvedTextColor = isDark ? "#f1f5f9" : textColor;
+    const resolvedTextColor = getContrastColor(resolvedBgColor);
 
     // Apply CSS variables to document html
     useEffect(() => {

@@ -27,6 +27,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
     const [activeSection, setActiveSection] = useState<string>("home");
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
@@ -83,8 +84,8 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
     };
 
     // Lightbox navigation
-    const openLightbox = (index: number) => setLightboxIndex(index);
-    const closeLightbox = () => setLightboxIndex(null);
+    const openLightbox = (index: number) => { setLightboxIndex(index); setIsPopupOpen(true); };
+    const closeLightbox = () => { setLightboxIndex(null); setIsPopupOpen(false); };
     const nextImage = useCallback(() => {
         if (lightboxIndex !== null && data.galleries.length > 0) {
             setLightboxIndex((lightboxIndex + 1) % data.galleries.length);
@@ -142,35 +143,39 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
             </div>
 
             {/* Theme Toggle Button */}
-            <button
-                onClick={handleThemeToggle}
-                className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
-                    isDark 
-                        ? "bg-[#282420]/95 text-yellow-400 border border-rose-950/30 hover:bg-[#332e28]" 
-                        : "bg-white/95 text-rose-500 hover:bg-white border border-rose-100/30"
-                }`}
-                title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
-            >
-                {isDark ? (
-                    <Sun className="w-5 h-5" />
-                ) : (
-                    <Moon className="w-5 h-5" />
-                )}
-            </button>
+            {!isPopupOpen && (
+                <button
+                    onClick={handleThemeToggle}
+                    className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
+                        isDark 
+                            ? "bg-[#282420]/95 text-yellow-400 border border-rose-950/30 hover:bg-[#332e28]" 
+                            : "bg-white/95 text-rose-500 hover:bg-white border border-rose-100/30"
+                    }`}
+                    title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+                >
+                    {isDark ? (
+                        <Sun className="w-5 h-5" />
+                    ) : (
+                        <Moon className="w-5 h-5" />
+                    )}
+                </button>
+            )}
 
             {/* Edit Button */}
-            <Link
-                href={`/${slug}/edit`}
-                className={`fixed top-4 right-4 z-30 p-3 rounded-full shadow-lg transition-all border hover:scale-105 ${
-                    isDark
-                        ? "bg-[#282420]/95 border-rose-950/30 text-rose-400 hover:bg-[#332e28]"
-                        : "bg-white/95 border-rose-100/30 text-rose-500 hover:bg-white"
-                }`}
-                title="Chỉnh sửa trang"
-                aria-label="Chỉnh sửa trang"
-            >
-                <Settings className="w-5 h-5" />
-            </Link>
+            {!isPopupOpen && (
+                <Link
+                    href={`/${slug}/edit`}
+                    className={`fixed top-4 right-4 z-30 p-3 rounded-full shadow-lg transition-all border hover:scale-105 ${
+                        isDark
+                            ? "bg-[#282420]/95 border-rose-950/30 text-rose-400 hover:bg-[#332e28]"
+                            : "bg-white/95 border-rose-100/30 text-rose-500 hover:bg-white"
+                    }`}
+                    title="Chỉnh sửa trang"
+                    aria-label="Chỉnh sửa trang"
+                >
+                    <Settings className="w-5 h-5" />
+                </Link>
+            )}
 
             {/* Main Header / Cover */}
             <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-16 pb-8 max-w-3xl mx-auto text-center">
@@ -302,7 +307,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                                         <div
                                             key={item.id}
                                             onClick={() => openLightbox(index)}
-                                            className={`${isDark ? "bg-[#332e28] border-rose-900/20 text-slate-200" : "bg-white border-slate-150 text-gray-800"} p-3 pb-6 border rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${rotClass} relative`}
+                                            className={`${isDark ? "bg-[#332e28] border-rose-900/20 text-slate-200" : "bg-white border-slate-200 text-gray-800"} p-3 pb-6 border rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${rotClass} relative`}
                                         >
                                             {/* Washi tape effect */}
                                             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-16 h-5 bg-yellow-100/60 border border-yellow-200/40 shadow-sm opacity-80" />
@@ -393,7 +398,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                         <p className={`text-xs sm:text-sm text-center mb-6 max-w-sm mx-auto ${isDark ? "text-slate-400" : "text-gray-500"}`}>
                             Tất cả những lá thư ngọt ngào nhất được lưu trữ tại hòm thư này.
                         </p>
-                        <LetterBox initialLetters={data.letters} slug={slug} theme="love" isDark={isDark} />
+                        <LetterBox initialLetters={data.letters} slug={slug} theme="love" isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
                     </section>
                 )}
 
@@ -408,72 +413,62 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                 )}
             </main>
 
-            {/* Lightbox Modal */}
+            {/* Gallery Lightbox */}
             {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                <div
-                    {...swipeHandlers}
-                    className="fixed inset-0 z-50 bg-slate-950/98 flex flex-col items-center justify-center p-4 animate-fade-in"
-                    onClick={closeLightbox}
-                >
-                    {/* Header */}
-                    <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 z-20">
-                        <span className="text-slate-300 text-sm font-medium">
-                            {lightboxIndex + 1} / {data.galleries.length}
-                        </span>
-                        <button
-                            onClick={closeLightbox}
-                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                            aria-label="Đóng"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-                    </div>
-
-                    {/* Image Container */}
-                    <div className="relative w-full max-w-4xl flex-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="relative w-full h-[70vh] aspect-[3/4] sm:aspect-[4/3] max-h-[75vh]">
-                            <Image
-                                src={data.galleries[lightboxIndex].image_url}
-                                alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                fill
-                                className="object-contain"
-                                priority
-                            />
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={closeLightbox}>
+                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#282420] text-slate-100" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-4 text-white flex-shrink-0">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">
+                                    {lightboxIndex + 1} / {data.galleries.length}
+                                </span>
+                                <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
-
-                        {data.galleries.length > 1 && (
-                            <>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                    className="absolute left-2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                                    aria-label="Ảnh trước"
-                                >
-                                    <ChevronLeft className="w-6 h-6" />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                    className="absolute right-2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                                    aria-label="Ảnh kế tiếp"
-                                >
-                                    <ChevronRight className="w-6 h-6" />
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Caption */}
-                    {data.galleries[lightboxIndex].caption && (
-                        <div className="w-full max-w-2xl text-center py-4 px-6 text-white z-10 font-serif italic">
-                            <p className="text-sm sm:text-base font-light">
+                        {/* Image */}
+                        <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
+                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                                <Image
+                                    src={data.galleries[lightboxIndex].image_url}
+                                    alt={data.galleries[lightboxIndex].caption || "Photo"}
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
+                            </div>
+                        </div>
+                        {/* Caption */}
+                        {data.galleries[lightboxIndex].caption && (
+                            <div className={`px-4 py-2 text-center text-sm font-serif italic ${isDark ? "text-slate-300" : "text-gray-600"}`}>
                                 {data.galleries[lightboxIndex].caption}
-                            </p>
+                            </div>
+                        )}
+                        {/* Navigation */}
+                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-rose-900/30" : "border-gray-100"}`}>
+                            <button
+                                onClick={prevImage}
+                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-rose-950/30 text-rose-400 hover:bg-rose-950/50" : "bg-rose-50 text-rose-500 hover:bg-rose-100"}`}
+                                aria-label="Ảnh trước"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={nextImage}
+                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-rose-950/30 text-rose-400 hover:bg-rose-950/50" : "bg-rose-50 text-rose-500 hover:bg-rose-100"}`}
+                                aria-label="Ảnh tiếp theo"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
             )}
 
             {/* Scroll to top */}
-            {showScrollTop && (
+            {showScrollTop && !isPopupOpen && (
                 <button
                     onClick={scrollToTop}
                     className="fixed bottom-6 right-6 z-30 p-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"

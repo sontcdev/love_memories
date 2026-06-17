@@ -62,17 +62,6 @@ const IDOL_ACCENT_COLORS = [
     { name: "Sky Blue", value: "#0ea5e9" },   // Sky 500
 ];
 
-const TEXT_COLORS = [
-    "#1f2937", // Gray 800 (default)
-    "#000000", // Black
-    "#374151", // Gray 700
-    "#4b5563", // Gray 600
-    "#ffffff", // White
-    "#fef2f2", // Rose 50
-    "#1e3a5f", // Dark blue
-    "#3b1f2b", // Dark rose
-];
-
 
 
 // ============================================================================
@@ -110,7 +99,6 @@ export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = fa
 
     const selectedColor = watch("background_color");
     const selectedAccentColor = watch("accent_color");
-    const selectedTextColor = watch("text_color");
 
     const onSubmit = async (data: ConfigFormData) => {
         setIsSubmitting(true);
@@ -238,54 +226,6 @@ export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = fa
                 </div>
                 {errors.accent_color && (
                     <p className="mt-1 text-sm text-red-500">{errors.accent_color.message}</p>
-                )}
-            </div>
-
-            {/* Text Color */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <Palette className="w-5 h-5 text-gray-500" />
-                    <h3 className={`text-lg font-semibold ${isDark ? "text-purple-100" : "text-gray-800"}`}>Màu chữ</h3>
-                </div>
-
-                <div className="flex flex-wrap gap-3 mb-4">
-                    {TEXT_COLORS.map((color) => (
-                        <button
-                            key={color}
-                            type="button"
-                            onClick={() => setValue("text_color", color)}
-                            className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedTextColor === color
-                                ? isDark
-                                    ? "border-purple-400 ring-2 ring-purple-500/50 scale-110 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
-                                    : "border-gray-800 ring-2 ring-gray-300 scale-110"
-                                : isDark
-                                    ? "border-purple-950/40 hover:border-purple-500/30"
-                                    : "border-gray-200 hover:border-gray-300"
-                                }`}
-                            style={{ backgroundColor: color }}
-                            title={color}
-                        />
-                    ))}
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <input
-                        type="color"
-                        {...register("text_color")}
-                        className={`w-12 h-10 rounded-lg cursor-pointer border ${isDark ? "border-purple-500/30 bg-slate-900" : "border-gray-300 bg-white"}`}
-                    />
-                    <input
-                        {...register("text_color")}
-                        className={`flex-1 px-4 py-2 rounded-lg border outline-none transition-all font-mono text-sm ${
-                            isDark 
-                                ? "bg-slate-950/60 border-purple-500/30 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
-                                : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-300 focus:border-gray-400"
-                        }`}
-                        placeholder="#1f2937"
-                    />
-                </div>
-                {errors.text_color && (
-                    <p className="mt-1 text-sm text-red-500">{errors.text_color.message}</p>
                 )}
             </div>
 

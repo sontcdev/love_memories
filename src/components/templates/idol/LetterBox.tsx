@@ -35,9 +35,10 @@ interface LetterBoxProps {
     initialLetters: LetterWithReplies[];
     theme?: "love" | "every" | "idol";
     isDark?: boolean;
+    onPopupOpenChange?: (isOpen: boolean) => void;
 }
 
-export function LetterBox({ slug, initialLetters, theme = "love", isDark = false }: LetterBoxProps) {
+export function LetterBox({ slug, initialLetters, theme = "love", isDark = false, onPopupOpenChange }: LetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
 
     // Helper to check if a letter is currently locked
@@ -50,6 +51,11 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         unlockDate.setHours(0, 0, 0, 0);
         return today < unlockDate;
     };
+    
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    useEffect(() => {
+        onPopupOpenChange?.(showCreateForm);
+    }, [showCreateForm, onPopupOpenChange]);
 
     // Sort letters:
     // 1. Unlocked letters (no unlock_date OR unlock_date passed) - sort by created_at ascending
@@ -72,7 +78,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         return aLocked ? 1 : -1;
     });
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [showCreateForm, setShowCreateForm] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyContent, setReplyContent] = useState("");
@@ -329,7 +334,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                         <audio src={newAudioUrl} controls className="w-full h-10" />
                                         <button
                                             onClick={() => setNewAudioUrl("")}
-                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-650"
+                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
                                         >
                                             <X className="w-4 h-4" />
                                             Xóa ghi âm
@@ -417,7 +422,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
 
             {/* Letters List */}
             {letters.length === 0 ? (
-                <div className={`text-center py-16 ${isDark ? "bg-zinc-900/50 border border-zinc-850/80" : colors.bg} rounded-2xl`}>
+                <div className={`text-center py-16 ${isDark ? "bg-zinc-900/50 border border-zinc-700/80" : colors.bg} rounded-2xl`}>
                     <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300 opacity-60" />
                     <p className={isDark ? "text-slate-400" : "text-gray-400"}>Chưa có thư nào...</p>
                     <p className={`text-sm ${isDark ? "text-slate-500" : "text-gray-400"}`}>Hãy gửi những lời chúc đầu tiên!</p>
@@ -451,7 +456,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                 
                                 {/* Letter Header */}
                                 <div
-                                    className={`p-4 cursor-pointer ${theme === "idol" ? "bg-transparent" : (isDark ? "bg-zinc-900/40 hover:bg-zinc-850" : colors.bg + " hover:bg-black/5")} transition-colors`}
+                                    className={`p-4 cursor-pointer ${theme === "idol" ? "bg-transparent" : (isDark ? "bg-zinc-900/40 hover:bg-zinc-800" : colors.bg + " hover:bg-black/5")} transition-colors`}
                                     onClick={() =>
                                         setExpandedId(expandedId === letter.id ? null : letter.id)
                                     }
@@ -515,7 +520,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                 <div className={`p-4 border-t ${isDark ? "border-zinc-800" : "border-gray-100"}`}>
                                     {/* Check if letter is locked */}
                                     {isLetterLocked(letter) ? (
-                                        <div className={`${isDark ? "bg-zinc-950/40 border border-zinc-850" : colors.bg} rounded-xl p-6 text-center`}>
+                                        <div className={`${isDark ? "bg-zinc-950/40 border border-zinc-700" : colors.bg} rounded-xl p-6 text-center`}>
                                             <Lock className={`w-12 h-12 mx-auto mb-3 ${colors.text}`} />
                                             <h4 className={`font-semibold ${isDark ? "text-slate-200" : "text-gray-800"} mb-2`}>Thư đang bị khóa</h4>
                                             <p className={`${isDark ? "text-slate-400" : "text-gray-600"} text-sm`}>
@@ -552,7 +557,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                             {/* Audio */}
                                             {letter.audio_url && (
                                                 <div className="mb-4">
-                                                    <div className={`${isDark ? "bg-zinc-950/50 border border-zinc-850" : colors.bg} p-3 rounded-xl`}>
+                                                    <div className={`${isDark ? "bg-zinc-950/50 border border-zinc-700" : colors.bg} p-3 rounded-xl`}>
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <Mic className={`w-4 h-4 ${colors.text}`} />
                                                             <span className={`text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"}`}>Ghi âm đính kèm</span>
@@ -577,7 +582,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                                     {letter.replies.map((reply) => (
                                                         <div
                                                             key={reply.id}
-                                                            className={`${isDark ? "bg-zinc-950/40 border border-zinc-850/60" : colors.bg} rounded-xl p-3 relative group`}
+                                                            className={`${isDark ? "bg-zinc-950/40 border border-zinc-700/60" : colors.bg} rounded-xl p-3 relative group`}
                                                         >
                                                             <p className={`text-sm pr-10 break-words overflow-hidden ${isDark ? "text-slate-300" : "text-gray-700"}`}>{reply.content}</p>
                                                             <div className="flex items-center justify-between mt-1">
