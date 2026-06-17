@@ -111,7 +111,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
             
             const root = document.documentElement;
             if (isSavedDark) {
-                root.style.setProperty("--theme-bg", "#0f0f12");
+                root.style.setProperty("--theme-bg", "#0b0813");
             } else {
                 root.style.setProperty("--theme-bg", linkData.config?.background_color || "#ffffff");
             }
@@ -139,7 +139,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         
         const root = document.documentElement;
         if (newDark) {
-            root.style.setProperty("--theme-bg", "#0f0f12");
+            root.style.setProperty("--theme-bg", "#0b0813");
         } else {
             root.style.setProperty("--theme-bg", linkData.config?.background_color || "#ffffff");
         }

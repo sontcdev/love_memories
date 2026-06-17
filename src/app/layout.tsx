@@ -146,6 +146,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var p=window.location.pathname,m=p.match(/^\/([^\/]+)(?:\/|$)/);if(m){var s=m[1];if(s!=='admin'&&s!=='offline'&&s!=='_not-found'){var t=localStorage.getItem('theme_mode_'+s);if(t==='dark'){document.documentElement.classList.add('dark')}}}}catch(e){}})()` }} />
       </head>
       <body
         className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${montserrat.variable} ${comfortaa.variable} ${caveat.variable} ${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}

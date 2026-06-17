@@ -176,9 +176,8 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
             });
         });
 
-        observer.observe(document.body, {
+        observer.observe(document.documentElement, {
             attributes: true,
-            subtree: true,
             attributeFilter: ["class"]
         });
 
@@ -193,9 +192,9 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
             case "LOVE2":
                 return "#181614";
             case "GRAD_PERSONAL":
-                return "#05130f";
+                return "#0f0a07";
             case "GRAD_CLASS":
-                return "#0f1512";
+                return "#162a22";
             case "GRAD_GROUP":
                 // Guess caravan as default or read from local storage if available
                 if (typeof window !== "undefined" && slug) {
@@ -203,12 +202,12 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
                         const savedProfile = localStorage.getItem(`profile_data_${slug}`);
                         if (savedProfile) {
                             const parsed = JSON.parse(savedProfile);
-                            if (parsed.theme === "station") return "#05060b";
-                            if (parsed.theme === "scrapbook") return "#181614";
+                            if (parsed.theme === "station") return "#05040a";
+                            if (parsed.theme === "scrapbook") return "#1c1611";
                         }
                     } catch {}
                 }
-                return "#1c0f07"; // default Caravan dark bg
+                return "#0f0a07"; // default Caravan dark bg
             default:
                 return "#121214";
         }

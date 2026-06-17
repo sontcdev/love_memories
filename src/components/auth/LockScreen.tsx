@@ -13,7 +13,9 @@ import {
     Camera, 
     Ticket, 
     Sparkles, 
-    Star 
+    Star,
+    Sun,
+    Moon
 } from "lucide-react";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
@@ -45,6 +47,35 @@ export function LockScreen({ slug, onSuccess, linkData }: LockScreenProps) {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [particles, setParticles] = useState<Particle[]>([]);
+    const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
+
+    const isDarkBackground = useCallback((hex?: string | null) => {
+        if (!hex) return false;
+        const color = hex.replace("#", "");
+        if (color.length !== 6) return false;
+        const r = parseInt(color.substring(0, 2), 16);
+        const g = parseInt(color.substring(2, 4), 16);
+        const b = parseInt(color.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 120;
+    }, []);
+
+    // Read from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(`theme_mode_${slug}`);
+        if (saved) {
+            setOverrideDark(saved === "dark");
+        }
+    }, [slug]);
+
+    const isDark = overrideDark !== null ? overrideDark : isDarkBackground(linkData?.config?.background_color);
+
+    const handleThemeToggle = () => {
+        const newDark = !isDark;
+        setOverrideDark(newDark);
+        localStorage.setItem(`theme_mode_${slug}`, newDark ? "dark" : "light");
+        window.dispatchEvent(new CustomEvent("theme-change", { detail: { isDark: newDark } }));
+    };
 
     // Generate drift background particles on mount
     useEffect(() => {
@@ -258,30 +289,29 @@ export function LockScreen({ slug, onSuccess, linkData }: LockScreenProps) {
                     };
                 }
             }
-            case "EVERY": {
-                const groupName = profileData?.group_name || "Nhóm kỷ niệm";
-                return {
-                    icon: <Users className="w-10 h-10 text-indigo-600" />,
-                    iconBg: "bg-white border border-indigo-100 shadow-lg",
-                    title: groupName,
-                    subtitle: "Nhập mã PIN để mở khóa trang kỷ niệm của nhóm!",
-                    bgClass: "from-indigo-100 via-pink-100 to-sky-100 text-indigo-950",
-                    accentColor: "#6366f1",
-                    cardClass: "bg-white/35 backdrop-blur-2xl border border-white/40 shadow-2xl",
-                    inputClass: "border-white/40 bg-white/20",
-                    activeInputClass: "border-indigo-400 bg-white/35 shadow-[0_0_10px_rgba(99,102,241,0.15)]",
-                    btnClass: "bg-white/25 hover:bg-white/45 border border-white/30 text-indigo-950 active:scale-95 shadow-sm",
-                    specialBtnClass: "bg-white/15 hover:bg-white/30 border border-white/20 text-indigo-700/80 active:scale-95",
-                    dotIcon: <div className="w-2 h-2 rounded-full bg-indigo-200" />,
-                    activeDotIcon: <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />,
-                    particleType: "soap",
-                    avatarUrl: undefined,
-                    footerText: "Khoảnh khắc bên nhau 💕"
-                };
-            }
             case "LOVE2": {
                 const bName = profileData?.boy_name || "Anh";
                 const gName = profileData?.girl_name || "Em";
+                if (isDark) {
+                    return {
+                        icon: <Heart className="w-10 h-10 text-white fill-white" />,
+                        iconBg: "bg-gradient-to-br from-rose-600 to-pink-700 shadow-lg shadow-rose-900/30",
+                        title: "Memorae Scrapbook",
+                        subtitle: `Nhập mã PIN để mở trang nhật ký của ${bName} & ${gName}!`,
+                        bgClass: "from-[#1a1816] via-[#282420] to-[#1a1816] bg-[radial-gradient(#3e3229_1.5px,transparent_1.5px)] [background-size:24px_24px] text-[#e2d5c8]",
+                        accentColor: "#f43f5e",
+                        cardClass: "bg-[#282420]/95 border border-rose-900/30 shadow-2xl",
+                        inputClass: "border-rose-900/40 bg-[#1a1816]",
+                        activeInputClass: "border-rose-400 bg-[#1a1816] shadow-[0_0_10px_rgba(244,63,94,0.25)]",
+                        btnClass: "bg-[#1a1816]/80 hover:bg-[#332e28] border border-rose-900/30 text-rose-200 active:scale-95 shadow-sm",
+                        specialBtnClass: "bg-[#1a1816]/40 hover:bg-[#1a1816]/75 border border-rose-950/30 text-rose-400 active:scale-95",
+                        dotIcon: <div className="w-2.5 h-2.5 rounded-full bg-rose-900/60" />,
+                        activeDotIcon: <Heart className="w-5 h-5 text-rose-500 fill-rose-500 animate-pulse" />,
+                        particleType: "kraft",
+                        avatarUrl: undefined,
+                        footerText: "Nhật ký tình yêu ngọt ngào ✨"
+                    };
+                }
                 return {
                     icon: <Heart className="w-10 h-10 text-white fill-white" />,
                     iconBg: "bg-gradient-to-br from-[#855430] via-rose-400 to-[#855430]/70 shadow-lg shadow-rose-200/30",
@@ -299,6 +329,47 @@ export function LockScreen({ slug, onSuccess, linkData }: LockScreenProps) {
                     particleType: "kraft",
                     avatarUrl: undefined,
                     footerText: "Nhật ký tình yêu ngọt ngào ✨"
+                };
+            }
+            case "EVERY": {
+                const groupName = profileData?.group_name || "Nhóm kỷ niệm";
+                if (isDark) {
+                    return {
+                        icon: <Users className="w-10 h-10 text-white" />,
+                        iconBg: "bg-gradient-to-br from-indigo-600 to-purple-700 border border-indigo-500/30 shadow-lg",
+                        title: groupName,
+                        subtitle: "Nhập mã PIN để mở khóa trang kỷ niệm của nhóm!",
+                        bgClass: "from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-slate-200",
+                        accentColor: "#818cf8",
+                        cardClass: "bg-[#1a1a2e]/85 backdrop-blur-2xl border border-indigo-500/20 shadow-2xl",
+                        inputClass: "border-indigo-800/40 bg-[#0f0f1a]",
+                        activeInputClass: "border-indigo-400 bg-[#0f0f1a] shadow-[0_0_10px_rgba(99,102,241,0.25)]",
+                        btnClass: "bg-[#0f0f1a]/60 hover:bg-[#1a1a2e] border border-indigo-800/30 text-indigo-200 active:scale-95 shadow-sm",
+                        specialBtnClass: "bg-[#0f0f1a]/30 hover:bg-[#0f0f1a]/55 border border-indigo-950/30 text-indigo-400 active:scale-95",
+                        dotIcon: <div className="w-2 h-2 rounded-full bg-indigo-800/60" />,
+                        activeDotIcon: <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />,
+                        particleType: "soap",
+                        avatarUrl: undefined,
+                        footerText: "Khoảnh khắc bên nhau 💕"
+                    };
+                }
+                return {
+                    icon: <Users className="w-10 h-10 text-indigo-600" />,
+                    iconBg: "bg-white border border-indigo-100 shadow-lg",
+                    title: groupName,
+                    subtitle: "Nhập mã PIN để mở khóa trang kỷ niệm của nhóm!",
+                    bgClass: "from-indigo-100 via-pink-100 to-sky-100 text-indigo-950",
+                    accentColor: "#6366f1",
+                    cardClass: "bg-white/35 backdrop-blur-2xl border border-white/40 shadow-2xl",
+                    inputClass: "border-white/40 bg-white/20",
+                    activeInputClass: "border-indigo-400 bg-white/35 shadow-[0_0_10px_rgba(99,102,241,0.15)]",
+                    btnClass: "bg-white/25 hover:bg-white/45 border border-white/30 text-indigo-950 active:scale-95 shadow-sm",
+                    specialBtnClass: "bg-white/15 hover:bg-white/30 border border-white/20 text-indigo-700/80 active:scale-95",
+                    dotIcon: <div className="w-2 h-2 rounded-full bg-indigo-200" />,
+                    activeDotIcon: <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />,
+                    particleType: "soap",
+                    avatarUrl: undefined,
+                    footerText: "Khoảnh khắc bên nhau 💕"
                 };
             }
             case "LOVE":
@@ -377,6 +448,23 @@ export function LockScreen({ slug, onSuccess, linkData }: LockScreenProps) {
                     />
                 ))}
             </div>
+
+            {/* Theme Toggle */}
+            {(type === "LOVE2" || type === "EVERY") && (
+                <div className="absolute top-4 right-4 z-20">
+                    <button
+                        onClick={handleThemeToggle}
+                        className={`p-2.5 rounded-full shadow-lg transition-all hover:scale-110 border ${
+                            isDark 
+                                ? "bg-[#282420]/95 text-yellow-400 border-rose-950/30 hover:bg-[#332e28]" 
+                                : "bg-white/95 text-rose-500 border-rose-100/30 hover:bg-white"
+                        }`}
+                        title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+                    >
+                        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    </button>
+                </div>
+            )}
 
             <div className="w-full max-w-sm relative z-10">
                 {/* Header */}

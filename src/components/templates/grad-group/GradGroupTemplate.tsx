@@ -192,12 +192,13 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
             
             const root = document.documentElement;
             if (isSavedDark) {
-                root.style.setProperty("--theme-bg", "#0f0a07");
+                const darkBg = subTheme === "station" ? "#05040a" : subTheme === "scrapbook" ? "#1c1611" : "#0f0a07";
+                root.style.setProperty("--theme-bg", darkBg);
             } else {
                 root.style.setProperty("--theme-bg", data.config?.background_color || "#3a2213");
             }
         }
-    }, [slug, data.config?.background_color]);
+    }, [slug, data.config?.background_color, subTheme]);
 
     const handleThemeToggle = () => {
         const newDark = !isDark;
@@ -207,7 +208,8 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
         
         const root = document.documentElement;
         if (newDark) {
-            root.style.setProperty("--theme-bg", "#0f0a07");
+            const darkBg = subTheme === "station" ? "#05040a" : subTheme === "scrapbook" ? "#1c1611" : "#0f0a07";
+            root.style.setProperty("--theme-bg", darkBg);
         } else {
             root.style.setProperty("--theme-bg", data.config?.background_color || "#3a2213");
         }
