@@ -66,6 +66,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
         theme?: string;
         group_name?: string;
         group_avatar?: string;
+        title?: string;
         slogan?: string;
         graduation_year?: string;
         members?: GroupMember[];
@@ -215,6 +216,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
     const groupAvatar = profileData?.group_avatar;
     const slogan = profileData?.slogan || "Cùng nhau đi qua giông bão, thanh xuân này trọn vẹn vì có nhau.";
     const graduationYear = profileData?.graduation_year || "2026";
+    const title = profileData?.title || "";
     const members: GroupMember[] = profileData?.members || [];
 
     useEffect(() => {
@@ -446,8 +448,13 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                     </div>
 
                     {/* School detail tags */}
+                    {title && (
+                        <p className="text-[#e2c19e] font-serif font-bold text-base sm:text-lg mb-1">
+                            {title}
+                        </p>
+                    )}
                     <p className="text-[#e2c19e] font-serif font-semibold text-sm sm:text-base mb-2">
-                        Niên khóa tốt nghiệp {graduationYear} • Chúng mình bên nhau
+                        {graduationYear}
                     </p>
                     <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto mb-6 italic font-serif leading-relaxed">
                         &ldquo;{slogan}&rdquo;

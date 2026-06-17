@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Palette, Music, Type } from "lucide-react";
+import { Save, Loader2, Palette, Type } from "lucide-react";
 
 // ============================================================================
 // SCHEMA
@@ -14,6 +14,7 @@ import { Save, Loader2, Palette, Music, Type } from "lucide-react";
 const configSchema = z.object({
     background_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
     accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
+    text_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
     font_family: z.string().optional(),
     music_url: z.string().url("Invalid URL").optional().or(z.literal("")),
     auto_play: z.boolean().optional(),
@@ -65,6 +66,17 @@ const ACCENT_COLORS = [
     "#6366f1", // Indigo 500
 ];
 
+const TEXT_COLORS = [
+    "#1f2937", // Gray 800 (default)
+    "#000000", // Black
+    "#374151", // Gray 700
+    "#4b5563", // Gray 600
+    "#ffffff", // White
+    "#fef2f2", // Rose 50
+    "#1e3a5f", // Dark blue
+    "#3b1f2b", // Dark rose
+];
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -90,6 +102,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
         defaultValues: {
             background_color: initialConfig?.background_color || "#ffffff",
             accent_color: initialConfig?.accent_color || "#ec4899",
+            text_color: initialConfig?.text_color || "#1f2937",
             font_family: initialConfig?.font_family || "Inter",
             music_url: initialConfig?.music_url || "",
             auto_play: initialConfig?.auto_play || false,
@@ -98,6 +111,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
 
     const selectedColor = watch("background_color");
     const selectedAccentColor = watch("accent_color");
+    const selectedTextColor = watch("text_color");
 
     const onSubmit = async (data: ConfigFormData) => {
         setIsSubmitting(true);
@@ -106,6 +120,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
         const result = await updateLinkConfig(slug, {
             background_color: data.background_color || undefined,
             accent_color: data.accent_color || undefined,
+            text_color: data.text_color || undefined,
             font_family: data.font_family || undefined,
             music_url: data.music_url || undefined,
             auto_play: data.auto_play,
@@ -127,7 +142,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Palette className="w-5 h-5 text-purple-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Màu nền</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">Màu nền màn hình chờ</h3>
                 </div>
 
                 {/* Preset Colors */}
@@ -206,6 +221,47 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                     <p className="mt-1 text-sm text-red-500">{errors.accent_color.message}</p>
                 )}
             </div>
+
+            {/* Text Color */}
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <Palette className="w-5 h-5 text-gray-500" />
+                    <h3 className="text-lg font-semibold text-gray-800">Màu chữ</h3>
+                </div>
+
+                <div className="flex flex-wrap gap-3 mb-4">
+                    {TEXT_COLORS.map((color) => (
+                        <button
+                            key={color}
+                            type="button"
+                            onClick={() => setValue("text_color", color)}
+                            className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedTextColor === color
+                                ? "border-gray-800 ring-2 ring-gray-300 scale-110"
+                                : "border-gray-200 hover:border-gray-300"
+                                }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                        />
+                    ))}
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <input
+                        type="color"
+                        {...register("text_color")}
+                        className="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                    />
+                    <input
+                        {...register("text_color")}
+                        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:border-gray-400 outline-none transition-all font-mono text-sm"
+                        placeholder="#1f2937"
+                    />
+                </div>
+                {errors.text_color && (
+                    <p className="mt-1 text-sm text-red-500">{errors.text_color.message}</p>
+                )}
+            </div>
+
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Type className="w-5 h-5 text-blue-500" />
@@ -224,8 +280,8 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                 </select>
             </div>
 
-            {/* Music URL */}
-            <div>
+            {/* Music URL - temporarily disabled */}
+            {/* <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Music className="w-5 h-5 text-pink-500" />
                     <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
@@ -240,7 +296,6 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                     <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
                 )}
 
-                {/* Auto-play Toggle */}
                 <label className="flex items-center gap-3 mt-4 cursor-pointer">
                     <input
                         type="checkbox"
@@ -251,7 +306,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                         Tự động phát nhạc khi tải trang
                     </span>
                 </label>
-            </div>
+            </div> */}
 
             {/* Message */}
             {message && (

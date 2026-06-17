@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { getLinkData } from "@/app/actions/auth-actions";
+import { getLinkData, getLinkPublicData } from "@/app/actions/auth-actions";
 import { SlugPageClient } from "./page-client";
 
-// Disable caching to always check fresh
 export const dynamic = "force-dynamic";
 
 interface PageProps {
@@ -13,16 +12,53 @@ interface PageProps {
 export default async function SlugPage({ params }: PageProps) {
     const { slug } = await params;
 
-    // Fetch link data
-    const linkResult = await getLinkData(slug);
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get(`session_${slug}`)?.value;
+    const isAuthenticated = !!sessionToken;
 
-    // If link doesn't exist, show 404
-    if (!linkResult.success || !linkResult.data) {
-        notFound();
+    if (isAuthenticated) {
+        const linkResult = await getLinkData(slug);
+        if (!linkResult.success || !linkResult.data) {
+            notFound();
+        }
+        if (!linkResult.data.is_active) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="text-center px-4">
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Trang không khả dụng</h1>
+                        <p className="text-gray-500">Trang kỷ niệm này hiện không khả dụng.</p>
+                    </div>
+                </div>
+            );
+        }
+        const bgColor = linkResult.data.config?.background_color || '#ffffff';
+        const accentColor = linkResult.data.config?.accent_color || '#ec4899';
+        const textColor = linkResult.data.config?.text_color || '#1f2937';
+        return (
+            <>
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                            document.documentElement.style.setProperty('--theme-bg', '${bgColor}');
+                            document.documentElement.style.setProperty('--theme-accent', '${accentColor}');
+                            document.documentElement.style.setProperty('--theme-text', '${textColor}');
+                        `,
+                    }}
+                />
+                <SlugPageClient
+                    slug={slug}
+                    isAuthenticated={true}
+                    linkData={linkResult.data}
+                />
+            </>
+        );
     }
 
-    // If link is not active, show disabled message
-    if (!linkResult.data.is_active) {
+    const publicResult = await getLinkPublicData(slug);
+    if (!publicResult.success || !publicResult.data) {
+        notFound();
+    }
+    if (!publicResult.data.is_active) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center px-4">
@@ -33,90 +69,72 @@ export default async function SlugPage({ params }: PageProps) {
         );
     }
 
-    // Check if user has session cookie (already authenticated)
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get(`session_${slug}`)?.value;
-    const isAuthenticated = !!sessionToken;
-
-    const bgColor = linkResult.data.config?.background_color || '#ffffff';
-    const accentColor = linkResult.data.config?.accent_color || '#ec4899';
+    const bgColor = publicResult.data.config?.background_color || '#ffffff';
+    const accentColor = publicResult.data.config?.accent_color || '#ec4899';
+    const textColor = publicResult.data.config?.text_color || '#1f2937';
 
     return (
         <>
-            {/* Inject theme CSS variables immediately */}
             <script
                 dangerouslySetInnerHTML={{
                     __html: `
                         document.documentElement.style.setProperty('--theme-bg', '${bgColor}');
                         document.documentElement.style.setProperty('--theme-accent', '${accentColor}');
+                        document.documentElement.style.setProperty('--theme-text', '${textColor}');
                     `,
                 }}
             />
             <SlugPageClient
                 slug={slug}
-                isAuthenticated={isAuthenticated}
-                linkData={linkResult.data}
+                isAuthenticated={false}
+                linkData={null}
+                publicData={publicResult.data}
             />
         </>
     );
 }
 
-// Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params;
-    const linkResult = await getLinkData(slug);
+    const publicResult = await getLinkPublicData(slug);
 
-    if (!linkResult.success || !linkResult.data) {
+    if (!publicResult.success || !publicResult.data) {
         return {
             title: "Không tìm thấy | Love Memories",
             description: "Trang kỷ niệm này không tồn tại.",
         };
     }
 
-    const profileData = linkResult.data.profile_data as Record<string, string> | null;
-    const linkType = linkResult.data.type;
+    const profileData = publicResult.data.profile_data as Record<string, string> | null;
+    const linkType = publicResult.data.type;
 
-    // Generate title based on link type
-    let title = "Our Memories";
-    let description = "Lưu giữ những khoảnh khắc đáng nhớ.";
+    let title = "Trang kỷ niệm";
+    let description = "Một trang kỷ niệm đặc biệt dành cho bạn. Nhập mã PIN để mở khóa!";
 
     switch (linkType) {
         case "LOVE":
         case "LOVE2":
-            const boyName = profileData?.boy_name || "Anh";
-            const girlName = profileData?.girl_name || "Em";
-            title = profileData?.title || `Kỷ niệm của ${boyName} & ${girlName}`;
-            description = `Trang kỷ niệm tình yêu của ${boyName} và ${girlName}. ${profileData?.short_note || ""}`;
+            title = "Kỷ niệm tình yêu";
+            description = "Một trang kỷ niệm tình yêu đang chờ bạn mở khóa.";
             break;
         case "IDOL":
-            const idolName = profileData?.idol_name || "Idol";
-            title = profileData?.title || `Fan Page - ${idolName}`;
-            description = `Trang dành cho fan của ${idolName}.`;
+            title = "Fan Page";
+            description = "Trang dành cho fan. Nhập mã PIN để xem!";
             break;
         case "GRAD_PERSONAL":
-            const studentName = profileData?.student_name || "Học sinh";
-            title = profileData?.title || `Kỷ niệm tốt nghiệp - ${studentName}`;
-            description = `Trang kỷ niệm tốt nghiệp cá nhân của ${studentName}. ${profileData?.slogan || ""}`;
+            title = "Kỷ niệm tốt nghiệp";
+            description = "Trang kỷ niệm tốt nghiệp. Nhập mã PIN để xem!";
             break;
         case "GRAD_CLASS":
-            const className = profileData?.class_name || "Tập thể lớp";
-            title = profileData?.title || `Kỷ yếu số lớp ${className}`;
-            description = `Trang kỷ yếu số và lưu bút của tập thể lớp ${className}. ${profileData?.slogan || ""}`;
+            title = "Kỷ yếu lớp";
+            description = "Kỷ yếu tập thể lớp. Nhập mã PIN để mở khóa!";
             break;
         case "GRAD_GROUP":
             const groupName = profileData?.group_name || "Nhóm bạn";
             title = profileData?.title || `Kỷ niệm nhóm - ${groupName}`;
-            description = `Trang kỷ niệm của nhóm bạn ${groupName}. ${profileData?.slogan || ""}`;
+            description = `Trang kỷ niệm của nhóm ${groupName}. Nhập mã PIN để xem!`;
             break;
-        // case "EVERY":
-        //     const groupName = profileData?.group_name || "Nhóm";
-        //     title = profileData?.title || groupName;
-        //     description = `Trang kỷ niệm của ${groupName}.`;
-        //     break;
     }
-
-    // Get first gallery image for OpenGraph
-    const ogImage = linkResult.data.galleries?.[0]?.image_url;
 
     return {
         title: `${title} | Love Memories`,
@@ -126,13 +144,11 @@ export async function generateMetadata({ params }: PageProps) {
             description,
             type: "website",
             locale: "vi_VN",
-            ...(ogImage && { images: [{ url: ogImage, width: 1200, height: 630 }] }),
         },
         twitter: {
             card: "summary_large_image",
             title,
             description,
-            ...(ogImage && { images: [ogImage] }),
         },
     };
 }

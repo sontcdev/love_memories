@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RotateCcw, Share2, HelpCircle, BarChart2, Loader2 } from "lucide-react";
+import { RotateCcw, HelpCircle, BarChart2, Loader2 } from "lucide-react";
 import { submitQuizVote, getQuizStats, MemberVoteStat } from "@/app/actions/game-actions";
 
 interface QuizQuestion {
@@ -53,7 +53,6 @@ export function GameSection({
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [showFeedback, setShowFeedback] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [shareCopied, setShareCopied] = useState(false);
     const [voteStats, setVoteStats] = useState<MemberVoteStat[]>([]);
     const [allQuizStats, setAllQuizStats] = useState<{ [key: number]: MemberVoteStat[] }>({});
 
@@ -120,14 +119,6 @@ export function GameSection({
         setShowFeedback(false);
         setVoteStats([]);
         setGameState("start");
-        setShareCopied(false);
-    };
-
-    const handleShare = () => {
-        const text = `Tham gia bình chọn Thử Thách Hiểu Ý Đồng Đội của nhóm bạn ${groupName} ngay tại đây: ${window.location.href}`;
-        navigator.clipboard.writeText(text);
-        setShareCopied(true);
-        setTimeout(() => setShareCopied(false), 2000);
     };
 
     return (
@@ -288,14 +279,6 @@ export function GameSection({
 
                     {/* Actions */}
                     <div className="flex flex-wrap justify-center gap-3 pt-2">
-                        <button
-                            onClick={handleShare}
-                            className="px-5 py-2.5 rounded-full text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 hover:scale-103"
-                            style={{ backgroundColor: accentColor }}
-                        >
-                            <Share2 className="w-3.5 h-3.5" />
-                            {shareCopied ? "Đã sao chép!" : "Chia sẻ cuộc bình chọn"}
-                        </button>
                         <button
                             onClick={resetQuiz}
                             className={`px-5 py-2.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 transition-all hover:scale-103 ${

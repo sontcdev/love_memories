@@ -7,6 +7,7 @@ interface ThemeConfig {
     background_color?: string | null;
     font_family?: string | null;
     accent_color?: string | null;
+    text_color?: string | null;
 }
 
 interface ThemeWrapperProps {
@@ -19,7 +20,8 @@ interface ThemeWrapperProps {
 const DEFAULT_THEME = {
     background_color: "#ffffff",
     font_family: "Inter, sans-serif",
-    accent_color: "#ec4899", // pink-500
+    accent_color: "#ec4899",
+    text_color: "#1f2937",
 };
 
 // Font family mapping
@@ -122,6 +124,7 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
     const bgColor = config?.background_color || DEFAULT_THEME.background_color;
     const fontFamily = config?.font_family || DEFAULT_THEME.font_family;
     const accentColor = config?.accent_color || DEFAULT_THEME.accent_color;
+    const textColor = config?.text_color || DEFAULT_THEME.text_color;
 
     const resolvedFont = FONT_FAMILIES[fontFamily] || fontFamily;
 
@@ -205,6 +208,7 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
     const darkBgColor = getDarkBgColor();
     const resolvedBgColor = isDark ? darkBgColor : bgColor;
     const resolvedAccentColor = optimizeColor(accentColor, isDark);
+    const resolvedTextColor = isDark ? "#f1f5f9" : textColor;
 
     // Apply CSS variables to document html
     useEffect(() => {
@@ -213,6 +217,7 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
         root.style.setProperty("--theme-bg", resolvedBgColor);
         root.style.setProperty("--theme-font", resolvedFont);
         root.style.setProperty("--theme-accent", resolvedAccentColor);
+        root.style.setProperty("--theme-text", resolvedTextColor);
 
         // Toggle global dark class on documentElement for tailwind compatibility
         if (isDark) {
@@ -225,15 +230,17 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
             root.style.removeProperty("--theme-bg");
             root.style.removeProperty("--theme-font");
             root.style.removeProperty("--theme-accent");
+            root.style.removeProperty("--theme-text");
             root.classList.remove("dark");
         };
-    }, [resolvedBgColor, resolvedFont, resolvedAccentColor, isDark]);
+    }, [resolvedBgColor, resolvedFont, resolvedAccentColor, resolvedTextColor, isDark]);
 
     return (
         <div
             className="min-h-screen transition-colors duration-500"
             style={{
                 backgroundColor: resolvedBgColor,
+                color: resolvedTextColor,
                 fontFamily: resolvedFont,
             }}
         >

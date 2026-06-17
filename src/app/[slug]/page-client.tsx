@@ -4,13 +4,14 @@ import { useState, useRef, useCallback } from "react";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
-import { MusicPlayer, MusicPlayerRef, WelcomeOverlay } from "@/components/music";
+import { MusicPlayerRef, WelcomeOverlay } from "@/components/music";
 import { LoveTemplate } from "@/components/templates/love/LoveTemplate";
 import { Love2Template } from "@/components/templates/love2/Love2Template";
 import { IdolTemplate } from "@/components/templates/idol/IdolTemplate";
 import { GradPersonalTemplate } from "@/components/templates/grad-personal/GradPersonalTemplate";
 import { GradClassTemplate } from "@/components/templates/grad-class/GradClassTemplate";
 import { GradGroupTemplate } from "@/components/templates/grad-group/GradGroupTemplate";
+import { getLinkData } from "@/app/actions/auth-actions";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -22,30 +23,88 @@ type LinkWithRelations = Link & {
     letters: LetterWithReplies[];
 };
 
+type LinkPublicData = {
+    id: string;
+    slug: string;
+    type: string;
+    is_active: boolean;
+    profile_data: unknown;
+    config: LinkConfig | null;
+};
+
 interface SlugPageClientProps {
     slug: string;
     isAuthenticated: boolean;
     linkData: LinkWithRelations | null;
+    publicData?: LinkPublicData | null;
 }
 
-export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClientProps) {
+export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkData, publicData }: SlugPageClientProps) {
     const [authenticated, setAuthenticated] = useState(isAuthenticated);
+    const [linkData, setLinkData] = useState<LinkWithRelations | null>(initialLinkData);
+    const [isLoadingData, setIsLoadingData] = useState(false);
     const musicPlayerRef = useRef<MusicPlayerRef>(null);
 
-    const handleUnlock = () => {
-        // Just set authenticated state - no reload needed since linkData is already available
-        setAuthenticated(true);
-    };
+    const handleUnlock = useCallback(async () => {
+        setIsLoadingData(true);
+        try {
+            const result = await getLinkData(slug);
+            if (result.success && result.data) {
+                setLinkData(result.data as LinkWithRelations);
+                setAuthenticated(true);
+            } else {
+                window.location.reload();
+            }
+        } catch {
+            window.location.reload();
+        }
+        setIsLoadingData(false);
+    }, [slug]);
 
-    // Callback for when user opens the welcome overlay
     const handleWelcomeOpen = useCallback(() => {
-        // Start playing music after user interaction (required by browsers)
         if (linkData?.config?.auto_play) {
             musicPlayerRef.current?.play();
         }
     }, [linkData?.config?.auto_play]);
 
-    // No data available (should have data after reload)
+    const lockScreenData = linkData || (publicData ? {
+        ...publicData,
+        galleries: [],
+        timelines: [],
+        letters: [],
+    } as unknown as LinkWithRelations : null);
+
+    if (!authenticated) {
+        if (!lockScreenData) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Nội dung chưa sẵn sàng</h1>
+                        <p className="text-gray-500">Trang này đang được chuẩn bị...</p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <ThemeWrapper config={lockScreenData.config} type={lockScreenData.type}>
+                {lockScreenData.type === "IDOL" ? (
+                    <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
+                ) : (
+                    <LockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
+                )}
+                {isLoadingData && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl p-6 flex items-center gap-3 shadow-xl">
+                            <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-gray-700 font-medium">Đang tải nội dung...</span>
+                        </div>
+                    </div>
+                )}
+            </ThemeWrapper>
+        );
+    }
+
     if (!linkData) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -57,7 +116,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
         );
     }
 
-    // Get profile data for welcome title
     const profileData = linkData.profile_data as Record<string, string> | null;
     const getWelcomeTitle = () => {
         switch (linkData.type) {
@@ -81,7 +139,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
         }
     };
 
-    // Render template based on link type
     const renderTemplate = () => {
         switch (linkData.type) {
             case "LOVE":
@@ -105,36 +162,26 @@ export function SlugPageClient({ slug, isAuthenticated, linkData }: SlugPageClie
 
     return (
         <ThemeWrapper config={linkData.config} type={linkData.type}>
-            {!authenticated ? (
-                linkData.type === "IDOL" ? (
-                    <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
-                ) : (
-                    <LockScreen slug={slug} onSuccess={handleUnlock} linkData={linkData} />
-                )
-            ) : (
-                <>
-                    {/* Welcome Overlay - shows on first visit */}
-                    <WelcomeOverlay
-                        title={getWelcomeTitle()}
-                        buttonText="Enter ✨"
-                        type={linkData.type}
-                        profileData={linkData.profile_data as Record<string, unknown> | null}
-                        onOpen={handleWelcomeOpen}
+            <>
+                <WelcomeOverlay
+                    title={getWelcomeTitle()}
+                    buttonText="Enter ✨"
+                    type={linkData.type}
+                    profileData={linkData.profile_data as Record<string, unknown> | null}
+                    onOpen={handleWelcomeOpen}
+                />
+
+                {renderTemplate()}
+
+                {/* Music Player - temporarily disabled (YouTube/TikTok playback issue) */}
+                {/* {linkData.config?.music_url && (
+                    <MusicPlayer
+                        ref={musicPlayerRef}
+                        src={linkData.config.music_url}
+                        autoPlay={linkData.config.auto_play ?? false}
                     />
-
-                    {/* Main Template Content */}
-                    {renderTemplate()}
-
-                    {/* Music Player - appears after overlay is dismissed */}
-                    {linkData.config?.music_url && (
-                        <MusicPlayer
-                            ref={musicPlayerRef}
-                            src={linkData.config.music_url}
-                            autoPlay={linkData.config.auto_play ?? false}
-                        />
-                    )}
-                </>
-            )}
+                )} */}
+            </>
         </ThemeWrapper>
     );
 }

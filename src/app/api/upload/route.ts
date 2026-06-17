@@ -78,8 +78,9 @@ export async function POST(request: NextRequest) {
 
         // Generate unique filename
         const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
         const ext = file.name.split(".").pop() || "jpg";
-        const filename = `${slug}/${type || "image"}_${timestamp}.${ext}`;
+        const filename = `${slug}/${type || "image"}_${timestamp}_${randomSuffix}.${ext}`;
 
         // Convert file to buffer
         const arrayBuffer = await file.arrayBuffer();

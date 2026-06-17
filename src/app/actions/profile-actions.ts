@@ -118,6 +118,7 @@ export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfil
 export interface LinkConfigData {
     background_color?: string;
     accent_color?: string;
+    text_color?: string;
     font_family?: string;
     music_url?: string;
     auto_play?: boolean;
@@ -219,6 +220,7 @@ export async function updateLinkConfig(
                 link_id: link.id,
                 background_color: config.background_color,
                 accent_color: config.accent_color,
+                text_color: config.text_color,
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play ?? false,
@@ -226,6 +228,7 @@ export async function updateLinkConfig(
             update: {
                 background_color: config.background_color,
                 accent_color: config.accent_color,
+                text_color: config.text_color,
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play,

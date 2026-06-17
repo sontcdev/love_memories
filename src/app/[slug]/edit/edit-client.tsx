@@ -502,6 +502,8 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                         slug={slug}
                                         initialConfig={linkData.config ? {
                                             background_color: linkData.config.background_color ?? undefined,
+                                            accent_color: linkData.config.accent_color ?? undefined,
+                                            text_color: linkData.config.text_color ?? undefined,
                                             font_family: linkData.config.font_family ?? undefined,
                                             music_url: linkData.config.music_url ?? undefined,
                                             auto_play: linkData.config.auto_play,
@@ -513,6 +515,8 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                         slug={slug}
                                         initialConfig={linkData.config ? {
                                             background_color: linkData.config.background_color ?? undefined,
+                                            accent_color: linkData.config.accent_color ?? undefined,
+                                            text_color: linkData.config.text_color ?? undefined,
                                             font_family: linkData.config.font_family ?? undefined,
                                             music_url: linkData.config.music_url ?? undefined,
                                             auto_play: linkData.config.auto_play,

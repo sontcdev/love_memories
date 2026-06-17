@@ -108,15 +108,58 @@ const getCachedLinkData = cache(async (slug: string) => {
     return link;
 });
 
-export async function getLinkData(slug: string) {
-    try {
-        const link = await getCachedLinkData(slug);
+const getCachedPublicData = cache(async (slug: string) => {
+    const link = await prisma.link.findUnique({
+        where: { slug },
+        select: {
+            id: true,
+            slug: true,
+            type: true,
+            is_active: true,
+            profile_data: true,
+            config: true,
+        },
+    });
+    return link;
+});
 
+export async function getLinkPublicData(slug: string) {
+    try {
+        const link = await getCachedPublicData(slug);
         if (!link) {
             return { success: false, error: "Link not found" };
         }
-
         return { success: true, data: link };
+    } catch (error) {
+        console.error("Get public data error:", error);
+        return { success: false, error: "Failed to fetch" };
+    }
+}
+
+export async function getLinkData(slug: string) {
+    try {
+        const cookieStore = await cookies();
+        const sessionToken = cookieStore.get(`session_${slug}`)?.value;
+
+        if (!sessionToken) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const link = await prisma.link.findUnique({
+            where: { slug },
+            select: { id: true, is_active: true },
+        });
+
+        if (!link || link.id !== sessionToken || !link.is_active) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const fullLink = await getCachedLinkData(slug);
+        if (!fullLink) {
+            return { success: false, error: "Link not found" };
+        }
+
+        return { success: true, data: fullLink };
     } catch (error) {
         console.error("Get link data error:", error);
         return { success: false, error: "Failed to fetch link data" };

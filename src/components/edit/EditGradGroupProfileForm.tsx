@@ -331,7 +331,7 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                                 {errors.group_name && <p className="text-red-500 text-xs mt-1">{errors.group_name.message}</p>}
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold mb-1">Niên khóa tốt nghiệp</label>
+                                <label className="block text-xs font-semibold mb-1">Mốc thời gian</label>
                                 <input
                                     {...register("graduation_year")}
                                     className={`w-full px-3 py-2 rounded-lg border text-sm outline-none ${isDark ? "bg-slate-950 border-slate-800 text-white" : "border-gray-300"}`}
