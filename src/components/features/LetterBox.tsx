@@ -34,9 +34,11 @@ interface LetterBoxProps {
     slug: string;
     initialLetters: LetterWithReplies[];
     theme?: "love" | "every" | "idol";
+    isDark?: boolean;
+    onPopupOpenChange?: (isOpen: boolean) => void;
 }
 
-export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxProps) {
+export function LetterBox({ slug, initialLetters, theme = "love", isDark = false, onPopupOpenChange }: LetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
 
     // Helper to check if a letter is currently locked
@@ -49,6 +51,11 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
         unlockDate.setHours(0, 0, 0, 0);
         return today < unlockDate;
     };
+    
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    useEffect(() => {
+        onPopupOpenChange?.(showCreateForm);
+    }, [showCreateForm, onPopupOpenChange]);
 
     // Sort letters:
     // 1. Unlocked letters (no unlock_date OR unlock_date passed) - sort by created_at ascending
@@ -71,7 +78,6 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
         return aLocked ? 1 : -1;
     });
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [showCreateForm, setShowCreateForm] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyContent, setReplyContent] = useState("");
@@ -81,6 +87,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
 
     // Form state
     const [newTitle, setNewTitle] = useState("");
+    const [newSender, setNewSender] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [newAudioUrl, setNewAudioUrl] = useState("");
@@ -151,6 +158,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
         setIsCreating(true);
         const result = await createLetter(slug, {
             title: newTitle.trim(),
+            sender: newSender.trim() || undefined,
             content: newContent.trim(),
             video_url: newVideoUrl || undefined,
             audio_url: newAudioUrl || undefined,
@@ -160,6 +168,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
         if (result.success && result.data) {
             setLetters([result.data, ...letters]);
             setNewTitle("");
+            setNewSender("");
             setNewContent("");
             setNewVideoUrl("");
             setNewAudioUrl("");
@@ -224,8 +233,8 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Mail className={`w-6 h-6 ${colors.text}`} />
-                    <h2 className="text-xl font-bold text-gray-800">Thư Tình</h2>
-                    <span className="text-sm text-gray-400">({letters.length})</span>
+                    <h2 className={`text-xl font-bold ${isDark ? "text-slate-100" : "text-gray-800"}`}>Thư Tình</h2>
+                    <span className={`text-sm ${isDark ? "text-slate-400" : "text-gray-400"}`}>({letters.length})</span>
                 </div>
                 <button
                     onClick={() => setShowCreateForm(true)}
@@ -239,7 +248,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
             {/* Create Form Modal */}
             {showCreateForm && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
+                    <div className={`${isDark ? "bg-[#1f1e1c] text-slate-100 border border-slate-800" : "bg-white text-gray-900"} rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col`}>
                         <div className={`bg-gradient-to-r ${colors.primary} p-4 text-white flex-shrink-0`}>
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold">Viết thư tình</h3>
@@ -250,7 +259,20 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                         </div>
                         <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
+                                    Người gửi <span className="text-gray-400 text-xs ml-1">({newSender.length}/50)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newSender}
+                                    onChange={(e) => setNewSender(e.target.value.slice(0, 50))}
+                                    placeholder="Nhập tên người gửi (tên của bạn hoặc ẩn danh)..."
+                                    maxLength={50}
+                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white focus:ring-rose-500/20" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none mb-3`}
+                                />
+                            </div>
+                            <div>
+                                <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     Tiêu đề <span className="text-gray-400 text-xs">({newTitle.length}/50)</span>
                                 </label>
                                 <input
@@ -259,11 +281,11 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                     onChange={(e) => setNewTitle(e.target.value.slice(0, 50))}
                                     placeholder="Tiêu đề bức thư..."
                                     maxLength={50}
-                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white focus:ring-rose-500/20" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     Nội dung <span className="text-gray-400 text-xs">({newContent.length}/1000)</span>
                                 </label>
                                 <textarea
@@ -272,13 +294,13 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                     placeholder="Viết những lời yêu thương..."
                                     rows={6}
                                     maxLength={1000}
-                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none resize-none`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white focus:ring-rose-500/20" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none resize-none`}
                                 />
                             </div>
 
                             {/* Video URL */}
                             <div>
-                                <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                                <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     <Video className="w-4 h-4" />
                                     Video (tùy chọn)
                                 </label>
@@ -304,7 +326,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
 
                             {/* Voice Recording */}
                             <div>
-                                <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                                <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     <Mic className="w-4 h-4" />
                                     Ghi âm (tùy chọn)
                                 </label>
@@ -329,7 +351,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
 
                             {/* Unlock Date Picker */}
                             <div>
-                                <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                                <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     <Calendar className="w-4 h-4" />
                                     Ngày mở khóa (tùy chọn)
                                 </label>
@@ -340,7 +362,6 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                         const selectedDate = new Date(e.target.value);
                                         const today = new Date();
                                         today.setHours(0, 0, 0, 0);
-                                        // Only accept dates after today
                                         if (selectedDate > today) {
                                             setNewUnlockDate(e.target.value);
                                         }
@@ -353,7 +374,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                         const day = String(tomorrow.getDate()).padStart(2, '0');
                                         return `${year}-${month}-${day}`;
                                     })()}
-                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
                                 />
                                 <p className="text-xs text-gray-400 mt-1">
                                     Thư sẽ bị khóa cho đến ngày này
@@ -402,39 +423,64 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
 
             {/* Letters List */}
             {letters.length === 0 ? (
-                <div className={`text-center py-16 ${colors.bg} rounded-2xl`}>
-                    <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-400">Chưa có thư nào...</p>
-                    <p className="text-gray-400 text-sm">Hãy viết bức thư tình đầu tiên!</p>
+                <div className={`text-center py-16 ${isDark ? "bg-zinc-900/50 border border-zinc-800/80" : colors.bg} rounded-2xl`}>
+                    <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300 opacity-60" />
+                    <p className={isDark ? "text-slate-400" : "text-gray-400"}>Chưa có thư nào...</p>
+                    <p className={`text-sm ${isDark ? "text-slate-500" : "text-gray-400"}`}>Hãy gửi những lời chúc đầu tiên!</p>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {sortedLetters.map((letter) => (
-                        <div
-                            key={letter.id}
-                            className={`bg-white rounded-2xl shadow-md border ${colors.border} overflow-hidden transition-all`}
-                        >
-                            {/* Letter Header */}
+                <div className={theme === "idol" ? "grid grid-cols-1 sm:grid-cols-2 gap-6 items-start" : "space-y-4"}>
+                    {sortedLetters.map((letter, index) => {
+                        const idolStickyColors = [
+                            { bg: "bg-[#fff9db]", border: "border-[#ffe066]", text: "text-[#f59f00]", pin: "bg-[#f59f00]" }, // Yellow
+                            { bg: "bg-[#fff0f6]", border: "border-[#ffdeeb]", text: "text-[#e64980]", pin: "bg-[#e64980]" }, // Pink
+                            { bg: "bg-[#f3f0ff]", border: "border-[#e5dbff]", text: "text-[#7048e8]", pin: "bg-[#7048e8]" }, // Purple
+                            { bg: "bg-[#e7f5ff]", border: "border-[#d0ebff]", text: "text-[#1c7ed6]", pin: "bg-[#1c7ed6]" }, // Blue
+                            { bg: "bg-[#e6fcf5]", border: "border-[#c3fae8]", text: "text-[#0ca678]", pin: "bg-[#0ca678]" }, // Teal
+                        ];
+                        const stickyColor = theme === "idol" 
+                            ? idolStickyColors[index % idolStickyColors.length]
+                            : { bg: isDark ? "bg-zinc-900" : "bg-white", border: isDark ? "border-zinc-800" : colors.border, text: colors.text, pin: "" };
+                        
+                        const rotationDeg = theme === "idol" ? (index % 4) - 2 : 0;
+                        
+                        return (
                             <div
-                                className={`p-4 cursor-pointer ${colors.bg} hover:bg-opacity-80 transition-colors`}
-                                onClick={() =>
-                                    setExpandedId(expandedId === letter.id ? null : letter.id)
-                                }
+                                key={letter.id}
+                                className={`rounded-2xl shadow-md border ${stickyColor.border} ${stickyColor.bg} overflow-hidden transition-all relative`}
+                                style={theme === "idol" ? { transform: `rotate(${rotationDeg}deg)` } : {}}
                             >
+                                {/* Push Pin */}
+                                {theme === "idol" && (
+                                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full shadow-md bg-gradient-to-br from-red-400 to-red-600 z-10" />
+                                )}
+                                
+                                {/* Letter Header */}
+                                <div
+                                    className={`p-4 cursor-pointer ${theme === "idol" ? "bg-transparent" : (isDark ? "bg-zinc-900/40 hover:bg-zinc-800" : colors.bg + " hover:bg-black/5")} transition-colors`}
+                                    onClick={() =>
+                                        setExpandedId(expandedId === letter.id ? null : letter.id)
+                                    }
+                                >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
+                                        {letter.sender && (
+                                            <div className="text-[10px] font-medium uppercase tracking-wider opacity-60 mb-0.5">
+                                                Từ: {letter.sender}
+                                            </div>
+                                        )}
                                         <div className="flex items-center gap-2">
-                                            <h3 className="font-semibold text-gray-800 break-words">{letter.title}</h3>
+                                            <h3 className={`font-semibold break-words ${isDark ? "text-slate-100" : "text-gray-800"}`}>{letter.title}</h3>
                                             {isLetterLocked(letter) && (
                                                 <Lock className={`w-4 h-4 ${colors.text} flex-shrink-0`} />
                                             )}
                                         </div>
-                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2 break-words overflow-hidden">
+                                        <p className={`text-sm mt-1 line-clamp-2 break-words overflow-hidden ${isDark ? "text-slate-400" : "text-gray-500"}`}>
                                             {isLetterLocked(letter)
                                                 ? `🔒 Mở khóa vào ${formatUnlockDate(letter.unlock_date!)}`
                                                 : letter.content}
                                         </p>
-                                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                                        <div className={`flex items-center gap-4 mt-2 text-xs ${isDark ? "text-slate-500" : "text-gray-400"}`}>
                                             <span>
                                                 {new Date(letter.created_at).toLocaleDateString("vi-VN")}
                                             </span>
@@ -453,7 +499,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                                 setDeleteConfirm({ type: "letter", id: letter.id });
                                             }}
                                             disabled={deletingId === letter.id}
-                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            className={`p-2 rounded-lg transition-colors ${isDark ? "text-slate-400 hover:text-red-400 hover:bg-red-950/20" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
                                         >
                                             {deletingId === letter.id ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -462,23 +508,23 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                             )}
                                         </button>
                                         {expandedId === letter.id ? (
-                                            <ChevronUp className="w-5 h-5 text-gray-400" />
+                                            <ChevronUp className={`w-5 h-5 ${isDark ? "text-slate-400" : "text-gray-400"}`} />
                                         ) : (
-                                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                                            <ChevronDown className={`w-5 h-5 ${isDark ? "text-slate-400" : "text-gray-400"}`} />
                                         )}
                                     </div>
                                 </div>
                             </div>
-
+ 
                             {/* Expanded Content */}
                             {expandedId === letter.id && (
-                                <div className="p-4 border-t border-gray-100">
+                                <div className={`p-4 border-t ${isDark ? "border-zinc-800" : "border-gray-100"}`}>
                                     {/* Check if letter is locked */}
                                     {isLetterLocked(letter) ? (
-                                        <div className={`${colors.bg} rounded-xl p-6 text-center`}>
+                                        <div className={`${isDark ? "bg-zinc-950/40 border border-zinc-700" : colors.bg} rounded-xl p-6 text-center`}>
                                             <Lock className={`w-12 h-12 mx-auto mb-3 ${colors.text}`} />
-                                            <h4 className="font-semibold text-gray-800 mb-2">Thư đang bị khóa</h4>
-                                            <p className="text-gray-600 text-sm">
+                                            <h4 className={`font-semibold ${isDark ? "text-slate-200" : "text-gray-800"} mb-2`}>Thư đang bị khóa</h4>
+                                            <p className={`${isDark ? "text-slate-400" : "text-gray-600"} text-sm`}>
                                                 Chờ đến ngày <span className="font-semibold">{formatUnlockDate(letter.unlock_date!)}</span> để xem nội dung
                                             </p>
                                         </div>
@@ -486,9 +532,9 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                         <>
                                             {/* Letter Content */}
                                             <div className="prose prose-sm max-w-none mb-4 overflow-hidden">
-                                                <p className="whitespace-pre-wrap break-words text-gray-700">{letter.content}</p>
+                                                <p className={`whitespace-pre-wrap break-words ${isDark ? "text-slate-300" : "text-gray-700"}`}>{letter.content}</p>
                                             </div>
-
+ 
                                             {/* Image */}
                                             {letter.image_url && (
                                                 <div className="mb-4">
@@ -501,21 +547,21 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                                     />
                                                 </div>
                                             )}
-
+ 
                                             {/* Video */}
                                             {letter.video_url && (
                                                 <div className="mb-4">
                                                     <VideoPlayer url={letter.video_url} className="rounded-xl" />
                                                 </div>
                                             )}
-
+ 
                                             {/* Audio */}
                                             {letter.audio_url && (
                                                 <div className="mb-4">
-                                                    <div className={`${colors.bg} p-3 rounded-xl`}>
+                                                    <div className={`${isDark ? "bg-zinc-950/50 border border-zinc-700" : colors.bg} p-3 rounded-xl`}>
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <Mic className={`w-4 h-4 ${colors.text}`} />
-                                                            <span className="text-sm font-medium text-gray-700">Ghi âm đính kèm</span>
+                                                            <span className={`text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"}`}>Ghi âm đính kèm</span>
                                                         </div>
                                                         <audio
                                                             src={letter.audio_url}
@@ -526,20 +572,20 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                                     </div>
                                                 </div>
                                             )}
-
+ 
                                             {/* Replies Thread */}
                                             {letter.replies.length > 0 && (
                                                 <div className="space-y-3 mb-4">
-                                                    <h4 className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                                                    <h4 className={`text-sm font-medium ${isDark ? "text-slate-400" : "text-gray-600"} flex items-center gap-2`}>
                                                         <MessageCircle className="w-4 h-4" />
                                                         Câu trả lời
                                                     </h4>
                                                     {letter.replies.map((reply) => (
                                                         <div
                                                             key={reply.id}
-                                                            className={`${colors.bg} rounded-xl p-3 relative group`}
+                                                            className={`${isDark ? "bg-zinc-950/40 border border-zinc-700/60" : colors.bg} rounded-xl p-3 relative group`}
                                                         >
-                                                            <p className="text-sm text-gray-700 pr-10 break-words overflow-hidden">{reply.content}</p>
+                                                            <p className={`text-sm pr-10 break-words overflow-hidden ${isDark ? "text-slate-300" : "text-gray-700"}`}>{reply.content}</p>
                                                             <div className="flex items-center justify-between mt-1">
                                                                 <span className="text-xs text-gray-400">
                                                                     {new Date(reply.created_at).toLocaleDateString("vi-VN", {
@@ -549,7 +595,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                                                 </span>
                                                                 <button
                                                                     onClick={() => setDeleteConfirm({ type: "reply", id: reply.id, letterId: letter.id })}
-                                                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-xs"
+                                                                    className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs ${isDark ? "text-gray-400 hover:text-red-400 hover:bg-red-950/20" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
                                                                     title="Xóa trả lời"
                                                                 >
                                                                     <Trash2 className="w-3.5 h-3.5" />
@@ -559,7 +605,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                                     ))}
                                                 </div>
                                             )}
-
+ 
                                             {/* Reply Input */}
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex gap-2">
@@ -573,7 +619,7 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                                         }}
                                                         onFocus={() => setReplyingTo(letter.id)}
                                                         placeholder="Viết câu trả lời..."
-                                                        className={`flex-1 px-4 py-2 rounded-full border ${colors.border} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
+                                                        className={`flex-1 px-4 py-2 rounded-full border ${colors.border} ${isDark ? "bg-[#121110] text-white border-zinc-800" : "bg-white text-gray-900"} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
                                                     />
                                                     <button
                                                         onClick={() => handleReply(letter.id)}
@@ -599,10 +645,10 @@ export function LetterBox({ slug, initialLetters, theme = "love" }: LetterBoxPro
                                 </div>
                             )}
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
-
             {/* Decorative */}
             <div className="text-center py-4">
                 <Heart className={`w-6 h-6 mx-auto ${colors.text} fill-current opacity-30`} />

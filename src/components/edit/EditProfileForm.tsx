@@ -8,6 +8,9 @@ import { LinkType } from "@prisma/client";
 import { updateLinkProfile, LoveProfileData, IdolProfileData } from "@/app/actions/profile-actions";
 import { Save, Loader2, Heart, Camera } from "lucide-react";
 import { EditIdolProfileForm } from "./EditIdolProfileForm";
+import { EditGradProfileForm } from "./EditGradProfileForm";
+import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
+
 
 // ============================================================================
 // ZOD SCHEMAS
@@ -33,15 +36,16 @@ interface EditProfileFormProps {
     slug: string;
     linkType: LinkType;
     initialData: Record<string, unknown> | null;
+    isDark?: boolean;
     onSuccess?: () => void;
 }
 
-export function EditProfileForm({ slug, linkType, initialData, onSuccess }: EditProfileFormProps) {
+export function EditProfileForm({ slug, linkType, initialData, isDark = false, onSuccess }: EditProfileFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     // Render based on link type
-    if (linkType === "LOVE") {
+    if (linkType === "LOVE" || linkType === "LOVE2") {
         return (
             <LoveProfileForm
                 slug={slug}
@@ -64,6 +68,30 @@ export function EditProfileForm({ slug, linkType, initialData, onSuccess }: Edit
                 setIsSubmitting={setIsSubmitting}
                 message={message}
                 setMessage={setMessage}
+                onSuccess={onSuccess}
+                isDark={isDark}
+            />
+        );
+    }
+
+    if (linkType === "GRAD_PERSONAL" || linkType === "GRAD_CLASS") {
+        return (
+            <EditGradProfileForm
+                slug={slug}
+                linkType={linkType}
+                initialData={initialData}
+                isDark={isDark}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "GRAD_GROUP") {
+        return (
+            <EditGradGroupProfileForm
+                slug={slug}
+                initialData={initialData}
+                isDark={isDark}
                 onSuccess={onSuccess}
             />
         );

@@ -111,18 +111,18 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
 
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors">
-                {/* Drag Handle */}
+                 {/* Drag Handle */}
                 <div
                     {...attributes}
                     {...listeners}
-                    className="absolute top-2 left-2 p-2 bg-white/90 rounded-full cursor-grab active:cursor-grabbing shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    className="absolute top-2 left-2 p-2 bg-white/90 rounded-full cursor-grab active:cursor-grabbing shadow-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity hover:bg-white"
                     title="Kéo để sắp xếp"
                 >
                     <GripVertical className="w-4 h-4 text-gray-600" />
                 </div>
 
                 {/* Actions */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 flex gap-1 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
                     <button
                         onClick={onEdit}
                         disabled={isLoading}
@@ -147,7 +147,7 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
 
                 {/* Caption */}
                 {image.caption && (
-                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
                         <p className="text-white text-sm truncate">{image.caption}</p>
                     </div>
                 )}
@@ -330,7 +330,7 @@ export function MomentsManager({ slug, initialGallery }: MomentsManagerProps) {
 
             {/* Add New Photos Modal */}
             {isAddingNew && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-4">
                             <div>
@@ -402,7 +402,7 @@ export function MomentsManager({ slug, initialGallery }: MomentsManagerProps) {
 
             {/* Edit Caption Dialog */}
             {editingImage && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold">Sửa chú thích</h3>

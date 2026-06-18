@@ -43,6 +43,7 @@ export async function createLetter(
     slug: string,
     data: {
         title: string;
+        sender?: string;
         content: string;
         image_url?: string;
         video_url?: string;
@@ -71,6 +72,7 @@ export async function createLetter(
             data: {
                 link_id: link.id,
                 title: data.title,
+                sender: data.sender || null,
                 content: data.content,
                 image_url: data.image_url,
                 video_url: data.video_url,

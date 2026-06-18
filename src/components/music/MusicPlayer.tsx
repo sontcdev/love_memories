@@ -66,34 +66,45 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
             const initPlayer = () => {
                 const YT = (window as unknown as { YT: { Player: new (id: string, config: unknown) => unknown } }).YT;
                 if (YT && YT.Player) {
-                    new YT.Player("youtube-player", {
-                        height: "0",
-                        width: "0",
-                        videoId: youtubeId,
-                        playerVars: {
-                            autoplay: autoPlay ? 1 : 0,
-                            loop: 1,
-                            playlist: youtubeId, // Required for loop
-                            controls: 0,
-                            disablekb: 1,
-                            fs: 0,
-                            modestbranding: 1,
-                            rel: 0,
-                        },
-                        events: {
-                            onReady: (event: { target: { playVideo: () => void; setVolume: (v: number) => void } }) => {
-                                (window as unknown as { ytPlayer: unknown }).ytPlayer = event.target;
-                                if (autoPlay) {
-                                    event.target.playVideo();
-                                    setIsPlaying(true);
+                    try {
+                        new YT.Player("youtube-player", {
+                            height: "0",
+                            width: "0",
+                            videoId: youtubeId,
+                            playerVars: {
+                                autoplay: autoPlay ? 1 : 0,
+                                loop: 1,
+                                playlist: youtubeId, // Required for loop
+                                controls: 0,
+                                disablekb: 1,
+                                fs: 0,
+                                modestbranding: 1,
+                                rel: 0,
+                            },
+                            events: {
+                                onReady: (event: { target: { playVideo: () => void; setVolume: (v: number) => void } }) => {
+                                    (window as unknown as { ytPlayer: unknown }).ytPlayer = event.target;
+                                    if (autoPlay) {
+                                        try {
+                                            event.target.playVideo();
+                                            setIsPlaying(true);
+                                        } catch {
+                                            // Fail silently
+                                        }
+                                    }
+                                },
+                                onStateChange: (event: { data: number }) => {
+                                    // 1 = playing, 2 = paused
+                                    setIsPlaying(event.data === 1);
+                                },
+                                onError: () => {
+                                    setIsPlaying(false);
                                 }
                             },
-                            onStateChange: (event: { data: number }) => {
-                                // 1 = playing, 2 = paused
-                                setIsPlaying(event.data === 1);
-                            },
-                        },
-                    });
+                        });
+                    } catch {
+                        // Fail silently
+                    }
                 }
             };
 
@@ -126,9 +137,11 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
             play: () => {
                 if (isYouTube) {
                     const ytPlayer = (window as unknown as { ytPlayer?: { playVideo: () => void } }).ytPlayer;
-                    ytPlayer?.playVideo();
+                    if (ytPlayer) {
+                        ytPlayer.playVideo();
+                    }
                 } else if (audioRef.current && src) {
-                    audioRef.current.play().catch(console.error);
+                    audioRef.current.play().catch(() => {});
                 }
             },
             pause: () => {
@@ -151,7 +164,7 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
                     if (isPlaying) {
                         audioRef.current.pause();
                     } else {
-                        audioRef.current.play().catch(console.error);
+                        audioRef.current.play().catch(() => {});
                     }
                 }
             },
@@ -164,8 +177,12 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
             const audio = audioRef.current;
             if (!audio) return;
 
-            const handlePlay = () => setIsPlaying(true);
-            const handlePause = () => setIsPlaying(false);
+            const handlePlay = () => {
+                setIsPlaying(true);
+            };
+            const handlePause = () => {
+                setIsPlaying(false);
+            };
 
             audio.addEventListener("play", handlePlay);
             audio.addEventListener("pause", handlePause);
@@ -202,7 +219,7 @@ export const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
                 if (isPlaying) {
                     audioRef.current.pause();
                 } else {
-                    audioRef.current.play().catch(console.error);
+                    audioRef.current.play().catch(() => {});
                 }
             }
         };

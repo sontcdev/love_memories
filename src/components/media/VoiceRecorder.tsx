@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { supabase, STORAGE_BUCKET, getPublicUrl } from "@/lib/supabase";
 import { Mic, Square, Trash2, Check, Loader2, Play, Pause } from "lucide-react";
 
 interface VoiceRecorderProps {
@@ -16,27 +15,21 @@ type RecorderState = "idle" | "recording" | "review" | "uploading";
 // Detect supported audio MIME type
 function getSupportedMimeType(): { mimeType: string; extension: string } {
     const types = [
-        { mimeType: "audio/mp4", extension: "m4a" },
         { mimeType: "audio/webm;codecs=opus", extension: "webm" },
         { mimeType: "audio/webm", extension: "webm" },
         { mimeType: "audio/ogg;codecs=opus", extension: "ogg" },
+        { mimeType: "audio/mp4", extension: "m4a" },
     ];
 
     for (const type of types) {
-        if (MediaRecorder.isTypeSupported(type.mimeType)) {
+        if (typeof window !== "undefined" && window.MediaRecorder && MediaRecorder.isTypeSupported(type.mimeType)) {
             return type;
         }
     }
 
-    // Ultimate fallback
     return { mimeType: "", extension: "webm" };
 }
 
-// Generate file path for voice recording
-function generateVoiceFilePath(slug: string, ext: string): string {
-    const timestamp = Date.now();
-    return `voice/${slug}/${timestamp}.${ext}`;
-}
 
 // Format seconds to MM:SS
 function formatTime(seconds: number): string {
@@ -100,6 +93,21 @@ export function VoiceRecorder({
         setError(null);
         audioChunksRef.current = [];
 
+        if (typeof window === "undefined" || !window.MediaRecorder) {
+            setError("Trình duyệt không hỗ trợ ghi âm. Vui lòng sử dụng Chrome, Firefox hoặc Safari 14+.");
+            return;
+        }
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setError("Trình duyệt không hỗ trợ truy cập micro. Vui lòng sử dụng HTTPS hoặc trình duyệt hiện đại.");
+            return;
+        }
+
+        if (!window.isSecureContext) {
+            setError("Ghi âm yêu cầu kết nối bảo mật (HTTPS). Vui lòng truy cập trang web qua HTTPS.");
+            return;
+        }
+
         try {
             // Pause background music before recording
             window.dispatchEvent(new CustomEvent('pause-music'));
@@ -142,7 +150,7 @@ export function VoiceRecorder({
                 const blob = new Blob(audioChunksRef.current, { type: mimeType });
 
                 if (blob.size === 0) {
-                    setError("Recording failed. Please try again.");
+                    setError("Ghi âm thất bại. Vui lòng thử lại.");
                     setState("idle");
                     return;
                 }
@@ -158,7 +166,7 @@ export function VoiceRecorder({
             };
 
             mediaRecorder.onerror = () => {
-                setError("Recording error occurred.");
+                setError("Lỗi ghi âm. Vui lòng thử lại.");
                 setState("idle");
             };
 
@@ -182,6 +190,8 @@ export function VoiceRecorder({
                 setError("Quyền truy cập micro bị từ chối. Vui lòng cho phép và thử lại.");
             } else if (err instanceof DOMException && err.name === "NotFoundError") {
                 setError("Không tìm thấy micro. Vui lòng kiểm tra thiết bị.");
+            } else if (err instanceof DOMException && err.name === "NotReadableError") {
+                setError("Micro đang được sử dụng bởi ứng dụng khác. Vui lòng đóng ứng dụng đó và thử lại.");
             } else {
                 setError("Không thể ghi âm. Vui lòng kiểm tra micro và thử lại.");
             }
@@ -233,25 +243,30 @@ export function VoiceRecorder({
                 type: audioBlob.type,
             });
 
-            const filePath = generateVoiceFilePath(slug, ext);
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("slug", slug);
+            formData.append("type", "voice");
 
-            const { error: uploadError } = await supabase.storage
-                .from(STORAGE_BUCKET)
-                .upload(filePath, file, {
-                    cacheControl: "3600",
-                    upsert: false,
-                });
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
 
-            if (uploadError) throw uploadError;
+            const result = await response.json();
 
-            const publicUrl = getPublicUrl(filePath);
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || "Upload failed");
+            }
+
+            const publicUrl = result.url;
             onUploadComplete(publicUrl);
 
             // Cleanup
             deleteRecording();
         } catch (err) {
             console.error("Upload failed:", err);
-            setError("Failed to upload recording. Please try again.");
+            setError(err instanceof Error ? err.message : "Failed to upload recording. Please try again.");
             setState("review");
         }
     }, [audioBlob, slug, onUploadComplete, deleteRecording]);

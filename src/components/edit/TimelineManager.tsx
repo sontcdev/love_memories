@@ -33,6 +33,7 @@ import {
 interface TimelineManagerProps {
     slug: string;
     initialTimeline: Timeline[];
+    isDark?: boolean;
 }
 
 interface FormData {
@@ -56,7 +57,7 @@ const emptyForm: FormData = {
     audio_url: "",
 };
 
-export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps) {
+export function TimelineManager({ slug, initialTimeline, isDark = false }: TimelineManagerProps) {
     const [, startTransition] = useTransition();
 
     // Optimistic state for instant UI updates
@@ -230,13 +231,15 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
         <div className="space-y-6">
             {/* Global Loading Overlay */}
             {isLoading && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100]">
-                    <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
+                    <div className={`rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 border transition-all ${
+                        isDark ? "bg-slate-900 border-purple-500/20 text-white shadow-[0_0_30px_rgba(168,85,247,0.2)]" : "bg-white border-gray-100 text-gray-700"
+                    }`}>
                         <div className="relative">
-                            <div className="w-12 h-12 border-4 border-indigo-200 rounded-full animate-pulse" />
-                            <Loader2 className="w-12 h-12 text-indigo-500 animate-spin absolute inset-0" />
+                            <div className={`w-12 h-12 border-4 rounded-full animate-pulse ${isDark ? "border-purple-900/50" : "border-indigo-200"}`} />
+                            <Loader2 className={`w-12 h-12 animate-spin absolute inset-0 ${isDark ? "text-purple-500" : "text-indigo-500"}`} />
                         </div>
-                        <p className="text-gray-700 font-medium">{loadingMessage}</p>
+                        <p className={`font-medium ${isDark ? "text-purple-200" : "text-gray-700"}`}>{loadingMessage}</p>
                     </div>
                 </div>
             )}
@@ -257,15 +260,19 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-800">Dòng thời gian</h2>
-                    <p className="text-sm text-gray-500">
+                    <h2 className={`text-xl font-semibold ${isDark ? "text-purple-100" : "text-gray-800"}`}>Dòng thời gian</h2>
+                    <p className={`text-sm ${isDark ? "text-purple-300/70" : "text-gray-500"}`}>
                         {timeline.length} / {MAX_EVENTS} sự kiện
                     </p>
                 </div>
                 <Button
                     onClick={handleAddNew}
                     disabled={isLimitReached || isLoading}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                    className={`text-white transition-all shadow-md ${
+                        isDark 
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35 hover:shadow-purple-500/20" 
+                            : "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 hover:shadow-indigo-500/20 hover:shadow-indigo-500/35"
+                    }`}
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     Thêm sự kiện
@@ -274,7 +281,11 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
             {/* Limit Warning */}
             {isLimitReached && (
-                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm">
+                <div className={`flex items-center gap-2 p-3 border rounded-xl text-sm ${
+                    isDark 
+                        ? "bg-amber-950/40 border-amber-800/40 text-amber-300" 
+                        : "bg-amber-50 border-amber-200 text-amber-700"
+                }`}>
                     <AlertCircle className="w-4 h-4" />
                     Đã đạt giới hạn {MAX_EVENTS} sự kiện
                 </div>
@@ -282,9 +293,13 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden p-0 flex flex-col">
+                <DialogContent className={`sm:max-w-lg max-h-[85vh] overflow-hidden p-0 flex flex-col border transition-all ${
+                    isDark 
+                        ? "bg-slate-900 border-purple-500/20 text-white" 
+                        : "bg-white border-gray-200 text-gray-800"
+                }`}>
                     <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
-                        <DialogTitle>
+                        <DialogTitle className={isDark ? "text-purple-100" : "text-gray-950"}>
                             {isEditing ? "Sửa sự kiện" : "Thêm sự kiện mới"}
                         </DialogTitle>
                     </DialogHeader>
@@ -294,7 +309,9 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                         <div className="space-y-4">
                             {/* Error Message */}
                             {error && (
-                                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                                <div className={`p-3 border rounded-lg text-sm ${
+                                    isDark ? "bg-red-950/40 border-red-800/40 text-red-300" : "bg-red-50 border-red-200 text-red-600"
+                                }`}>
                                     {error}
                                 </div>
                             )}
@@ -302,8 +319,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                             {/* Title Input */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="title">Tiêu đề *</Label>
-                                    <span className={`text-xs ${formData.title.length > 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                                    <Label htmlFor="title" className={isDark ? "text-purple-200" : "text-gray-700"}>Tiêu đề *</Label>
+                                    <span className={`text-xs ${formData.title.length > 50 ? 'text-red-500' : isDark ? 'text-purple-400/60' : 'text-gray-400'}`}>
                                         {formData.title.length}/50
                                     </span>
                                 </div>
@@ -315,27 +332,30 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                     }
                                     placeholder="Lần hẹn đầu tiên, Kỷ niệm, ..."
                                     maxLength={50}
+                                    className={isDark ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus-visible:ring-purple-500/50 focus-visible:border-purple-400" : ""}
                                 />
                             </div>
 
                             {/* Date Input */}
                             <div className="space-y-2">
-                                <Label htmlFor="date">Ngày *</Label>
+                                <Label htmlFor="date" className={isDark ? "text-purple-200" : "text-gray-700"}>Ngày *</Label>
                                 <Input
                                     id="date"
                                     type="date"
                                     value={formData.date}
+                                    style={{ colorScheme: isDark ? "dark" : "light" }}
                                     onChange={(e) =>
                                         setFormData((prev) => ({ ...prev, date: e.target.value }))
                                     }
+                                    className={isDark ? "bg-slate-950/60 border-purple-500/30 text-white focus-visible:ring-purple-500/50 focus-visible:border-purple-400" : ""}
                                 />
                             </div>
 
                             {/* Description */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="description">Mô tả (tùy chọn)</Label>
-                                    <span className={`text-xs ${formData.description.length > 300 ? 'text-red-500' : 'text-gray-400'}`}>
+                                    <Label htmlFor="description" className={isDark ? "text-purple-200" : "text-gray-700"}>Mô tả (tùy chọn)</Label>
+                                    <span className={`text-xs ${formData.description.length > 300 ? 'text-red-500' : isDark ? 'text-purple-400/60' : 'text-gray-400'}`}>
                                         {formData.description.length}/300
                                     </span>
                                 </div>
@@ -348,14 +368,15 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                     placeholder="Chuyện gì đã xảy ra vào ngày này..."
                                     rows={3}
                                     maxLength={300}
+                                    className={isDark ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus-visible:ring-purple-500/50 focus-visible:border-purple-400 resize-none" : "resize-none"}
                                 />
                             </div>
 
                             {/* Image Upload */}
                             <div className="space-y-2">
-                                <Label>Ảnh (tùy chọn)</Label>
+                                <Label className={isDark ? "text-purple-200" : "text-gray-700"}>Ảnh (tùy chọn)</Label>
                                 {formData.image_url ? (
-                                    <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                                    <div className={`relative aspect-video rounded-lg overflow-hidden border ${isDark ? "border-purple-950/40 bg-slate-950" : "bg-gray-100 border-gray-200"}`}>
                                         <Image
                                             src={formData.image_url}
                                             alt="Event photo"
@@ -364,7 +385,9 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                         />
                                         <button
                                             onClick={() => setFormData((prev) => ({ ...prev, image_url: "" }))}
-                                            className="absolute top-2 right-2 p-2 bg-white/90 rounded-full hover:bg-white shadow"
+                                            className={`absolute top-2 right-2 p-2 rounded-full shadow transition-colors ${
+                                                isDark ? "bg-slate-800 text-purple-300 hover:bg-slate-700 hover:text-white" : "bg-white/90 hover:bg-white text-gray-700"
+                                            }`}
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -378,10 +401,14 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                 ) : (
                                     <button
                                         onClick={() => setShowImageUpload(true)}
-                                        className="w-full py-6 border-2 border-dashed rounded-lg text-gray-400 hover:text-gray-500 hover:border-gray-400 transition-colors"
+                                        className={`w-full py-6 border-2 border-dashed rounded-lg transition-colors flex flex-col items-center justify-center ${
+                                            isDark 
+                                                ? "border-purple-500/20 text-purple-400/60 hover:text-purple-300 hover:border-purple-500/40 bg-slate-950/30 hover:bg-slate-950/50" 
+                                                : "border-gray-300 text-gray-400 hover:text-gray-500 hover:border-gray-400 bg-gray-50/50 hover:bg-gray-50"
+                                        }`}
                                     >
-                                        <ImageIcon className="w-6 h-6 mx-auto mb-1" />
-                                        <span className="text-sm">Thêm ảnh</span>
+                                        <ImageIcon className="w-6 h-6 mx-auto mb-1 text-inherit" />
+                                        <span className="text-sm font-medium">Thêm ảnh</span>
                                     </button>
                                 )}
                             </div>
@@ -390,12 +417,16 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                     </div>
 
                     {/* Fixed Footer Actions */}
-                    <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 sm:px-6 py-4">
+                    <div className={`flex-shrink-0 border-t px-4 sm:px-6 py-4 ${isDark ? "bg-slate-900/60 border-purple-500/20" : "bg-white border-t border-gray-200"}`}>
                         <div className="flex gap-2 sm:gap-3">
                             <Button
                                 onClick={handleSave}
                                 disabled={!isFormValid || isSaving}
-                                className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500"
+                                className={`flex-1 text-white font-medium ${
+                                    isDark 
+                                        ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35" 
+                                        : "bg-gradient-to-r from-indigo-500 to-purple-500"
+                                }`}
                             >
                                 {isSaving ? (
                                     <>
@@ -406,7 +437,11 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                     isEditing ? "Cập nhật" : "Thêm sự kiện"
                                 )}
                             </Button>
-                            <Button variant="outline" onClick={handleCloseDialog}>
+                            <Button 
+                                variant={isDark ? "secondary" : "outline"} 
+                                onClick={handleCloseDialog}
+                                className={isDark ? "bg-slate-800 text-purple-300 hover:bg-slate-700 hover:text-white border-purple-500/20" : ""}
+                            >
                                 Hủy
                             </Button>
                         </div>
@@ -416,12 +451,18 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
             {/* Timeline List */}
             {timeline.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 rounded-2xl">
-                    <Calendar className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500 mb-4">Chưa có sự kiện nào</p>
+                <div className={`text-center py-16 rounded-2xl border transition-all ${
+                    isDark 
+                        ? "bg-slate-950/40 border-purple-950/40" 
+                        : "bg-gray-50 border-gray-100"
+                }`}>
+                    <Calendar className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-purple-900/60" : "text-gray-300"}`} />
+                    <p className={`mb-4 ${isDark ? "text-purple-300/60" : "text-gray-500"}`}>Chưa có sự kiện nào</p>
                     <button
                         onClick={handleAddNew}
-                        className="text-indigo-500 hover:text-indigo-600 font-medium"
+                        className={`font-medium transition-colors ${
+                            isDark ? "text-purple-400 hover:text-purple-300" : "text-indigo-500 hover:text-indigo-600"
+                        }`}
                     >
                         Thêm sự kiện đầu tiên
                     </button>
@@ -431,11 +472,19 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                     {timeline.map((event) => (
                         <div
                             key={event.id}
-                            className="group bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                            className={`group rounded-xl border p-4 transition-all ${
+                                isDark 
+                                    ? "bg-slate-950/40 border-purple-500/20 hover:border-purple-500/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.1)]" 
+                                    : "bg-white border-gray-200 hover:shadow-md"
+                            }`}
                         >
                             <div className="flex gap-3 items-start">
                                 {/* Date Badge */}
-                                <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-400 flex flex-col items-center justify-center text-white">
+                                <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex flex-col items-center justify-center text-white ${
+                                    isDark 
+                                        ? "bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-900/20" 
+                                        : "bg-gradient-to-br from-indigo-400 to-purple-400"
+                                }`}>
                                     <span className="text-base sm:text-lg font-bold leading-none">
                                         {new Date(event.date).getDate()}
                                     </span>
@@ -446,8 +495,8 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-gray-800 break-words">{event.title}</h3>
-                                    <p className="text-xs text-gray-400">
+                                    <h3 className={`font-semibold break-words ${isDark ? "text-purple-100" : "text-gray-800"}`}>{event.title}</h3>
+                                    <p className={`text-xs ${isDark ? "text-purple-400/60" : "text-gray-400"}`}>
                                         {new Date(event.date).toLocaleDateString("vi-VN", {
                                             year: "numeric",
                                             month: "short",
@@ -455,7 +504,7 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                         })}
                                     </p>
                                     {event.description && (
-                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                                        <p className={`text-sm mt-1 line-clamp-2 ${isDark ? "text-purple-300/80" : "text-gray-500"}`}>
                                             {event.description}
                                         </p>
                                     )}
@@ -463,7 +512,9 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
 
                                 {/* Thumbnail */}
                                 {event.image_url && (
-                                    <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-100">
+                                    <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden border bg-gray-100 ${
+                                        isDark ? "border-purple-500/20" : "border-gray-200"
+                                    }`}>
                                         <Image
                                             src={event.image_url}
                                             alt={event.title}
@@ -477,10 +528,14 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                             </div>
 
                             {/* Actions - Always visible on mobile */}
-                            <div className="flex justify-end gap-1 mt-3 pt-3 border-t border-gray-100 sm:border-t-0 sm:mt-0 sm:pt-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <div className={`flex justify-end gap-1 mt-3 pt-3 border-t sm:border-t-0 sm:mt-0 sm:pt-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ${
+                                isDark ? "border-purple-950/40" : "border-gray-100"
+                            }`}>
                                 <button
                                     onClick={() => handleEdit(event)}
-                                    className="p-2 hover:bg-gray-100 rounded-lg text-sm text-indigo-500 flex items-center gap-1"
+                                    className={`p-2 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                                        isDark ? "text-purple-400 hover:bg-slate-800" : "text-indigo-500 hover:bg-gray-100"
+                                    }`}
                                     title="Sửa"
                                 >
                                     <Edit3 className="w-4 h-4" />
@@ -489,7 +544,9 @@ export function TimelineManager({ slug, initialTimeline }: TimelineManagerProps)
                                 <button
                                     onClick={() => setDeleteConfirmId(event.id)}
                                     disabled={deletingId === event.id}
-                                    className="p-2 hover:bg-red-50 rounded-lg text-sm text-red-500 flex items-center gap-1"
+                                    className={`p-2 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                                        isDark ? "text-red-400 hover:bg-red-950/40" : "text-red-500 hover:bg-red-50"
+                                    }`}
                                     title="Xóa"
                                 >
                                     {deletingId === event.id ? (

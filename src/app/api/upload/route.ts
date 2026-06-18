@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-// Initialize Supabase client
+// Initialize Supabase admin client (server-side, bypasses RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Service role key is REQUIRED for server-side storage uploads to bypass RLS.
+// Get it from: Supabase Dashboard → Project Settings → API → service_role key
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabaseBucket = "memories"; // Matches STORAGE_BUCKET in src/lib/supabase.ts
 
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -53,13 +57,30 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Initialize Supabase
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        // Initialize Supabase admin client
+        // Service role key bypasses RLS — required for server-side uploads
+        // A valid Supabase JWT always starts with "eyJ"
+        const isValidJwt = supabaseServiceKey && supabaseServiceKey.startsWith("eyJ");
+        if (!isValidJwt) {
+            console.error(
+                "SUPABASE_SERVICE_ROLE_KEY is missing or not a valid JWT.\n" +
+                "Get it from: Supabase Dashboard → Project Settings → API → service_role key\n" +
+                `Current value: "${supabaseServiceKey?.slice(0, 20)}..."`
+            );
+            return NextResponse.json(
+                { success: false, error: "Storage service not configured. Please set SUPABASE_SERVICE_ROLE_KEY in .env" },
+                { status: 500 }
+            );
+        }
+        const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+            auth: { persistSession: false },
+        });
 
         // Generate unique filename
         const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
         const ext = file.name.split(".").pop() || "jpg";
-        const filename = `${slug}/${type || "image"}_${timestamp}.${ext}`;
+        const filename = `${slug}/${type || "image"}_${timestamp}_${randomSuffix}.${ext}`;
 
         // Convert file to buffer
         const arrayBuffer = await file.arrayBuffer();
@@ -67,7 +88,7 @@ export async function POST(request: NextRequest) {
 
         // Upload to Supabase Storage
         const { data, error } = await supabase.storage
-            .from("uploads")
+            .from(supabaseBucket)
             .upload(filename, buffer, {
                 contentType: file.type || "image/jpeg",
                 upsert: true,
@@ -83,7 +104,7 @@ export async function POST(request: NextRequest) {
 
         // Get public URL
         const { data: urlData } = supabase.storage
-            .from("uploads")
+            .from(supabaseBucket)
             .getPublicUrl(data.path);
 
         return NextResponse.json({

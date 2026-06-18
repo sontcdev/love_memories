@@ -6,8 +6,8 @@ import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
-import { GameSection } from "@/components/features/GameSection";
-import { LetterBox } from "@/components/features/LetterBox";
+import { GameSection } from "./GameSection";
+import { LetterBox } from "./LetterBox";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -27,6 +27,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
     const [activeSection, setActiveSection] = useState<string>("home");
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
 
     const boyName = profileData?.boy_name || "Him";
@@ -50,8 +51,8 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
     };
 
     // Lightbox navigation
-    const openLightbox = (index: number) => setLightboxIndex(index);
-    const closeLightbox = () => setLightboxIndex(null);
+    const openLightbox = (index: number) => { setLightboxIndex(index); setIsPopupOpen(true); };
+    const closeLightbox = () => { setLightboxIndex(null); setIsPopupOpen(false); };
     const nextImage = useCallback(() => {
         if (lightboxIndex !== null && data.galleries.length > 0) {
             setLightboxIndex((lightboxIndex + 1) % data.galleries.length);
@@ -103,14 +104,16 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
     return (
         <div className="min-h-screen relative" style={{ backgroundColor: 'var(--theme-bg, #fff0f5)' }}>
             {/* Edit Button - Fixed */}
-            <Link
-                href={`/${slug}/edit`}
-                className="fixed top-4 right-4 z-30 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all"
-                title="Edit Page"
-                aria-label="Chỉnh sửa trang"
-            >
-                <Settings className="w-5 h-5 text-gray-600" />
-            </Link>
+            {!isPopupOpen && (
+                <Link
+                    href={`/${slug}/edit`}
+                    className="fixed top-4 right-4 z-30 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all"
+                    title="Edit Page"
+                    aria-label="Chỉnh sửa trang"
+                >
+                    <Settings className="w-5 h-5 text-gray-600" />
+                </Link>
+            )}
             {/* Hero Section */}
             <section className="relative flex flex-col items-center justify-center px-4 pt-16 pb-8">
 
@@ -120,7 +123,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                     <div className="flex items-start justify-center gap-2 sm:gap-6 mb-8">
                         {/* His Profile */}
                         <div className="flex flex-col items-center flex-1 min-w-0 max-w-[120px] sm:max-w-[140px]">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg mb-2 flex-shrink-0">
+                            <div className="w-16 h-16 min-[380px]:w-20 min-[380px]:h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 p-1 shadow-lg mb-2 flex-shrink-0">
                                 {boyAvatar ? (
                                     <Image
                                         src={boyAvatar}
@@ -139,13 +142,13 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                         </div>
 
                         {/* Heart - aligned with avatar center */}
-                        <div className="h-20 sm:h-24 flex items-center flex-shrink-0">
+                        <div className="h-16 min-[380px]:h-20 sm:h-24 flex items-center flex-shrink-0">
                             <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-rose-400 fill-rose-400 animate-pulse" />
                         </div>
 
                         {/* Her Profile */}
                         <div className="flex flex-col items-center flex-1 min-w-0 max-w-[120px] sm:max-w-[140px]">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg mb-2 flex-shrink-0">
+                            <div className="w-16 h-16 min-[380px]:w-20 min-[380px]:h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 p-1 shadow-lg mb-2 flex-shrink-0">
                                 {girlAvatar ? (
                                     <Image
                                         src={girlAvatar}
@@ -271,61 +274,52 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
 
                 {/* Gallery Lightbox */}
                 {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                    <div {...swipeHandlers} className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4" onClick={closeLightbox}>
-                        {/* Top bar with close button and counter */}
-                        <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 z-20">
-                            <span className="text-white/70 text-sm font-medium">
-                                {lightboxIndex + 1} / {data.galleries.length}
-                            </span>
-                            <button
-                                onClick={closeLightbox}
-                                className="p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg transition-all hover:scale-110"
-                                style={{ color: 'var(--theme-accent, #ec4899)' }}
-                                aria-label="Đóng"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        {/* Image container - larger size */}
-                        <div className="relative w-full max-w-4xl flex-1 flex items-center justify-center px-4" onClick={(e) => e.stopPropagation()}>
-                            <div className="relative w-full max-h-[70vh] aspect-[3/4] sm:aspect-[4/3] bg-black/30 rounded-xl overflow-hidden">
-                                <Image
-                                    src={data.galleries[lightboxIndex].image_url}
-                                    alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                    fill
-                                    className="object-contain transition-opacity duration-200"
-                                    priority
-                                />
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
+                        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-4 text-white flex-shrink-0">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium">
+                                        {lightboxIndex + 1} / {data.galleries.length}
+                                    </span>
+                                    <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-
-                        {/* Bottom bar with caption and navigation */}
-                        <div className="w-full max-w-2xl mt-4 space-y-3">
+                            {/* Image */}
+                            <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 bg-gray-50 min-h-[300px]">
+                                <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                                    <Image
+                                        src={data.galleries[lightboxIndex].image_url}
+                                        alt={data.galleries[lightboxIndex].caption || "Photo"}
+                                        fill
+                                        className="object-contain"
+                                        priority
+                                    />
+                                </div>
+                            </div>
                             {/* Caption */}
                             {data.galleries[lightboxIndex].caption && (
-                                <p className="text-center text-white text-sm md:text-base px-4">
+                                <div className="px-4 py-2 text-center text-gray-700 text-sm">
                                     {data.galleries[lightboxIndex].caption}
-                                </p>
+                                </div>
                             )}
-
-                            {/* Navigation buttons */}
-                            <div className="flex justify-center items-center gap-4">
+                            {/* Navigation */}
+                            <div className="flex justify-center items-center gap-4 p-4 border-t border-gray-100">
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                    className="p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-lg transition-all hover:scale-110"
-                                    style={{ color: 'var(--theme-accent, #ec4899)' }}
+                                    onClick={prevImage}
+                                    className="p-2.5 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all hover:scale-110"
                                     aria-label="Ảnh trước"
                                 >
-                                    <ChevronLeft className="w-6 h-6" />
+                                    <ChevronLeft className="w-5 h-5" />
                                 </button>
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                    className="p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-lg transition-all hover:scale-110"
-                                    style={{ color: 'var(--theme-accent, #ec4899)' }}
+                                    onClick={nextImage}
+                                    className="p-2.5 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all hover:scale-110"
                                     aria-label="Ảnh tiếp theo"
                                 >
-                                    <ChevronRight className="w-6 h-6" />
+                                    <ChevronRight className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
@@ -398,7 +392,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {/* Letters Section */}
                 {activeSection === "letters" && (
                     <section className="max-w-2xl mx-auto px-4 py-12">
-                        <LetterBox slug={slug} initialLetters={data.letters} theme="love" />
+                        <LetterBox slug={slug} initialLetters={data.letters} theme="love" onPopupOpenChange={setIsPopupOpen} />
                     </section>
                 )}
 
@@ -416,7 +410,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 </footer>
 
                 {/* Scroll to Top Button */}
-                {showScrollTop && (
+                {showScrollTop && !isPopupOpen && (
                     <button
                         onClick={scrollToTop}
                         className="fixed bottom-28 right-6 z-40 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-rose-100 hover:bg-rose-50 transition-all hover:scale-110"

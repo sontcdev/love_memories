@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Palette, Music, Type } from "lucide-react";
+import { Save, Loader2, Palette, Type } from "lucide-react";
 
 // ============================================================================
 // SCHEMA
@@ -14,6 +14,7 @@ import { Save, Loader2, Palette, Music, Type } from "lucide-react";
 const configSchema = z.object({
     background_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
     accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
+    text_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
     font_family: z.string().optional(),
     music_url: z.string().url("Invalid URL").optional().or(z.literal("")),
     auto_play: z.boolean().optional(),
@@ -26,13 +27,17 @@ type ConfigFormData = z.infer<typeof configSchema>;
 // ============================================================================
 
 const FONT_OPTIONS = [
-    { value: "Inter", label: "Inter (Default)" },
-    { value: "Roboto", label: "Roboto" },
-    { value: "Poppins", label: "Poppins" },
-    { value: "Playfair Display", label: "Playfair Display (Serif)" },
-    { value: "Dancing Script", label: "Dancing Script (Cursive)" },
-    { value: "Quicksand", label: "Quicksand" },
-    { value: "Nunito", label: "Nunito" },
+    { value: "Inter", label: "Inter (Mặc định)" },
+    { value: "Roboto", label: "Roboto (Thanh lịch)" },
+    { value: "Poppins", label: "Poppins (Hiện đại)" },
+    { value: "Playfair Display", label: "Playfair Display (Có chân)" },
+    { value: "Dancing Script", label: "Dancing Script (Viết tay bay bổng)" },
+    { value: "Quicksand", label: "Quicksand (Bo tròn dễ thương)" },
+    { value: "Nunito", label: "Nunito (Trẻ trung)" },
+    { value: "Pacifico", label: "Pacifico (Script nghệ thuật)" },
+    { value: "Montserrat", label: "Montserrat (Mạnh mẽ)" },
+    { value: "Comfortaa", label: "Comfortaa (Bo tròn mập)" },
+    { value: "Caveat", label: "Caveat (Viết tay phóng khoáng)" },
 ];
 
 // ============================================================================
@@ -86,6 +91,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
         defaultValues: {
             background_color: initialConfig?.background_color || "#ffffff",
             accent_color: initialConfig?.accent_color || "#ec4899",
+            text_color: initialConfig?.text_color || "#1f2937",
             font_family: initialConfig?.font_family || "Inter",
             music_url: initialConfig?.music_url || "",
             auto_play: initialConfig?.auto_play || false,
@@ -102,6 +108,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
         const result = await updateLinkConfig(slug, {
             background_color: data.background_color || undefined,
             accent_color: data.accent_color || undefined,
+            text_color: data.text_color || undefined,
             font_family: data.font_family || undefined,
             music_url: data.music_url || undefined,
             auto_play: data.auto_play,
@@ -123,7 +130,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Palette className="w-5 h-5 text-purple-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Màu nền</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">Màu nền màn hình chờ</h3>
                 </div>
 
                 {/* Preset Colors */}
@@ -202,6 +209,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                     <p className="mt-1 text-sm text-red-500">{errors.accent_color.message}</p>
                 )}
             </div>
+
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Type className="w-5 h-5 text-blue-500" />
@@ -220,8 +228,8 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                 </select>
             </div>
 
-            {/* Music URL */}
-            <div>
+            {/* Music URL - temporarily disabled */}
+            {/* <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Music className="w-5 h-5 text-pink-500" />
                     <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
@@ -236,7 +244,6 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                     <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
                 )}
 
-                {/* Auto-play Toggle */}
                 <label className="flex items-center gap-3 mt-4 cursor-pointer">
                     <input
                         type="checkbox"
@@ -247,7 +254,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                         Tự động phát nhạc khi tải trang
                     </span>
                 </label>
-            </div>
+            </div> */}
 
             {/* Message */}
             {message && (
