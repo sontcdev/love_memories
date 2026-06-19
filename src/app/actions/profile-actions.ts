@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // ============================================================================
 // PROFILE DATA TYPES
@@ -192,6 +193,15 @@ export async function updateLinkProfile(
 // UPDATE LINK CONFIG
 // ============================================================================
 
+const configSchema = z.object({
+    background_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
+    accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
+    text_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
+    font_family: z.string().nullable().optional(),
+    music_url: z.string().nullable().optional(),
+    auto_play: z.boolean().optional(),
+});
+
 export async function updateLinkConfig(
     slug: string,
     config: LinkConfigData
@@ -202,6 +212,9 @@ export async function updateLinkConfig(
         if (!hasAccess) {
             return { success: false, error: "Unauthorized" };
         }
+
+        // Validate config
+        const parsed = configSchema.parse(config);
 
         // Get link
         const link = await prisma.link.findUnique({
@@ -218,20 +231,20 @@ export async function updateLinkConfig(
             where: { link_id: link.id },
             create: {
                 link_id: link.id,
-                background_color: config.background_color,
-                accent_color: config.accent_color,
-                text_color: config.text_color,
-                font_family: config.font_family,
-                music_url: config.music_url,
-                auto_play: config.auto_play ?? false,
+                background_color: parsed.background_color ?? null,
+                accent_color: parsed.accent_color ?? null,
+                text_color: parsed.text_color ?? null,
+                font_family: parsed.font_family ?? null,
+                music_url: parsed.music_url ?? null,
+                auto_play: parsed.auto_play ?? false,
             },
             update: {
-                background_color: config.background_color,
-                accent_color: config.accent_color,
-                text_color: config.text_color,
-                font_family: config.font_family,
-                music_url: config.music_url,
-                auto_play: config.auto_play,
+                background_color: parsed.background_color ?? null,
+                accent_color: parsed.accent_color ?? null,
+                text_color: parsed.text_color ?? null,
+                font_family: parsed.font_family ?? null,
+                music_url: parsed.music_url ?? null,
+                auto_play: parsed.auto_play,
             },
         });
 

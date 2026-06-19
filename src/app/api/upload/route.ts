@@ -59,13 +59,11 @@ export async function POST(request: NextRequest) {
 
         // Initialize Supabase admin client
         // Service role key bypasses RLS — required for server-side uploads
-        // A valid Supabase JWT always starts with "eyJ"
-        const isValidJwt = supabaseServiceKey && supabaseServiceKey.startsWith("eyJ");
-        if (!isValidJwt) {
+        // Supports both legacy JWT format ("eyJ...") and new Supabase format ("sb_secret_...")
+        if (!supabaseServiceKey) {
             console.error(
-                "SUPABASE_SERVICE_ROLE_KEY is missing or not a valid JWT.\n" +
-                "Get it from: Supabase Dashboard → Project Settings → API → service_role key\n" +
-                `Current value: "${supabaseServiceKey?.slice(0, 20)}..."`
+                "SUPABASE_SERVICE_ROLE_KEY is missing.\n" +
+                "Get it from: Supabase Dashboard → Project Settings → API → service_role key"
             );
             return NextResponse.json(
                 { success: false, error: "Storage service not configured. Please set SUPABASE_SERVICE_ROLE_KEY in .env" },

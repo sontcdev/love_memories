@@ -9,6 +9,8 @@ interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
+const escapeJs = (s: string) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/<\//g, '<\\/');
+
 export default async function SlugPage({ params }: PageProps) {
     const { slug } = await params;
 
@@ -39,9 +41,9 @@ export default async function SlugPage({ params }: PageProps) {
                 <script
                     dangerouslySetInnerHTML={{
                         __html: `
-                            document.documentElement.style.setProperty('--theme-bg', '${bgColor}');
-                            document.documentElement.style.setProperty('--theme-accent', '${accentColor}');
-                            document.documentElement.style.setProperty('--theme-text', '${textColor}');
+                            document.documentElement.style.setProperty('--theme-bg', '${escapeJs(bgColor)}');
+                            document.documentElement.style.setProperty('--theme-accent', '${escapeJs(accentColor)}');
+                            document.documentElement.style.setProperty('--theme-text', '${escapeJs(textColor)}');
                         `,
                     }}
                 />
@@ -78,9 +80,9 @@ export default async function SlugPage({ params }: PageProps) {
             <script
                 dangerouslySetInnerHTML={{
                     __html: `
-                        document.documentElement.style.setProperty('--theme-bg', '${bgColor}');
-                        document.documentElement.style.setProperty('--theme-accent', '${accentColor}');
-                        document.documentElement.style.setProperty('--theme-text', '${textColor}');
+                        document.documentElement.style.setProperty('--theme-bg', '${escapeJs(bgColor)}');
+                        document.documentElement.style.setProperty('--theme-accent', '${escapeJs(accentColor)}');
+                        document.documentElement.style.setProperty('--theme-text', '${escapeJs(textColor)}');
                     `,
                 }}
             />
