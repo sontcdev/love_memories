@@ -2,7 +2,7 @@
  
 import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
-import { Upload, X, Loader2, ImageIcon, Check, AlertCircle } from "lucide-react";
+import { Upload, X, Loader2, Image as ImageIcon, Check, AlertCircle } from "lucide-react";
 
 interface MultiImageUploadProps {
     slug: string;
