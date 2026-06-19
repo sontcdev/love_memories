@@ -7,6 +7,7 @@ import * as z from "zod";
 import { LinkType } from "@prisma/client";
 import { updateLinkProfile, GradPersonalProfileData, GradClassProfileData } from "@/app/actions/profile-actions";
 import { Save, Loader2, GraduationCap, Users, Camera, Plus, Trash2, HelpCircle, Map, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 
 // ============================================================================
 // ZOD SCHEMAS
@@ -187,6 +188,10 @@ function GradPersonalProfileForm({
     const [studentAvatar, setStudentAvatar] = useState<string>(initialData?.student_avatar || "");
     const [uploading, setUploading] = useState(false);
     const [quiz, setQuiz] = useState<Required<GradPersonalProfileData>["quiz"]>(initialData?.quiz || []);
+    const [cropState, setCropState] = useState<{
+        file: File;
+        onCrop: (file: File) => void;
+    } | null>(null);
     const [goals, setGoals] = useState<Required<GradPersonalProfileData>["goals"]>(initialData?.goals || []);
     const [showQuizEditor, setShowQuizEditor] = useState(false);
     const [showGoalsEditor, setShowGoalsEditor] = useState(false);
@@ -355,7 +360,12 @@ function GradPersonalProfileForm({
                             className="hidden"
                             onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (file) handleAvatarUpload(file);
+                                if (file) {
+                                    setCropState({
+                                        file,
+                                        onCrop: (croppedFile) => handleAvatarUpload(croppedFile),
+                                    });
+                                }
                             }}
                             disabled={uploading}
                         />
@@ -703,6 +713,17 @@ function GradPersonalProfileForm({
                     </>
                 )}
             </button>
+
+            {cropState && (
+                <ImageCropperModal
+                    file={cropState.file}
+                    onClose={() => setCropState(null)}
+                    onCropComplete={(croppedFile) => {
+                        cropState.onCrop(croppedFile);
+                        setCropState(null);
+                    }}
+                />
+            )}
         </form>
     );
 }
@@ -723,6 +744,10 @@ function GradClassProfileForm({
 }: FormProps<GradClassProfileData>) {
     const [teacherAvatar, setTeacherAvatar] = useState<string>(initialData?.homeroom_teacher_avatar || "");
     const [uploading, setUploading] = useState(false);
+    const [cropState, setCropState] = useState<{
+        file: File;
+        onCrop: (file: File) => void;
+    } | null>(null);
 
     const {
         register,
@@ -828,7 +853,12 @@ function GradClassProfileForm({
                             className="hidden"
                             onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (file) handleAvatarUpload(file);
+                                if (file) {
+                                    setCropState({
+                                        file,
+                                        onCrop: (croppedFile) => handleAvatarUpload(croppedFile),
+                                    });
+                                }
                             }}
                             disabled={uploading}
                         />
@@ -1033,6 +1063,17 @@ function GradClassProfileForm({
                     </>
                 )}
             </button>
+
+            {cropState && (
+                <ImageCropperModal
+                    file={cropState.file}
+                    onClose={() => setCropState(null)}
+                    onCropComplete={(croppedFile) => {
+                        cropState.onCrop(croppedFile);
+                        setCropState(null);
+                    }}
+                />
+            )}
         </form>
     );
 }

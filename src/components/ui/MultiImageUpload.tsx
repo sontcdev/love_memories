@@ -79,7 +79,6 @@ export function MultiImageUpload({
     slug,
     onUploadComplete,
     maxFiles = 5,
-    maxSizeMB = 10,
     targetSizeKB = 50,
 }: MultiImageUploadProps) {
     const [files, setFiles] = useState<FileWithPreview[]>([]);
@@ -88,7 +87,6 @@ export function MultiImageUpload({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const previewsRef = useRef<string[]>([]);
 
-    const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
     // Revoke all preview URLs on unmount
     useEffect(() => {
@@ -109,7 +107,7 @@ export function MultiImageUpload({
         const validFiles: FileWithPreview[] = [];
         for (const file of fileArray) {
             if (!file.type.startsWith("image/")) continue;
-            if (file.size > maxSizeBytes) continue;
+            // Allow unlimited file size for images since they are compressed client-side before upload
 
             const previewUrl = URL.createObjectURL(file);
             previewsRef.current.push(previewUrl);
@@ -191,7 +189,7 @@ export function MultiImageUpload({
                 onUploadComplete(successfulUrls);
             }, 500);
         }
-    }, [slug, maxFiles, maxSizeBytes, targetSizeKB, onUploadComplete]);
+    }, [slug, maxFiles, targetSizeKB, onUploadComplete]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();

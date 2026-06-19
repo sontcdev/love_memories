@@ -1,17 +1,32 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
 import { MusicPlayerRef, WelcomeOverlay } from "@/components/music";
-import { LoveTemplate } from "@/components/templates/love/LoveTemplate";
-import { Love2Template } from "@/components/templates/love2/Love2Template";
-import { IdolTemplate } from "@/components/templates/idol/IdolTemplate";
-import { GradPersonalTemplate } from "@/components/templates/grad-personal/GradPersonalTemplate";
-import { GradClassTemplate } from "@/components/templates/grad-class/GradClassTemplate";
-import { GradGroupTemplate } from "@/components/templates/grad-group/GradGroupTemplate";
 import { getLinkData } from "@/app/actions/auth-actions";
+
+// Dynamically load templates to optimize compilation and bundle size
+const LoveTemplate = dynamic(() => import("@/components/templates/love/LoveTemplate").then(m => m.LoveTemplate), {
+    loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
+});
+const Love2Template = dynamic(() => import("@/components/templates/love2/Love2Template").then(m => m.Love2Template), {
+    loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
+});
+const IdolTemplate = dynamic(() => import("@/components/templates/idol/IdolTemplate").then(m => m.IdolTemplate), {
+    loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
+});
+const GradPersonalTemplate = dynamic(() => import("@/components/templates/grad-personal/GradPersonalTemplate").then(m => m.GradPersonalTemplate), {
+    loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
+});
+const GradClassTemplate = dynamic(() => import("@/components/templates/grad-class/GradClassTemplate").then(m => m.GradClassTemplate), {
+    loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
+});
+const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-group/GradGroupTemplate").then(m => m.GradGroupTemplate), {
+    loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
+});
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };

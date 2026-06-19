@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { updateLinkProfile, GradGroupProfileData, GroupMember } from "@/app/actions/profile-actions";
 import { Save, Loader2, Users, Camera, Plus, Trash2, HelpCircle, Map, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 
 const groupProfileSchema = z.object({
     group_name: z.string().min(1, "Bắt buộc").max(50),
@@ -114,6 +115,10 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
     const [activePanel, setActivePanel] = useState<string>("general");
     const [uploadingAvatarId, setUploadingAvatarId] = useState<string | null>(null);
     const [uploadingGroupAvatar, setUploadingGroupAvatar] = useState(false);
+    const [cropState, setCropState] = useState<{
+        file: File;
+        onCrop: (file: File) => void;
+    } | null>(null);
 
     const {
         register,
@@ -310,7 +315,12 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                                         className="hidden"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
-                                            if (file) handleAvatarUpload(file);
+                                            if (file) {
+                                                setCropState({
+                                                    file,
+                                                    onCrop: (croppedFile) => handleAvatarUpload(croppedFile),
+                                                });
+                                            }
                                         }}
                                         disabled={uploadingGroupAvatar}
                                     />
@@ -435,7 +445,12 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                                                 className="hidden"
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0];
-                                                    if (file) handleAvatarUpload(file, member.id);
+                                                    if (file) {
+                                                        setCropState({
+                                                            file,
+                                                            onCrop: (croppedFile) => handleAvatarUpload(croppedFile, member.id),
+                                                        });
+                                                    }
                                                 }}
                                                 disabled={uploadingAvatarId === member.id}
                                             />
@@ -720,6 +735,17 @@ export function EditGradGroupProfileForm({ slug, initialData, isDark = false, on
                     </>
                 )}
             </button>
+
+            {cropState && (
+                <ImageCropperModal
+                    file={cropState.file}
+                    onClose={() => setCropState(null)}
+                    onCropComplete={(croppedFile) => {
+                        cropState.onCrop(croppedFile);
+                        setCropState(null);
+                    }}
+                />
+            )}
         </form>
     );
 }

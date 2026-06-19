@@ -24,6 +24,19 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 262.1 83.3% 57.8%;
     --radius: 0.5rem;
+
+    /* Google Font variables loaded via stylesheet */
+    --font-inter: 'Inter', sans-serif;
+    --font-roboto: 'Roboto', sans-serif;
+    --font-poppins: 'Poppins', sans-serif;
+    --font-playfair: 'Playfair Display', serif;
+    --font-dancing-script: 'Dancing Script', cursive;
+    --font-quicksand: 'Quicksand', sans-serif;
+    --font-nunito: 'Nunito', sans-serif;
+    --font-pacifico: 'Pacifico', cursive;
+    --font-montserrat: 'Montserrat', sans-serif;
+    --font-comfortaa: 'Comfortaa', sans-serif;
+    --font-caveat: 'Caveat', cursive;
   }
 
   .dark {

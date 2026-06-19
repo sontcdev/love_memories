@@ -96,7 +96,6 @@ export function ImageUpload({
     onUploadComplete,
     currentImageUrl,
     className = "",
-    maxSizeMB = 10, // Allow larger initial files
     targetSizeKB = 50, // Compress to 50KB
     acceptedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"],
 }: ImageUploadProps) {
@@ -109,15 +108,12 @@ export function ImageUpload({
     const [compressionInfo, setCompressionInfo] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
     const validateFile = (file: File): string | null => {
         if (!acceptedTypes.includes(file.type)) {
             return `Invalid file type. Accepted: ${acceptedTypes.map((t) => t.split("/")[1]).join(", ")}`;
         }
-        if (file.size > maxSizeBytes) {
-            return `File too large. Maximum size: ${maxSizeMB}MB`;
-        }
+        // Allow unlimited file size for images since they are compressed client-side before upload
         return null;
     };
 

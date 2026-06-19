@@ -8,6 +8,7 @@ import { LinkType } from "@prisma/client";
 import { updateLinkProfile, LoveProfileData, IdolProfileData } from "@/app/actions/profile-actions";
 import { Save, Loader2, Heart, Camera } from "lucide-react";
 import { EditIdolProfileForm } from "./EditIdolProfileForm";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import { EditGradProfileForm } from "./EditGradProfileForm";
 import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
 
@@ -127,6 +128,10 @@ function LoveProfileForm({
     const [girlAvatar, setGirlAvatar] = useState<string>(initialData?.girl_avatar || "");
     const [uploadingBoy, setUploadingBoy] = useState(false);
     const [uploadingGirl, setUploadingGirl] = useState(false);
+    const [cropState, setCropState] = useState<{
+        file: File;
+        onCrop: (file: File) => void;
+    } | null>(null);
 
     const {
         register,
@@ -310,7 +315,12 @@ function LoveProfileForm({
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleAvatarUpload(file, "boy", setUploadingBoy, setBoyAvatar);
+                                    if (file) {
+                                        setCropState({
+                                            file,
+                                            onCrop: (croppedFile) => handleAvatarUpload(croppedFile, "boy", setUploadingBoy, setBoyAvatar),
+                                        });
+                                    }
                                 }}
                                 disabled={uploadingBoy}
                             />
@@ -350,7 +360,12 @@ function LoveProfileForm({
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleAvatarUpload(file, "girl", setUploadingGirl, setGirlAvatar);
+                                    if (file) {
+                                        setCropState({
+                                            file,
+                                            onCrop: (croppedFile) => handleAvatarUpload(croppedFile, "girl", setUploadingGirl, setGirlAvatar),
+                                        });
+                                    }
                                 }}
                                 disabled={uploadingGirl}
                             />
@@ -465,6 +480,17 @@ function LoveProfileForm({
                     </>
                 )}
             </button>
+
+            {cropState && (
+                <ImageCropperModal
+                    file={cropState.file}
+                    onClose={() => setCropState(null)}
+                    onCropComplete={(croppedFile) => {
+                        cropState.onCrop(croppedFile);
+                        setCropState(null);
+                    }}
+                />
+            )}
         </form>
     );
 }

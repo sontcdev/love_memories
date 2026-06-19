@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { updateLinkProfile, IdolProfileData } from "@/app/actions/profile-actions";
 import { Save, Loader2, Star, Camera } from "lucide-react";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 
 // ============================================================================
 // ZOD SCHEMA
@@ -50,6 +51,10 @@ export function EditIdolProfileForm({
     const [fanAvatar, setFanAvatar] = useState<string>(initialData?.fan_avatar || "");
     const [uploadingIdol, setUploadingIdol] = useState(false);
     const [uploadingFan, setUploadingFan] = useState(false);
+    const [cropState, setCropState] = useState<{
+        file: File;
+        onCrop: (file: File) => void;
+    } | null>(null);
 
     const {
         register,
@@ -233,7 +238,12 @@ export function EditIdolProfileForm({
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleAvatarUpload(file, "idol", setUploadingIdol, setIdolAvatar);
+                                    if (file) {
+                                        setCropState({
+                                            file,
+                                            onCrop: (croppedFile) => handleAvatarUpload(croppedFile, "idol", setUploadingIdol, setIdolAvatar),
+                                        });
+                                    }
                                 }}
                                 disabled={uploadingIdol}
                             />
@@ -275,7 +285,12 @@ export function EditIdolProfileForm({
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) handleAvatarUpload(file, "fan", setUploadingFan, setFanAvatar);
+                                    if (file) {
+                                        setCropState({
+                                            file,
+                                            onCrop: (croppedFile) => handleAvatarUpload(croppedFile, "fan", setUploadingFan, setFanAvatar),
+                                        });
+                                    }
                                 }}
                                 disabled={uploadingFan}
                             />
@@ -420,6 +435,17 @@ export function EditIdolProfileForm({
                     </>
                 )}
             </button>
+
+            {cropState && (
+                <ImageCropperModal
+                    file={cropState.file}
+                    onClose={() => setCropState(null)}
+                    onCropComplete={(croppedFile) => {
+                        cropState.onCrop(croppedFile);
+                        setCropState(null);
+                    }}
+                />
+            )}
         </form>
     );
 }
