@@ -26,6 +26,7 @@ import {
     Calendar,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { formatDate, tomorrowMinInput } from "@/lib/date-utils"
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -82,13 +83,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, onPopupOpenCha
     };
 
     // Helper to format unlock date
-    const formatUnlockDate = (date: Date): string => {
-        return new Date(date).toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-        });
-    };
+    const formatUnlockDate = (date: Date | string) => formatDate(date, { day: "2-digit", month: "2-digit", year: "numeric" })
 
     async function handleCreate() {
         if (!newTitle.trim() || !newContent.trim()) return;
@@ -441,14 +436,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, onPopupOpenCha
                                             setNewUnlockDate(e.target.value);
                                         }
                                     }}
-                                    min={(() => {
-                                        const tomorrow = new Date();
-                                        tomorrow.setDate(tomorrow.getDate() + 1);
-                                        const year = tomorrow.getFullYear();
-                                        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-                                        const day = String(tomorrow.getDate()).padStart(2, '0');
-                                        return `${year}-${month}-${day}`;
-                                    })()}
+min={tomorrowMinInput()}
                                     className={`w-full px-4 py-2 rounded-lg border border-amber-900/15 ${isDark ? "bg-[#121110] text-white" : "bg-white"} outline-none text-sm`}
                                 />
                                 <p className="text-[10px] text-gray-400 mt-1">
@@ -525,7 +513,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, onPopupOpenCha
                                         <div className="flex items-center justify-between text-xs text-[#8c6239] font-mono mb-1">
                                             <div className="flex items-center gap-1.5">
                                                 <Calendar className="w-3.5 h-3.5" />
-                                                <span>{new Date(letter.created_at).toLocaleDateString("vi-VN")}</span>
+                                                <span>{formatDate(letter.created_at)}</span>
                                             </div>
                                             {letter.sender && (
                                                 <span className="font-semibold text-amber-800">Người gửi: {letter.sender}</span>
@@ -609,7 +597,7 @@ export function LetterBox({ slug, initialLetters, isDark = false, onPopupOpenCha
                                                                     {reply.content}
                                                                 </p>
                                                                 <div className="flex justify-between items-center mt-1 text-[10px] text-[#a08060]">
-                                                                    <span>{new Date(reply.created_at).toLocaleDateString("vi-VN")}</span>
+                                                                    <span>{formatDate(reply.created_at)}</span>
                                                                     <button
                                                                         onClick={() => setDeleteConfirm({ type: "reply", id: reply.id, letterId: letter.id })}
                                                                         className="text-red-600 hover:text-red-800 opacity-60 group-hover:opacity-100 transition-opacity"

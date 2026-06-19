@@ -8,6 +8,7 @@ import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, Chev
 import { useSwipeable } from "react-swipeable";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
+import { formatDate } from "@/lib/date-utils";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -350,7 +351,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
 
                                             <div className="bg-white rounded-2xl p-5 shadow-md">
                                                 <div className="text-xs text-rose-400 font-medium mb-1">
-                                                    {new Date(event.date).toLocaleDateString("vi-VN", {
+                                                    {formatDate(event.date, {
                                                         year: "numeric",
                                                         month: "long",
                                                         day: "numeric",

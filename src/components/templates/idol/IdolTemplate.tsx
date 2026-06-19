@@ -9,6 +9,7 @@ import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
 import { VideoPlayer } from "@/components/media/VideoPlayer";
 import { GalleryLightbox } from "@/components/templates/shared/GalleryLightbox";
+import { formatDate, getDateParts } from "@/lib/date-utils";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -185,15 +186,15 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
         if (!debutDate) return;
 
         const calculateTimeLeft = () => {
-            const debut = new Date(debutDate);
             const today = new Date();
+            const { month: debutMonth, day: debutDay } = getDateParts(debutDate);
             
             // Set target to this year's anniversary
-            let target = new Date(today.getFullYear(), debut.getMonth(), debut.getDate());
+            let target = new Date(today.getFullYear(), debutMonth - 1, debutDay);
             
             // If the anniversary has already passed this year, set it to next year
             if (target.getTime() < today.getTime()) {
-                target = new Date(today.getFullYear() + 1, debut.getMonth(), debut.getDate());
+                target = new Date(today.getFullYear() + 1, debutMonth - 1, debutDay);
             }
 
             const difference = target.getTime() - today.getTime();
@@ -749,8 +750,8 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                                 <div className={`shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center text-white ${
                                                     isDark ? "bg-gradient-to-br from-purple-500 to-pink-500" : "bg-gradient-to-br from-indigo-400 to-purple-400"
                                                 }`}>
-                                                    <span className="text-lg font-bold leading-none">{new Date(latestEvent.date).getDate()}</span>
-                                                    <span className="text-[10px] opacity-80">{new Date(latestEvent.date).toLocaleDateString("en", { month: "short" })}</span>
+                                                    <span className="text-lg font-bold leading-none">{getDateParts(latestEvent.date).day}</span>
+                                                    <span className="text-[10px] opacity-80">{new Date(latestEvent.date).toLocaleDateString("en", { month: "short", timeZone: "Asia/Ho_Chi_Minh" })}</span>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <h5 className="font-bold text-sm truncate">{latestEvent.title}</h5>
@@ -880,7 +881,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                                         : "bg-white border border-gray-100 hover:shadow-lg text-gray-800"
                                                 }`}>
                                                     <div className={`text-xs font-semibold mb-1 ${isDark ? "text-purple-300" : "text-purple-400"}`}>
-                                                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                                                        {formatDate(event.date, {
                                                             year: "numeric",
                                                             month: "long",
                                                             day: "numeric",

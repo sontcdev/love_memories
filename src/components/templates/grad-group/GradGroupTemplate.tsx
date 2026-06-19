@@ -9,6 +9,7 @@ import { useSwipeable } from "react-swipeable";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
 import { GalleryLightbox } from "@/components/templates/shared/GalleryLightbox";
+import { formatDate } from "@/lib/date-utils";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -708,7 +709,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                                 }`}>
                                                     <div className={`text-xs font-bold mb-1 flex items-center gap-1.5 ${themeProps.accentText}`}>
                                                         <Calendar className="w-3.5 h-3.5" />
-                                                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                                                        {formatDate(event.date, {
                                                             year: "numeric",
                                                             month: "long",
                                                             day: "numeric",

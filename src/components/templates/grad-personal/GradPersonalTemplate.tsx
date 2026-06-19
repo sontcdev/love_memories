@@ -9,6 +9,7 @@ import { useSwipeable } from "react-swipeable";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
 import { GalleryLightbox } from "@/components/templates/shared/GalleryLightbox";
+import { formatDate } from "@/lib/date-utils";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -517,7 +518,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
 
                                                 <div className={`transition-all rounded-2xl p-4 sm:p-5 border shadow-sm ${isDark ? "bg-zinc-900/40 hover:bg-[#201c18] border-zinc-700 text-slate-200" : "bg-slate-50/50 hover:bg-slate-50 border-slate-100 text-slate-800"}`}>
                                                     <span className={`text-xs font-semibold font-mono ${isDark ? "text-amber-300" : "text-amber-700"}`}>
-                                                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                                                        {formatDate(event.date, {
                                                             month: "long",
                                                             year: "numeric",
                                                         })}

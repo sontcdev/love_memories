@@ -7,6 +7,7 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 import { VideoInput } from "@/components/media/VideoInput";
 import { VoiceRecorder } from "@/components/media/VoiceRecorder";
 import { VideoPlayer } from "@/components/media/VideoPlayer";
+import { formatDate, getDateParts } from "@/lib/date-utils";
 import {
     upsertTimelineEvent,
     deleteTimelineEvent,
@@ -491,10 +492,10 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
                                 {/* Date Badge */}
                                 <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex flex-col items-center justify-center text-white">
                                     <span className="text-base sm:text-lg font-bold leading-none">
-                                        {new Date(event.date).getDate()}
+                                        {getDateParts(event.date).day}
                                     </span>
                                     <span className="text-xs opacity-80">
-                                        {new Date(event.date).toLocaleDateString("en", { month: "short" })}
+                                        {new Date(event.date).toLocaleDateString("en", { month: "short", timeZone: "Asia/Ho_Chi_Minh" })}
                                     </span>
                                 </div>
 
@@ -502,7 +503,7 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold text-gray-800 break-words">{event.title}</h3>
                                     <p className="text-xs text-gray-400">
-                                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                                        {formatDate(event.date, {
                                             year: "numeric",
                                             month: "short",
                                             day: "numeric",

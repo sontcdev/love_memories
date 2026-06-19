@@ -4,6 +4,7 @@ import { useState, useOptimistic, useTransition } from "react";
 import Image from "next/image";
 import type { Timeline } from "@prisma/client";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { formatDate, getDateParts } from "@/lib/date-utils";
 import {
     upsertTimelineEvent,
     deleteTimelineEvent,
@@ -486,10 +487,10 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
                                         : "bg-gradient-to-br from-indigo-400 to-purple-400"
                                 }`}>
                                     <span className="text-base sm:text-lg font-bold leading-none">
-                                        {new Date(event.date).getDate()}
+                                        {getDateParts(event.date).day}
                                     </span>
                                     <span className="text-xs opacity-80">
-                                        {new Date(event.date).toLocaleDateString("en", { month: "short" })}
+                                        {new Date(event.date).toLocaleDateString("en", { month: "short", timeZone: "Asia/Ho_Chi_Minh" })}
                                     </span>
                                 </div>
 
@@ -497,7 +498,7 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
                                 <div className="flex-1 min-w-0">
                                     <h3 className={`font-semibold break-words ${isDark ? "text-purple-100" : "text-gray-800"}`}>{event.title}</h3>
                                     <p className={`text-xs ${isDark ? "text-purple-400/60" : "text-gray-400"}`}>
-                                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                                        {formatDate(event.date, {
                                             year: "numeric",
                                             month: "short",
                                             day: "numeric",
