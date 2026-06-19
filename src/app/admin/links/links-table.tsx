@@ -9,7 +9,6 @@ import {
     toggleLinkStatus,
     resetLinkPin,
 } from "@/app/actions/admin-actions";
-import { formatDate } from "@/lib/date-utils";
 import { QRCodeDialog } from "@/components/admin/QRCodeDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -545,7 +544,7 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                         </button>
                                     </TableCell>
                                     <TableCell className="text-slate-400 text-sm">
-                                        {formatDate(link.created_at)}
+                                        {new Date(link.created_at).toLocaleDateString("vi-VN")}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">

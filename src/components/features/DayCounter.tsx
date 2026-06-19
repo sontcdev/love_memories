@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, memo } from "react";
 import { Heart } from "lucide-react";
-import { formatDate, getDateParts } from "@/lib/date-utils";
 
 interface DayCounterProps {
     startDate: Date | string;
@@ -41,17 +40,14 @@ export function DayCounter({ startDate, showSeconds = false, theme = "love" }: D
             const totalSeconds = Math.floor(diffMs / 1000);
 
             // Calculate years, months, days
-            const nowParts = getDateParts(now);
-            const startParts = getDateParts(start);
-            let years = nowParts.year - startParts.year;
-            let months = nowParts.month - startParts.month;
-            let days = nowParts.day - startParts.day;
+            let years = now.getFullYear() - start.getFullYear();
+            let months = now.getMonth() - start.getMonth();
+            let days = now.getDate() - start.getDate();
 
             if (days < 0) {
                 months--;
-                const prevMonthDate = new Date(nowParts.year, nowParts.month - 1, 0);
-                const prevMonthParts = getDateParts(prevMonthDate);
-                days += prevMonthParts.day;
+                const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                days += prevMonth.getDate();
             }
 
             if (months < 0) {
@@ -127,7 +123,7 @@ export function DayCounter({ startDate, showSeconds = false, theme = "love" }: D
 
             {/* Anniversary Date */}
             <p className="mt-6 text-sm text-gray-400">
-                Since {formatDate(start, {
+                Since {start.toLocaleDateString("vi-VN", {
                     year: "numeric",
                     month: "long",
                     day: "numeric"

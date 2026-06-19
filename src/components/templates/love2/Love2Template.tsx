@@ -9,7 +9,6 @@ import { useSwipeable } from "react-swipeable";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
 import { GalleryLightbox } from "@/components/templates/shared/GalleryLightbox";
-import { formatDate } from "@/lib/date-utils";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -362,7 +361,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                                         <div className={`${isDark ? "bg-[#332e28]/50 hover:bg-[#332e28] border-rose-900/20 text-slate-200" : "bg-slate-50/50 hover:bg-slate-50 border-rose-50/50"} border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
                                             <div className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1.5">
                                                 <Calendar className="w-3.5 h-3.5" />
-                                                {formatDate(event.date, {
+                                                {new Date(event.date).toLocaleDateString("vi-VN", {
                                                     year: "numeric",
                                                     month: "long",
                                                     day: "numeric",

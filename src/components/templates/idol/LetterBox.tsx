@@ -29,7 +29,6 @@ import {
     Calendar,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { formatDate, tomorrowMinInput } from "@/lib/date-utils"
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -146,7 +145,13 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
     };
 
     // Helper to format unlock date
-    const formatUnlockDate = (date: Date | string) => formatDate(date, { day: "2-digit", month: "2-digit", year: "numeric" })
+    const formatUnlockDate = (date: Date): string => {
+        return new Date(date).toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+    };
 
     async function handleCreate() {
         if (!newTitle.trim() || !newContent.trim()) return;
@@ -362,7 +367,14 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                             setNewUnlockDate(e.target.value);
                                         }
                                     }}
-min={tomorrowMinInput()}
+                                    min={(() => {
+                                        const tomorrow = new Date();
+                                        tomorrow.setDate(tomorrow.getDate() + 1);
+                                        const year = tomorrow.getFullYear();
+                                        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                                        const day = String(tomorrow.getDate()).padStart(2, '0');
+                                        return `${year}-${month}-${day}`;
+                                    })()}
                                     className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
                                 />
                                 <p className="text-xs text-gray-400 mt-1">
@@ -471,7 +483,7 @@ min={tomorrowMinInput()}
                                         </p>
                                         <div className={`flex items-center gap-4 mt-2 text-xs ${isDark ? "text-slate-500" : "text-gray-400"}`}>
                                             <span>
-                                                {formatDate(letter.created_at)}
+                                                {new Date(letter.created_at).toLocaleDateString("vi-VN")}
                                             </span>
                                             {letter.replies.length > 0 && (
                                                 <span className="flex items-center gap-1">
@@ -577,7 +589,10 @@ min={tomorrowMinInput()}
                                                             <p className={`text-sm pr-10 break-words overflow-hidden ${isDark ? "text-slate-300" : "text-gray-700"}`}>{reply.content}</p>
                                                             <div className="flex items-center justify-between mt-1">
                                                                 <span className="text-xs text-gray-400">
-{formatDate(reply.created_at, { hour: "2-digit", minute: "2-digit" })}
+                                                                    {new Date(reply.created_at).toLocaleDateString("vi-VN", {
+                                                                        hour: "2-digit",
+                                                                        minute: "2-digit",
+                                                                    })}
                                                                 </span>
                                                                 <button
                                                                     onClick={() => setDeleteConfirm({ type: "reply", id: reply.id, letterId: letter.id })}
