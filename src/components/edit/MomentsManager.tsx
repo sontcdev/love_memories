@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Gallery } from "@prisma/client";
+import type { Gallery } from "@prisma/client";
 import { MultiImageUpload } from "@/components/ui/MultiImageUpload";
 import { ShimmerImage } from "@/components/ui/ShimmerImage";
 import {

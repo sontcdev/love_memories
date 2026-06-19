@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Letter, LetterReply } from "@prisma/client";
-import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
+import type { Letter, LetterReply } from "@prisma/client";
+import { VideoInput } from "@/components/media/VideoInput";
+import { VoiceRecorder } from "@/components/media/VoiceRecorder";
+import { VideoPlayer } from "@/components/media/VideoPlayer";
 import {
     createLetter,
     replyToLetter,

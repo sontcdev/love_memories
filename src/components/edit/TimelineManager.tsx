@@ -2,7 +2,7 @@
 
 import { useState, useOptimistic, useTransition } from "react";
 import Image from "next/image";
-import { Timeline } from "@prisma/client";
+import type { Timeline } from "@prisma/client";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import {
     upsertTimelineEvent,

@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
-import { MusicPlayerRef, WelcomeOverlay } from "@/components/music";
+import type { MusicPlayerRef } from "@/components/music/MusicPlayer";
+import { WelcomeOverlay } from "@/components/music/WelcomeOverlay";
 import { getLinkData } from "@/app/actions/auth-actions";
 
 // Dynamically load templates to optimize compilation and bundle size
@@ -27,7 +28,7 @@ const GradClassTemplate = dynamic(() => import("@/components/templates/grad-clas
 const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-group/GradGroupTemplate").then(m => m.GradGroupTemplate), {
     loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
 });
-import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
+import type { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 

@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Star, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic, Trophy, Disc, Sun, Moon } from "lucide-react";
+import type { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
+import { Star, Calendar, Image as ImageIcon, Mail, ChevronUp, Settings, Sparkles, Mic, Trophy, Disc, Sun, Moon } from "lucide-react";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
-import { VideoPlayer } from "@/components/media";
+import { VideoPlayer } from "@/components/media/VideoPlayer";
+import { GalleryLightbox } from "@/components/templates/shared/GalleryLightbox";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -813,59 +814,19 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                     </section>
                 )}
 
-                {/* Gallery Lightbox */}
-                {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
-                        <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-slate-900 text-white border border-purple-500/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
-                            {/* Header */}
-                            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white flex-shrink-0">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">
-                                        {lightboxIndex + 1} / {data.galleries.length}
-                                    </span>
-                                    <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                            {/* Image */}
-                            <div className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
-                                <div className="relative w-full aspect-[4/3] max-h-[55vh]">
-                                    <Image
-                                        src={data.galleries[lightboxIndex].image_url}
-                                        alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                        fill
-                                        className="object-contain"
-                                        priority
-                                    />
-                                </div>
-                            </div>
-                            {/* Caption */}
-                            {data.galleries[lightboxIndex].caption && (
-                                <div className={`px-4 py-2 text-center text-sm ${isDark ? "text-purple-200" : "text-gray-600"}`}>
-                                    {data.galleries[lightboxIndex].caption}
-                                </div>
-                            )}
-                            {/* Navigation */}
-                            <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-purple-500/20" : "border-gray-100"}`}>
-                                <button
-                                    onClick={prevImage}
-                                    className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-purple-950/30 text-purple-400 hover:bg-purple-950/50" : "bg-purple-50 text-purple-500 hover:bg-purple-100"}`}
-                                    aria-label="Ảnh trước"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={nextImage}
-                                    className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-purple-950/30 text-purple-400 hover:bg-purple-950/50" : "bg-purple-50 text-purple-500 hover:bg-purple-100"}`}
-                                    aria-label="Ảnh tiếp theo"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <GalleryLightbox
+                    isOpen={lightboxIndex !== null && !!data.galleries[lightboxIndex]}
+                    currentIndex={lightboxIndex ?? 0}
+                    images={data.galleries}
+                    onClose={closeLightbox}
+                    onPrev={prevImage}
+                    onNext={nextImage}
+                    headerClass="bg-gradient-to-r from-purple-500 to-pink-500"
+                    cardClass={isDark ? "bg-slate-900 text-white border border-purple-500/20" : "bg-white text-gray-800"}
+                    navClass={isDark ? "bg-purple-950/30 text-purple-400 hover:bg-purple-950/50" : "bg-purple-50 text-purple-500 hover:bg-purple-100"}
+                    borderClass={isDark ? "border-purple-500/20" : "border-gray-100"}
+                    captionClass={isDark ? "text-purple-200" : "text-gray-600"}
+                />
 
                 {/* Timeline Section */}
                 {activeSection === "timeline" && (

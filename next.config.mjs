@@ -16,6 +16,11 @@ const nextConfig = {
             },
         ],
     },
+    modularizeImports: {
+        "lucide-react": {
+            transform: "lucide-react/dist/esm/icons/{{ kebabCase member }}",
+        },
+    },
     experimental: {
         serverActions: {
             bodySizeLimit: "10mb",

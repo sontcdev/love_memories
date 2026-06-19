@@ -2,9 +2,11 @@
 
 import { useState, useOptimistic, useTransition } from "react";
 import Image from "next/image";
-import { Timeline } from "@prisma/client";
+import type { Timeline } from "@prisma/client";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
+import { VideoInput } from "@/components/media/VideoInput";
+import { VoiceRecorder } from "@/components/media/VoiceRecorder";
+import { VideoPlayer } from "@/components/media/VideoPlayer";
 import {
     upsertTimelineEvent,
     deleteTimelineEvent,

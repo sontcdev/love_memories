@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter } from "@prisma/client";
+import type { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter } from "@prisma/client";
 import { EditProfileForm } from "@/components/edit/EditProfileForm";
 import { EditConfigForm } from "@/components/edit/EditConfigForm";
 import { EditIdolConfigForm } from "@/components/edit/EditIdolConfigForm";

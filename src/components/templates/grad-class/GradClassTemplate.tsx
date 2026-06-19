@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Users, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Pin, Sun, Moon } from "lucide-react";
+import type { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
+import { Users, Calendar, Image as ImageIcon, Mail, ChevronUp, Settings, Sparkles, X, Pin, Sun, Moon } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
+import { GalleryLightbox } from "@/components/templates/shared/GalleryLightbox";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -533,59 +534,20 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                 </div>
             )}
 
-            {/* Gallery Lightbox */}
-            {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={closeLightbox}>
-                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#0c1c16] text-white border border-emerald-800/30" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-emerald-600 to-emerald-800 p-4 text-white flex-shrink-0">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">
-                                    {lightboxIndex + 1} / {data.galleries.length}
-                                </span>
-                                <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        {/* Image */}
-                        <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
-                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
-                                <Image
-                                    src={data.galleries[lightboxIndex].image_url}
-                                    alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                    fill
-                                    className="object-contain"
-                                    priority
-                                />
-                            </div>
-                        </div>
-                        {/* Caption */}
-                        {data.galleries[lightboxIndex].caption && (
-                            <div className={`px-4 py-2 text-center text-sm ${isDark ? "text-slate-300" : "text-gray-600"}`}>
-                                {data.galleries[lightboxIndex].caption}
-                            </div>
-                        )}
-                        {/* Navigation */}
-                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-emerald-800/30" : "border-gray-100"}`}>
-                            <button
-                                onClick={prevImage}
-                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-emerald-950/30 text-emerald-400 hover:bg-emerald-950/50" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"}`}
-                                aria-label="Ảnh trước"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={nextImage}
-                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-emerald-950/30 text-emerald-400 hover:bg-emerald-950/50" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"}`}
-                                aria-label="Ảnh tiếp theo"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <GalleryLightbox
+                isOpen={lightboxIndex !== null && !!data.galleries[lightboxIndex]}
+                currentIndex={lightboxIndex ?? 0}
+                images={data.galleries}
+                onClose={closeLightbox}
+                onPrev={prevImage}
+                onNext={nextImage}
+                headerClass="bg-gradient-to-r from-emerald-600 to-emerald-800"
+                cardClass={isDark ? "bg-[#0c1c16] text-white border border-emerald-800/30" : "bg-white text-gray-800"}
+                navClass={isDark ? "bg-emerald-950/30 text-emerald-400 hover:bg-emerald-950/50" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"}
+                borderClass={isDark ? "border-emerald-800/30" : "border-gray-100"}
+                captionClass={isDark ? "text-slate-300" : "text-gray-600"}
+                swipeHandlers={swipeHandlers}
+            />
 
             {/* Scroll to Top */}
             {showScrollTop && !isPopupOpen && (

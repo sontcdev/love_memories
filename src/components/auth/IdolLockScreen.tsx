@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { verifyLinkPassword } from "@/app/actions/auth-actions";
 import { Star, Delete, Loader2, Lock, Sparkles, Sun, Moon } from "lucide-react";
-import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
+import type { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 

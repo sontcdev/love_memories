@@ -17,7 +17,7 @@ import {
     Sun,
     Moon
 } from "lucide-react";
-import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
+import type { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 type LinkWithRelations = PrismaLink & {
