@@ -429,14 +429,7 @@ export function IdolLockScreen({ slug, onSuccess, linkData }: IdolLockScreenProp
                 .animate-float {
                     animation: float 3s ease-in-out infinite;
                 }
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(-4px); }
-                    75% { transform: translateX(4px); }
-                }
-                .animate-shake {
-                    animation: shake 0.2s ease-in-out 2;
-                }
+                /* shake + drift moved to globals.css */
                 @keyframes blob {
                     0% { transform: translate(0px, 0px) scale(1); }
                     33% { transform: translate(25px, -35px) scale(1.08); }
@@ -451,25 +444,6 @@ export function IdolLockScreen({ slug, onSuccess, linkData }: IdolLockScreenProp
                 }
                 .animation-delay-4000 {
                     animation-delay: 4s;
-                }
-                @keyframes drift {
-                    0% {
-                        transform: translateY(120px) translateX(0) scale(0.8);
-                        opacity: 0;
-                    }
-                    15% {
-                        opacity: 0.75;
-                    }
-                    85% {
-                        opacity: 0.75;
-                    }
-                    100% {
-                        transform: translateY(-120px) translateX(40px) scale(1.3);
-                        opacity: 0;
-                    }
-                }
-                .animate-drift {
-                    animation: drift 15s infinite linear;
                 }
             `}</style>
         </div>

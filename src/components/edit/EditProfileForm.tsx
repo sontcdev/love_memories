@@ -1,16 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
 import { updateLinkProfile, LoveProfileData, IdolProfileData } from "@/app/actions/profile-actions";
 import { Save, Loader2, Heart, Camera } from "lucide-react";
-import { EditIdolProfileForm } from "./EditIdolProfileForm";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
-import { EditGradProfileForm } from "./EditGradProfileForm";
-import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
+
+// P1.4: Lazy load form components theo LinkType (mỗi form ~600-1000 dòng)
+const EditIdolProfileForm = dynamic(
+    () => import("./EditIdolProfileForm").then(m => m.EditIdolProfileForm),
+    { loading: () => <div className="p-4 text-gray-400">Đang tải...</div> }
+);
+const EditGradProfileForm = dynamic(
+    () => import("./EditGradProfileForm").then(m => m.EditGradProfileForm),
+    { loading: () => <div className="p-4 text-gray-400">Đang tải...</div> }
+);
+const EditGradGroupProfileForm = dynamic(
+    () => import("./EditGradGroupProfileForm").then(m => m.EditGradGroupProfileForm),
+    { loading: () => <div className="p-4 text-gray-400">Đang tải...</div> }
+);
 
 
 // ============================================================================

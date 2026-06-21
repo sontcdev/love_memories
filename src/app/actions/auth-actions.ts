@@ -2,7 +2,44 @@
 
 import { cookies } from "next/headers";
 import { cache } from "react";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
+
+// P-Fix 4: Cross-request cache cho public data với per-slug tag
+// Cache hit khi slug đã được fetch trong vòng 60s → giảm DB query
+const fetchPublicData = async (slug: string) => {
+    return prisma.link.findUnique({
+        where: { slug },
+        select: {
+            id: true,
+            slug: true,
+            type: true,
+            is_active: true,
+            profile_data: true,
+            config: true,
+        },
+    });
+};
+
+const getCachedPublicDataAcrossRequests = async (slug: string) => {
+    return unstable_cache(
+        () => fetchPublicData(slug),
+        [`link-public-${slug}`],
+        {
+            revalidate: 60,
+            tags: [`link-${slug}`],
+        }
+    )();
+};
+
+// Helper: per-request cache (React.cache) chứa cross-request cache
+const getCachedPublicDataBySlug = cache(async (slug: string) => {
+    return getCachedPublicDataAcrossRequests(slug);
+});
+
+export async function revalidateLinkCache(slug: string) {
+    revalidateTag(`link-${slug}`);
+}
 
 export async function verifyLinkPassword(slug: string, pin: string) {
     if (!slug || !pin) {
@@ -109,18 +146,8 @@ const getCachedLinkData = cache(async (slug: string) => {
 });
 
 const getCachedPublicData = cache(async (slug: string) => {
-    const link = await prisma.link.findUnique({
-        where: { slug },
-        select: {
-            id: true,
-            slug: true,
-            type: true,
-            is_active: true,
-            profile_data: true,
-            config: true,
-        },
-    });
-    return link;
+    // P-Fix 4: Use cross-request cache for public data
+    return getCachedPublicDataBySlug(slug);
 });
 
 export async function getLinkPublicData(slug: string) {
@@ -145,18 +172,10 @@ export async function getLinkData(slug: string) {
             return { success: false, error: "Unauthorized" };
         }
 
-        const link = await prisma.link.findUnique({
-            where: { slug },
-            select: { id: true, is_active: true },
-        });
-
-        if (!link || link.id !== sessionToken || !link.is_active) {
-            return { success: false, error: "Unauthorized" };
-        }
-
+        // P0.3: Single query - getCachedLinkData includes id + is_active
         const fullLink = await getCachedLinkData(slug);
-        if (!fullLink) {
-            return { success: false, error: "Link not found" };
+        if (!fullLink || fullLink.id !== sessionToken || !fullLink.is_active) {
+            return { success: false, error: "Unauthorized" };
         }
 
         return { success: true, data: fullLink };

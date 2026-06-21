@@ -354,6 +354,8 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                             alt={idolName}
                                             width={128}
                                             height={128}
+                                            sizes="(max-width: 640px) 112px, 128px"
+                                            priority
                                             className="w-full h-full rounded-full object-cover"
                                         />
                                     ) : (
@@ -378,6 +380,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                                 alt={fanName}
                                                 width={48}
                                                 height={48}
+                                                sizes="48px"
                                                 className="w-full h-full rounded-full object-cover"
                                             />
                                         ) : (
@@ -798,6 +801,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                                     src={item.image_url}
                                                     alt={item.caption || "Memory"}
                                                     fill
+                                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                                     className="object-cover transition-transform duration-300 animate-fadeIn"
                                                 />
                                             </div>
@@ -921,6 +925,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                                                             alt={event.title}
                                                                             width={160}
                                                                             height={160}
+                                                                            sizes="(max-width: 640px) 144px, 160px"
                                                                             className="w-full h-full object-cover"
                                                                         />
                                                                     </div>

@@ -270,7 +270,7 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                 isDark ? "bg-[#162a22] border-white/15" : "bg-slate-100 border-slate-200"
                             }`}>
                                 {teacherAvatar ? (
-                                    <Image src={teacherAvatar} alt={teacherName} width={112} height={112} className="w-full h-full object-cover rounded-xl" />
+                                    <Image src={teacherAvatar} alt={teacherName} width={112} height={112} sizes="(max-width: 768px) 112px, 112px" priority className="w-full h-full object-cover rounded-xl" />
                                 ) : (
                                     <div className="w-full h-full rounded-xl bg-slate-900 flex items-center justify-center text-3xl font-bold">👩‍🏫</div>
                                 )}

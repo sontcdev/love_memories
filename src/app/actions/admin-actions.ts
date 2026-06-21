@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { generateSlug, generatePin } from "@/lib/utils";
 import { LinkType } from "@prisma/client";
+import { revalidateLinkCache } from "./auth-actions";
 
 // ============================================================================
 // ADMIN AUTHENTICATION
@@ -179,7 +180,7 @@ export async function deleteLink(linkId: string) {
     try {
         const link = await prisma.link.findUnique({
             where: { id: linkId },
-            select: { user_id: true },
+            select: { user_id: true, slug: true },
         });
 
         if (!link) {
@@ -190,6 +191,9 @@ export async function deleteLink(linkId: string) {
         await prisma.user.delete({
             where: { id: link.user_id },
         });
+
+        // P-Fix 4: Invalidate public data cache
+        await revalidateLinkCache(link.slug);
 
         return { success: true };
     } catch (error) {
@@ -212,6 +216,9 @@ export async function toggleLinkStatus(linkId: string) {
             where: { id: linkId },
             data: { is_active: !link.is_active },
         });
+
+        // P-Fix 4: Invalidate public data cache khi link thay đổi
+        await revalidateLinkCache(updatedLink.slug);
 
         return { success: true, data: updatedLink };
     } catch (error) {
@@ -248,6 +255,9 @@ export async function resetLinkPin(linkId: string, customPin?: string) {
             where: { id: link.user_id },
             data: { password_hash: newPin },
         });
+
+        // P-Fix 4: Invalidate public data cache
+        await revalidateLinkCache(link.slug);
 
         return {
             success: true,

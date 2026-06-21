@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { getLinkData, getLinkPublicData } from "@/app/actions/auth-actions";
 import { SlugPageClient } from "./page-client";
+import { PageSkeleton } from "./page-skeleton";
 
 export const dynamic = "force-dynamic";
 
@@ -11,69 +13,41 @@ interface PageProps {
 
 const escapeJs = (s: string) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/<\//g, '<\\/');
 
+const InactivePage = () => (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center px-4">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Trang không khả dụng</h1>
+            <p className="text-gray-500">Trang kỷ niệm này hiện không khả dụng.</p>
+        </div>
+    </div>
+);
+
 export default async function SlugPage({ params }: PageProps) {
     const { slug } = await params;
 
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get(`session_${slug}`)?.value;
-    const isAuthenticated = !!sessionToken;
+    const hasSession = !!sessionToken;
 
-    if (isAuthenticated) {
-        const linkResult = await getLinkData(slug);
-        if (!linkResult.success || !linkResult.data) {
-            notFound();
-        }
-        if (!linkResult.data.is_active) {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div className="text-center px-4">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Trang không khả dụng</h1>
-                        <p className="text-gray-500">Trang kỷ niệm này hiện không khả dụng.</p>
-                    </div>
-                </div>
-            );
-        }
-        const bgColor = linkResult.data.config?.background_color || '#ffffff';
-        const accentColor = linkResult.data.config?.accent_color || '#ec4899';
-        const textColor = linkResult.data.config?.text_color || '#1f2937';
-        return (
-            <>
-                <script
-                    dangerouslySetInnerHTML={{
-                        __html: `
-                            document.documentElement.style.setProperty('--theme-bg', '${escapeJs(bgColor)}');
-                            document.documentElement.style.setProperty('--theme-accent', '${escapeJs(accentColor)}');
-                            document.documentElement.style.setProperty('--theme-text', '${escapeJs(textColor)}');
-                        `,
-                    }}
-                />
-                <SlugPageClient
-                    slug={slug}
-                    isAuthenticated={true}
-                    linkData={linkResult.data}
-                />
-            </>
-        );
-    }
+    // P-Fix 5: For authenticated users, fetch full data directly (saves 1 query)
+    // For unauthenticated, fetch public data only (cached across requests)
+    const isAuth = hasSession;
+    const result = isAuth
+        ? await getLinkData(slug)
+        : await getLinkPublicData(slug);
 
-    const publicResult = await getLinkPublicData(slug);
-    if (!publicResult.success || !publicResult.data) {
+    if (!result.success || !result.data) {
         notFound();
     }
-    if (!publicResult.data.is_active) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center px-4">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Trang không khả dụng</h1>
-                    <p className="text-gray-500">Trang kỷ niệm này hiện không khả dụng.</p>
-                </div>
-            </div>
-        );
+
+    if (!result.data.is_active) {
+        return <InactivePage />;
     }
 
-    const bgColor = publicResult.data.config?.background_color || '#ffffff';
-    const accentColor = publicResult.data.config?.accent_color || '#ec4899';
-    const textColor = publicResult.data.config?.text_color || '#1f2937';
+    const config = result.data.config;
+    const bgColor = config?.background_color || '#ffffff';
+    const accentColor = config?.accent_color || '#ec4899';
+    const textColor = config?.text_color || '#1f2937';
 
     return (
         <>
@@ -86,12 +60,27 @@ export default async function SlugPage({ params }: PageProps) {
                     `,
                 }}
             />
-            <SlugPageClient
-                slug={slug}
-                isAuthenticated={false}
-                linkData={null}
-                publicData={publicResult.data}
-            />
+            <Suspense
+                key={`${slug}-${isAuth}`}
+                fallback={
+                    <PageSkeleton themeConfig={config} type={result.data.type} />
+                }
+            >
+                {isAuth ? (
+                    <SlugPageClient
+                        slug={slug}
+                        isAuthenticated={true}
+                        linkData={result.data as Parameters<typeof SlugPageClient>[0]["linkData"]}
+                    />
+                ) : (
+                    <SlugPageClient
+                        slug={slug}
+                        isAuthenticated={false}
+                        linkData={null}
+                        publicData={result.data as Parameters<typeof SlugPageClient>[0]["publicData"]}
+                    />
+                )}
+            </Suspense>
         </>
     );
 }

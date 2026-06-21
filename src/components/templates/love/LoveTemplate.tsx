@@ -130,6 +130,8 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                         alt={boyName}
                                         width={96}
                                         height={96}
+                                        sizes="(max-width: 640px) 80px, 96px"
+                                        priority
                                         className="w-full h-full rounded-full object-cover"
                                     />
                                 ) : (
@@ -251,6 +253,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                             alt={item.caption || "Memory"}
                                             width={400}
                                             height={400}
+                                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                             className="relative z-10 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                             onLoad={(e) => {
                                                 const parent = e.currentTarget.parentElement;
@@ -294,6 +297,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                         src={data.galleries[lightboxIndex].image_url}
                                         alt={data.galleries[lightboxIndex].caption || "Photo"}
                                         fill
+                                        sizes="100vw"
                                         className="object-contain"
                                         priority
                                     />
@@ -375,6 +379,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                                                 alt={event.title}
                                                                 width={800}
                                                                 height={600}
+                                                                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 800px"
                                                                 className="w-full object-cover"
                                                             />
                                                         </div>

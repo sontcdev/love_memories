@@ -586,33 +586,7 @@ export function LockScreen({ slug, onSuccess, linkData }: LockScreenProps) {
 
             {/* Embedded styles for animations */}
             <style jsx>{`
-                @keyframes drift {
-                    0% {
-                        transform: translateY(120px) translateX(0) scale(0.8);
-                        opacity: 0;
-                    }
-                    15% {
-                        opacity: 0.75;
-                    }
-                    85% {
-                        opacity: 0.75;
-                    }
-                    100% {
-                        transform: translateY(-120px) translateX(40px) scale(1.3);
-                        opacity: 0;
-                    }
-                }
-                .animate-drift {
-                    animation: drift 14s infinite linear;
-                }
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(-4px); }
-                    75% { transform: translateX(4px); }
-                }
-                .animate-shake {
-                    animation: shake 0.2s ease-in-out 2;
-                }
+                /* drift + shake moved to globals.css */
                 .animate-pulse-slow {
                     animation: pulseSlow 3s ease-in-out infinite;
                 }

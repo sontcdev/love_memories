@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 
 import { Link, LinkType } from "@prisma/client";
 import {
@@ -9,7 +10,11 @@ import {
     toggleLinkStatus,
     resetLinkPin,
 } from "@/app/actions/admin-actions";
-import { QRCodeDialog } from "@/components/admin/QRCodeDialog";
+// P-Fix 3: Lazy load QRCodeDialog (~34KB html-to-image) chỉ khi user mở dialog
+const QRCodeDialog = dynamic(
+    () => import("@/components/admin/QRCodeDialog").then((m) => m.QRCodeDialog),
+    { ssr: false }
+);
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

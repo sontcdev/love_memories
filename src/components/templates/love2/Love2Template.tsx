@@ -207,7 +207,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                         <div className="flex flex-col items-center">
                             <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-1 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[-3deg] hover:rotate-0 transition-transform duration-300`}>
                                 {boyAvatar ? (
-                                    <Image src={boyAvatar} alt={boyName} width={96} height={96} className="w-full h-full object-cover rounded-xl" />
+                                    <Image src={boyAvatar} alt={boyName} width={96} height={96} sizes="(max-width: 640px) 80px, 96px" priority className="w-full h-full object-cover rounded-xl" />
                                 ) : (
                                     <div className="w-full h-full bg-rose-50 flex items-center justify-center text-2xl font-bold text-rose-300">👦</div>
                                 )}
@@ -224,7 +224,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                         <div className="flex flex-col items-center">
                             <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-1 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[3deg] hover:rotate-0 transition-transform duration-300`}>
                                 {girlAvatar ? (
-                                    <Image src={girlAvatar} alt={girlName} width={96} height={96} className="w-full h-full object-cover rounded-xl" />
+                                    <Image src={girlAvatar} alt={girlName} width={96} height={96} sizes="(max-width: 640px) 80px, 96px" className="w-full h-full object-cover rounded-xl" />
                                 ) : (
                                     <div className="w-full h-full bg-rose-50 flex items-center justify-center text-2xl font-bold text-rose-300">👧</div>
                                 )}
@@ -319,6 +319,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                                                     src={item.image_url}
                                                     alt={item.caption || "Love Memory"}
                                                     fill
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                                     className="object-cover"
                                                 />
                                             </div>

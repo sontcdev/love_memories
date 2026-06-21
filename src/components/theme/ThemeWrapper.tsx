@@ -139,17 +139,17 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
 
     const [isDark, setIsDark] = useState(false);
 
-    // Initial check from localStorage on mount
+    // P1.2: Gộp init + listener vào 1 effect duy nhất, bỏ MutationObserver
     useEffect(() => {
-        if (!slug) return;
-        const saved = localStorage.getItem(`theme_mode_${slug}`);
-        if (saved) {
-            setIsDark(saved === "dark");
+        // 1. Init from localStorage
+        if (slug) {
+            const saved = localStorage.getItem(`theme_mode_${slug}`);
+            if (saved === "dark") {
+                setIsDark(true);
+            }
         }
-    }, [slug]);
 
-    // Listen to theme changes from event dispatcher
-    useEffect(() => {
+        // 2. Listen to theme-change event
         const handleThemeChange = (e: Event) => {
             const customEvent = e as CustomEvent;
             if (customEvent.detail && typeof customEvent.detail.isDark === "boolean") {
@@ -157,32 +157,11 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
             }
         };
         window.addEventListener("theme-change", handleThemeChange);
-        return () => window.removeEventListener("theme-change", handleThemeChange);
-    }, []);
 
-    // Fallback: MutationObserver to detect dark class toggled on DOM children
-    useEffect(() => {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === "attributes" && mutation.attributeName === "class") {
-                    const target = mutation.target as HTMLElement;
-                    if (target.classList.contains("dark")) {
-                        setIsDark(true);
-                    } else if (target.tagName === "DIV" && target.parentElement === document.body) {
-                        // Check other siblings if they lost it
-                        setIsDark(false);
-                    }
-                }
-            });
-        });
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ["class"]
-        });
-
-        return () => observer.disconnect();
-    }, []);
+        return () => {
+            window.removeEventListener("theme-change", handleThemeChange);
+        };
+    }, [slug]);
 
     // Get dark mode background color matching templates
     const getDarkBgColor = () => {

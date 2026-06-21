@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
-import type { MusicPlayerRef } from "@/components/music/MusicPlayer";
-import { WelcomeOverlay } from "@/components/music/WelcomeOverlay";
 import { getLinkData } from "@/app/actions/auth-actions";
 
-// Dynamically load templates to optimize compilation and bundle size
+// Dynamic import templates to optimize compilation and bundle size
 const LoveTemplate = dynamic(() => import("@/components/templates/love/LoveTemplate").then(m => m.LoveTemplate), {
     loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
 });
@@ -28,6 +26,16 @@ const GradClassTemplate = dynamic(() => import("@/components/templates/grad-clas
 const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-group/GradGroupTemplate").then(m => m.GradGroupTemplate), {
     loading: () => <div className="min-h-screen flex items-center justify-center text-slate-400">Đang tải giao diện...</div>
 });
+
+// P0.2: Lazy load WelcomeOverlay (848 dòng) chỉ sau khi linkData sẵn sàng
+const WelcomeOverlay = dynamic(
+    () => import("@/components/music/WelcomeOverlay").then(m => m.WelcomeOverlay),
+    {
+        ssr: false,
+        loading: () => null,
+    }
+);
+
 import type { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -59,7 +67,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
     const [authenticated, setAuthenticated] = useState(isAuthenticated);
     const [linkData, setLinkData] = useState<LinkWithRelations | null>(initialLinkData);
     const [isLoadingData, setIsLoadingData] = useState(false);
-    const musicPlayerRef = useRef<MusicPlayerRef>(null);
+    const [showWelcome, setShowWelcome] = useState(false);
 
     const handleUnlock = useCallback(async () => {
         setIsLoadingData(true);
@@ -77,11 +85,12 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
         setIsLoadingData(false);
     }, [slug]);
 
-    const handleWelcomeOpen = useCallback(() => {
-        if (linkData?.config?.auto_play) {
-            musicPlayerRef.current?.play();
+    // P0.2: Defer WelcomeOverlay cho đến khi linkData sẵn sàng (phải đặt trước early returns)
+    useEffect(() => {
+        if (linkData) {
+            setShowWelcome(true);
         }
-    }, [linkData?.config?.auto_play]);
+    }, [linkData]);
 
     const lockScreenData = linkData || (publicData ? {
         ...publicData,
@@ -179,24 +188,17 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
     return (
         <ThemeWrapper config={linkData.config} type={linkData.type}>
             <>
-                <WelcomeOverlay
-                    title={getWelcomeTitle()}
-                    buttonText="Enter ✨"
-                    type={linkData.type}
-                    profileData={linkData.profile_data as Record<string, unknown> | null}
-                    onOpen={handleWelcomeOpen}
-                />
+                {showWelcome && (
+                    <WelcomeOverlay
+                        title={getWelcomeTitle()}
+                        buttonText="Enter ✨"
+                        type={linkData.type}
+                        profileData={linkData.profile_data as Record<string, unknown> | null}
+                        onOpen={() => setShowWelcome(false)}
+                    />
+                )}
 
                 {renderTemplate()}
-
-                {/* Music Player - temporarily disabled (YouTube/TikTok playback issue) */}
-                {/* {linkData.config?.music_url && (
-                    <MusicPlayer
-                        ref={musicPlayerRef}
-                        src={linkData.config.music_url}
-                        autoPlay={linkData.config.auto_play ?? false}
-                    />
-                )} */}
             </>
         </ThemeWrapper>
     );

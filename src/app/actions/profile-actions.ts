@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { revalidateLinkCache } from "./auth-actions";
 
 // ============================================================================
 // PROFILE DATA TYPES
@@ -181,6 +182,8 @@ export async function updateLinkProfile(
 
         revalidatePath(`/${slug}`);
         revalidatePath(`/${slug}/edit`);
+        // P-Fix 4: Invalidate public data cache khi profile thay đổi
+        await revalidateLinkCache(slug);
 
         return { success: true };
     } catch (error) {
@@ -250,6 +253,8 @@ export async function updateLinkConfig(
 
         revalidatePath(`/${slug}`);
         revalidatePath(`/${slug}/edit`);
+        // P-Fix 4: Invalidate public data cache khi config thay đổi
+        await revalidateLinkCache(slug);
 
         return { success: true };
     } catch (error) {

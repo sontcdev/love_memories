@@ -372,6 +372,8 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                     src={studentAvatar}
                                     alt={studentName}
                                     fill
+                                    sizes="(max-width: 640px) 112px, 128px"
+                                    priority
                                     className="object-cover"
                                 />
                             ) : (
@@ -482,6 +484,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                                     src={item.image_url}
                                                     alt={item.caption || "Kỷ niệm"}
                                                     fill
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                                                 />
                                                 {item.caption && (
@@ -537,6 +540,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                                                                 src={event.image_url}
                                                                 alt={event.title}
                                                                 fill
+                                                                sizes="(max-width: 768px) 100vw, 50vw"
                                                                 className="object-cover"
                                                             />
                                                         </div>

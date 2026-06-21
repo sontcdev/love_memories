@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminSession, getLinks } from "@/app/actions/admin-actions";
-import { LinksTable } from "./links-table";
+import { LinksTableClient } from "./links-table-client";
 
 export default async function LinksPage() {
     const session = await getAdminSession();
@@ -63,7 +63,7 @@ export default async function LinksPage() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <LinksTable initialLinks={links || []} />
+                <LinksTableClient initialLinks={links || []} />
             </main>
         </div>
     );

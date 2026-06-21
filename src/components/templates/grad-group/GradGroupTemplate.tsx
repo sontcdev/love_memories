@@ -336,7 +336,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                     >
                         <div className="w-14 h-14 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100">
                             {a.avatar ? (
-                                <Image src={a.avatar} alt={a.name} width={56} height={56} className="object-cover w-full h-full" />
+                                <Image src={a.avatar} alt={a.name} width={56} height={56} sizes="56px" className="object-cover w-full h-full" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-xl bg-amber-100">🧑‍🤝‍🧑</div>
                             )}
@@ -440,6 +440,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                     src={groupAvatar}
                                     alt={groupName}
                                     fill
+                                    sizes="(max-width: 640px) 192px, 256px"
                                     className="object-cover"
                                     priority
                                 />
@@ -658,6 +659,7 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                                     src={item.image_url}
                                                     alt={item.caption || "Photo"}
                                                     fill
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                                                 />
                                                 {item.caption && (
