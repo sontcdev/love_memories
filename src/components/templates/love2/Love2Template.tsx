@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Sun, Moon } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
-import { GameSection } from "@/components/shared/CardDrawGame";
+import { CardDrawGame } from "@/components/shared/CardDrawGame";
 import { LetterBox } from "@/components/shared/LetterBox";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -408,7 +408,7 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                         <h2 className={`text-2xl font-serif font-bold ${isDark ? "text-slate-100" : "text-gray-800"} text-center mb-6 flex items-center justify-center gap-2`}>
                             <span className="text-xl">🎲</span> Thử Thách Tình Yêu
                         </h2>
-                        <GameSection theme="love" isDark={isDark} />
+                        <CardDrawGame theme="love" isDark={isDark} />
                     </section>
                 )}
             </main>

@@ -105,7 +105,102 @@ export interface GradClassProfileData {
     title?: string;
 }
 
-export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData;
+export interface WeddingProfileData {
+    bride_name?: string;
+    groom_name?: string;
+    wedding_date?: string;
+    venue?: string;
+    ceremony_time?: string;
+    reception_time?: string;
+    bride_avatar?: string;
+    groom_avatar?: string;
+    title?: string;
+    short_note?: string;
+    love_story?: string;
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    quiz_badges?: {
+        perfect_title?: string;
+        perfect_desc?: string;
+        good_title?: string;
+        good_desc?: string;
+        average_title?: string;
+        average_desc?: string;
+        low_title?: string;
+        low_desc?: string;
+    };
+}
+
+export interface TravelProfileData {
+    trip_name?: string;
+    start_date?: string;
+    end_date?: string;
+    owner_name?: string;
+    destinations?: string;
+    travelers?: string;
+    title?: string;
+    short_note?: string;
+    owner_avatar?: string;
+    trip_stats?: {
+        days?: number;
+        countries?: number;
+        cities?: number;
+        photos?: number;
+        memories?: number;
+    };
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+}
+
+export interface FriendshipMember {
+    id: string;
+    name: string;
+    nickname?: string;
+    avatar?: string;
+    quote?: string;
+}
+
+export interface FriendshipFunFact {
+    id: string;
+    emoji: string;
+    label: string;
+    value: string;
+}
+
+export interface FriendshipProfileData {
+    group_name?: string;
+    owner_name?: string;
+    since_date?: string;
+    motto?: string;
+    title?: string;
+    short_note?: string;
+    owner_avatar?: string;
+    members?: FriendshipMember[];
+    fun_facts?: FriendshipFunFact[];
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    quiz_badges?: {
+        perfect_title?: string;
+        perfect_desc?: string;
+        good_title?: string;
+        good_desc?: string;
+        average_title?: string;
+        average_desc?: string;
+        low_title?: string;
+        low_desc?: string;
+    };
+}
+
+export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData | WeddingProfileData | TravelProfileData | FriendshipProfileData;
 
 export interface LinkConfigData {
     background_color?: string;

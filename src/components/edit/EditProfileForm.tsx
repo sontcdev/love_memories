@@ -5,11 +5,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
-import { updateLinkProfile, LoveProfileData, IdolProfileData } from "@/app/actions/profile-actions";
+import { updateLinkProfile, LoveProfileData, IdolProfileData, WeddingProfileData, TravelProfileData, FriendshipProfileData } from "@/app/actions/profile-actions";
 import { Save, Loader2, Heart, Camera } from "lucide-react";
 import { EditIdolProfileForm } from "./EditIdolProfileForm";
 import { EditGradProfileForm } from "./EditGradProfileForm";
 import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
+import { EditWeddingProfileForm } from "./EditWeddingProfileForm";
+import { EditTravelProfileForm } from "./EditTravelProfileForm";
+import { EditFriendshipProfileForm } from "./EditFriendshipProfileForm";
 
 
 // ============================================================================
@@ -92,6 +95,48 @@ export function EditProfileForm({ slug, linkType, initialData, isDark = false, o
                 slug={slug}
                 initialData={initialData}
                 isDark={isDark}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "WEDDING") {
+        return (
+            <EditWeddingProfileForm
+                slug={slug}
+                initialData={initialData as WeddingProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                message={message}
+                setMessage={setMessage}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "TRAVEL") {
+        return (
+            <EditTravelProfileForm
+                slug={slug}
+                initialData={initialData as TravelProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                message={message}
+                setMessage={setMessage}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "FRIENDSHIP") {
+        return (
+            <EditFriendshipProfileForm
+                slug={slug}
+                initialData={initialData as FriendshipProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                message={message}
+                setMessage={setMessage}
                 onSuccess={onSuccess}
             />
         );

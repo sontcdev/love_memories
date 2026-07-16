@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Users, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Pin, Sun, Moon } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
-import { GameSection } from "@/components/shared/CardDrawGame";
+import { CardDrawGame } from "@/components/shared/CardDrawGame";
 import { LetterBox } from "@/components/shared/LetterBox";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -458,7 +458,7 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                         <h2 className={`text-2xl font-serif font-bold text-center mb-6 flex items-center justify-center gap-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
                             <span className="text-xl">🎲</span> Thử Thách Lớp Học
                         </h2>
-                        <GameSection theme="every" isDark={isDark} />
+                        <CardDrawGame theme="every" isDark={isDark} />
                     </section>
                 )}
 

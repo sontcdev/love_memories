@@ -11,6 +11,9 @@ import { IdolTemplate } from "@/components/templates/idol/IdolTemplate";
 import { GradPersonalTemplate } from "@/components/templates/grad-personal/GradPersonalTemplate";
 import { GradClassTemplate } from "@/components/templates/grad-class/GradClassTemplate";
 import { GradGroupTemplate } from "@/components/templates/grad-group/GradGroupTemplate";
+import { WeddingTemplate } from "@/components/templates/wedding/WeddingTemplate";
+import { TravelTemplate } from "@/components/templates/travel/TravelTemplate";
+import { FriendshipTemplate } from "@/components/templates/friendship/FriendshipTemplate";
 import { getLinkData } from "@/app/actions/auth-actions";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
@@ -134,6 +137,14 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return profileData?.class_name || "Our Class";
             case "GRAD_GROUP":
                 return profileData?.group_name || "Our Group";
+            case "WEDDING":
+                const brideName = profileData?.bride_name || "Bride";
+                const groomName = profileData?.groom_name || "Groom";
+                return `${groomName} & ${brideName}`;
+            case "TRAVEL":
+                return profileData?.trip_name || "Our Journey";
+            case "FRIENDSHIP":
+                return profileData?.group_name || "Best Friends";
             default:
                 return "Welcome";
         }
@@ -153,6 +164,12 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return <GradClassTemplate data={linkData} slug={slug} />;
             case "GRAD_GROUP":
                 return <GradGroupTemplate data={linkData} slug={slug} />;
+            case "WEDDING":
+                return <WeddingTemplate data={linkData} slug={slug} />;
+            case "TRAVEL":
+                return <TravelTemplate data={linkData} slug={slug} />;
+            case "FRIENDSHIP":
+                return <FriendshipTemplate data={linkData} slug={slug} />;
             case "EVERY":
                 return <LoveTemplate data={linkData} slug={slug} />;
             default:

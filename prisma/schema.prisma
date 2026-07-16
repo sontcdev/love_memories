@@ -23,6 +23,9 @@ enum LinkType {
   GRAD_PERSONAL
   GRAD_CLASS
   GRAD_GROUP
+  WEDDING
+  TRAVEL
+  FRIENDSHIP
 }
 
 enum GameLevel {

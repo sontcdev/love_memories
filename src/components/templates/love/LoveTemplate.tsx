@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
-import { GameSection } from "@/components/shared/CardDrawGame";
+import { CardDrawGame } from "@/components/shared/CardDrawGame";
 import { LetterBox } from "@/components/shared/LetterBox";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -399,7 +399,7 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                 {/* Game Section */}
                 {activeSection === "game" && (
                     <section className="max-w-4xl mx-auto px-4 py-12">
-                        <GameSection theme="love" />
+                        <CardDrawGame theme="love" />
                     </section>
                 )}
 

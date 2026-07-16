@@ -5,7 +5,7 @@ import { drawCard, DrawnCard } from "@/app/actions/game-actions";
 import { Sparkles, Heart, Flame, Star, RotateCcw, Loader2, RefreshCw } from "lucide-react";
 
 interface CardDrawGameProps {
-    theme?: "love" | "every" | "idol";
+    theme?: "love" | "every" | "idol" | "wedding" | "travel" | "friendship";
     isDark?: boolean;
 }
 
@@ -40,6 +40,27 @@ export function CardDrawGame({ theme = "love", isDark = false }: CardDrawGamePro
             hard: "from-red-500 to-orange-600",
             card: "from-amber-400 via-orange-500 to-red-500",
             bg: "bg-gradient-to-br from-amber-50 to-orange-50",
+        },
+        wedding: {
+            easy: "from-green-400 to-emerald-500",
+            medium: "from-amber-300 to-yellow-400",
+            hard: "from-rose-400 to-pink-500",
+            card: "from-amber-200 via-yellow-300 to-rose-300",
+            bg: "bg-gradient-to-br from-amber-50 to-rose-50",
+        },
+        travel: {
+            easy: "from-green-400 to-emerald-500",
+            medium: "from-teal-400 to-cyan-500",
+            hard: "from-orange-400 to-red-500",
+            card: "from-teal-400 via-cyan-500 to-orange-400",
+            bg: "bg-gradient-to-br from-teal-50 to-orange-50",
+        },
+        friendship: {
+            easy: "from-green-400 to-emerald-500",
+            medium: "from-purple-400 to-violet-500",
+            hard: "from-pink-400 to-rose-500",
+            card: "from-purple-400 via-pink-400 to-cyan-400",
+            bg: "bg-gradient-to-br from-purple-50 to-cyan-50",
         },
     };
 
@@ -107,7 +128,7 @@ export function CardDrawGame({ theme = "love", isDark = false }: CardDrawGamePro
                 <div className="inline-flex items-center gap-2 mb-2">
                     <Sparkles className="w-6 h-6 text-amber-400" />
                     <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
-                        {theme === "idol" ? "Thử Thách Fandom" : "Thử Thách Tình Yêu"}
+                        {theme === "idol" ? "Thử Thách Fandom" : theme === "wedding" ? "Thử Thách Cặp Đôi" : theme === "travel" ? "Thử Thách Phiêu Lưu" : theme === "friendship" ? "Thử Thách Tình Bạn" : "Thử Thách Tình Yêu"}
                     </h2>
                     <Sparkles className="w-6 h-6 text-amber-400" />
                 </div>

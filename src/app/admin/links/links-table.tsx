@@ -52,6 +52,9 @@ import {
     KeyRound,
     Shuffle,
     GraduationCap,
+    Gem,
+    MapPin,
+    Smile,
 } from "lucide-react";
 
 type LinkWithUser = Link & {
@@ -103,6 +106,12 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                 return <Users className="w-4 h-4 text-cyan-400" />;
             case "GRAD_GROUP":
                 return <Users className="w-4 h-4 text-orange-400" />;
+            case "WEDDING":
+                return <Gem className="w-4 h-4 text-amber-400" />;
+            case "TRAVEL":
+                return <MapPin className="w-4 h-4 text-teal-400" />;
+            case "FRIENDSHIP":
+                return <Smile className="w-4 h-4 text-purple-400" />;
         }
     };
 
@@ -122,6 +131,12 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                 return "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
             case "GRAD_GROUP":
                 return "bg-orange-500/10 text-orange-400 border-orange-500/30";
+            case "WEDDING":
+                return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+            case "TRAVEL":
+                return "bg-teal-500/10 text-teal-400 border-teal-500/30";
+            case "FRIENDSHIP":
+                return "bg-purple-500/10 text-purple-400 border-purple-500/30";
         }
     };
 
@@ -426,12 +441,30 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                                                             Tốt nghiệp tập thể
                                                         </div>
                                                     </SelectItem>
-                                                    <SelectItem value="GRAD_GROUP" className="text-white focus:bg-slate-700 focus:text-white">
-                                                        <div className="flex items-center gap-2">
-                                                            <Users className="w-4 h-4 text-orange-400" />
-                                                            Tốt nghiệp nhóm bạn
-                                                        </div>
-                                                    </SelectItem>
+                                                     <SelectItem value="GRAD_GROUP" className="text-white focus:bg-slate-700 focus:text-white">
+                                                         <div className="flex items-center gap-2">
+                                                             <Users className="w-4 h-4 text-orange-400" />
+                                                             Tốt nghiệp nhóm bạn
+                                                         </div>
+                                                     </SelectItem>
+                                                     <SelectItem value="WEDDING" className="text-white focus:bg-slate-700 focus:text-white">
+                                                         <div className="flex items-center gap-2">
+                                                             <Gem className="w-4 h-4 text-amber-400" />
+                                                             Đám cưới
+                                                         </div>
+                                                     </SelectItem>
+                                                     <SelectItem value="TRAVEL" className="text-white focus:bg-slate-700 focus:text-white">
+                                                         <div className="flex items-center gap-2">
+                                                             <MapPin className="w-4 h-4 text-teal-400" />
+                                                             Du lịch
+                                                         </div>
+                                                     </SelectItem>
+                                                     <SelectItem value="FRIENDSHIP" className="text-white focus:bg-slate-700 focus:text-white">
+                                                         <div className="flex items-center gap-2">
+                                                             <Smile className="w-4 h-4 text-purple-400" />
+                                                             Tình bạn
+                                                         </div>
+                                                     </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

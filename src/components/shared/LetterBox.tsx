@@ -33,7 +33,7 @@ type LetterWithReplies = Letter & { replies: LetterReply[] };
 interface LetterBoxProps {
     slug: string;
     initialLetters: LetterWithReplies[];
-    theme?: "love" | "every" | "idol";
+    theme?: "love" | "every" | "idol" | "wedding" | "travel" | "friendship";
     isDark?: boolean;
     onPopupOpenChange?: (isOpen: boolean) => void;
 }
@@ -105,6 +105,27 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
             bg: "bg-amber-50",
             border: "border-amber-200",
             text: "text-amber-600",
+        },
+        wedding: {
+            primary: "from-amber-300 to-yellow-400",
+            secondary: "amber",
+            bg: "bg-amber-50",
+            border: "border-amber-200",
+            text: "text-amber-600",
+        },
+        travel: {
+            primary: "from-teal-400 to-cyan-500",
+            secondary: "teal",
+            bg: "bg-teal-50",
+            border: "border-teal-200",
+            text: "text-teal-600",
+        },
+        friendship: {
+            primary: "from-purple-400 to-violet-500",
+            secondary: "purple",
+            bg: "bg-purple-50",
+            border: "border-purple-200",
+            text: "text-purple-600",
         },
     };
 
@@ -216,7 +237,9 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Mail className={`w-6 h-6 ${colors.text}`} />
-                    <h2 className={`text-xl font-bold ${isDark ? "text-slate-100" : "text-gray-800"}`}>Thư Tình</h2>
+                    <h2 className={`text-xl font-bold ${isDark ? "text-slate-100" : "text-gray-800"}`}>
+                        {theme === "wedding" ? "Sổ Lưu Bút" : theme === "travel" ? "Postcards" : theme === "friendship" ? "Lời Nhắn" : "Thư Tình"}
+                    </h2>
                     <span className={`text-sm ${isDark ? "text-slate-400" : "text-gray-400"}`}>({letters.length})</span>
                 </div>
                 <button
