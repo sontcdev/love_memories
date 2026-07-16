@@ -2,18 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-// Initialize Supabase admin client (server-side, bypasses RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-// Service role key is REQUIRED for server-side storage uploads to bypass RLS.
-// Get it from: Supabase Dashboard → Project Settings → API → service_role key
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabaseBucket = "memories"; // Matches STORAGE_BUCKET in src/lib/supabase.ts
+const supabaseBucket = "memories";
 
-// Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-// Route segment config - replaces deprecated export const config
+const ALLOWED_MIME_TYPES = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "audio/mpeg",
+    "audio/wav",
+    "audio/mp3",
+    "audio/ogg",
+    "audio/webm",
+]);
+
+const ALLOWED_EXTENSIONS = new Set([
+    "jpg", "jpeg", "png", "webp", "gif",
+    "mp3", "wav", "ogg", "webm",
+]);
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -26,49 +38,51 @@ export async function POST(request: NextRequest) {
 
         if (!file) {
             return NextResponse.json(
-                { success: false, error: "No file provided" },
+                { success: false, error: "Chưa chọn tệp" },
                 { status: 400 }
             );
         }
 
-        // Check file size (10MB limit)
         if (file.size > MAX_FILE_SIZE) {
             return NextResponse.json(
-                { success: false, error: `File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB` },
+                { success: false, error: `Tệp quá lớn. Tối đa: ${MAX_FILE_SIZE / 1024 / 1024}MB` },
+                { status: 400 }
+            );
+        }
+
+        const ext = (file.name.split(".").pop() || "").toLowerCase();
+        if (!ALLOWED_MIME_TYPES.has(file.type) || !ALLOWED_EXTENSIONS.has(ext)) {
+            return NextResponse.json(
+                { success: false, error: "Loại tệp không được hỗ trợ. Chỉ chấp nhận ảnh (JPEG, PNG, WebP, GIF) và âm thanh (MP3, WAV, OGG)" },
                 { status: 400 }
             );
         }
 
         if (!slug) {
             return NextResponse.json(
-                { success: false, error: "No slug provided" },
+                { success: false, error: "Chưa có slug" },
                 { status: 400 }
             );
         }
 
-        // Verify user has access to this slug
         const cookieStore = await cookies();
         const accessToken = cookieStore.get(`access_token_${slug}`)?.value;
 
         if (!accessToken) {
             return NextResponse.json(
-                { success: false, error: "Unauthorized" },
+                { success: false, error: "Chưa xác thực" },
                 { status: 401 }
             );
         }
 
-        // Initialize Supabase admin client
-        // Service role key bypasses RLS — required for server-side uploads
-        // A valid Supabase JWT always starts with "eyJ"
         const isValidJwt = supabaseServiceKey && supabaseServiceKey.startsWith("eyJ");
         if (!isValidJwt) {
             console.error(
                 "SUPABASE_SERVICE_ROLE_KEY is missing or not a valid JWT.\n" +
-                "Get it from: Supabase Dashboard → Project Settings → API → service_role key\n" +
-                `Current value: "${supabaseServiceKey?.slice(0, 20)}..."`
+                "Get it from: Supabase Dashboard → Project Settings → API → service_role key"
             );
             return NextResponse.json(
-                { success: false, error: "Storage service not configured. Please set SUPABASE_SERVICE_ROLE_KEY in .env" },
+                { success: false, error: "Dịch vụ lưu trữ chưa được cấu hình" },
                 { status: 500 }
             );
         }
@@ -76,21 +90,17 @@ export async function POST(request: NextRequest) {
             auth: { persistSession: false },
         });
 
-        // Generate unique filename
         const timestamp = Date.now();
         const randomSuffix = Math.random().toString(36).substring(2, 8);
-        const ext = file.name.split(".").pop() || "jpg";
         const filename = `${slug}/${type || "image"}_${timestamp}_${randomSuffix}.${ext}`;
 
-        // Convert file to buffer
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Upload to Supabase Storage
         const { data, error } = await supabase.storage
             .from(supabaseBucket)
             .upload(filename, buffer, {
-                contentType: file.type || "image/jpeg",
+                contentType: file.type,
                 upsert: true,
             });
 
@@ -102,7 +112,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Get public URL
         const { data: urlData } = supabase.storage
             .from(supabaseBucket)
             .getPublicUrl(data.path);
@@ -115,7 +124,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error("Upload error:", error);
         return NextResponse.json(
-            { success: false, error: "Internal server error" },
+            { success: false, error: "Lỗi máy chủ nội bộ" },
             { status: 500 }
         );
     }

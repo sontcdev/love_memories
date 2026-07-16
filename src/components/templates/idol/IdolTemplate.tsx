@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Star, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic, Trophy, Disc, Sun, Moon } from "lucide-react";
-import { GameSection } from "./GameSection";
-import { LetterBox } from "./LetterBox";
+import { GameSection } from "@/components/shared/CardDrawGame";
+import { LetterBox } from "@/components/shared/LetterBox";
 import { VideoPlayer } from "@/components/media";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };

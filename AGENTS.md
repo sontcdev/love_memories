@@ -2,9 +2,37 @@
 
 Next.js 14 App Router + Prisma + Supabase app for personalized anniversary/memory websites. Users get unique slugs (`/[slug]`) with galleries, timelines, letters, and games. PWA-enabled.
 
-## Stack
+## Tech Stack
 
-Next.js 14.2.35, TypeScript 5, React 18, Prisma 6.19.1, PostgreSQL (Supabase), Tailwind CSS 3.4.1, React Hook Form + Zod, next-pwa 5.6.0.
+**Framework & Runtime**
+- Next.js 14.2.35 (App Router)
+- React 18
+- TypeScript 5
+- Node.js
+
+**Database & ORM**
+- PostgreSQL (Supabase)
+- Prisma 6.19.1
+
+**Styling & UI**
+- Tailwind CSS 3.4.1
+- Radix UI primitives (dialog, label, select)
+- lucide-react (icons)
+- class-variance-authority + clsx + tailwind-merge
+
+**Forms & Validation**
+- React Hook Form 7.69.0
+- Zod 4.2.1 with @hookform/resolvers
+
+**PWA & Performance**
+- next-pwa 5.6.0 (production only)
+
+**Utilities**
+- bcryptjs (password hashing)
+- html-to-image (screenshot generation)
+- react-qr-code (QR codes)
+- react-swipeable (touch gestures)
+- @dnd-kit (drag and drop)
 
 
 

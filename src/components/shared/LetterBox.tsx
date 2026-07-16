@@ -41,10 +41,8 @@ interface LetterBoxProps {
 export function LetterBox({ slug, initialLetters, theme = "love", isDark = false, onPopupOpenChange }: LetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
 
-    // Helper to check if a letter is currently locked
     const isLocked = (letter: LetterWithReplies): boolean => {
         if (!letter.unlock_date) return false;
-        // Compare dates only (ignore time) - unlock at start of the day
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const unlockDate = new Date(letter.unlock_date);
@@ -57,24 +55,18 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         onPopupOpenChange?.(showCreateForm);
     }, [showCreateForm, onPopupOpenChange]);
 
-    // Sort letters:
-    // 1. Unlocked letters (no unlock_date OR unlock_date passed) - sort by created_at ascending
-    // 2. Locked letters (has unlock_date in future) - sort by unlock_date ascending
     const sortedLetters = [...letters].sort((a, b) => {
         const aLocked = isLocked(a);
         const bLocked = isLocked(b);
 
-        // Both unlocked - sort by created_at ascending
         if (!aLocked && !bLocked) {
             return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         }
 
-        // Both locked - sort by unlock_date ascending
         if (aLocked && bLocked) {
             return new Date(a.unlock_date!).getTime() - new Date(b.unlock_date!).getTime();
         }
 
-        // Mixed: unlocked comes first
         return aLocked ? 1 : -1;
     });
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -85,7 +77,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ type: "letter" | "reply"; id: string; letterId?: string } | null>(null);
 
-    // Form state
     const [newTitle, setNewTitle] = useState("");
     const [newSender, setNewSender] = useState("");
     const [newContent, setNewContent] = useState("");
@@ -119,22 +110,17 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
 
     const colors = themeColors[theme];
 
-    // State for realtime unlock check
     const [currentTime, setCurrentTime] = useState(new Date());
 
-    // Update time every minute for realtime unlock
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentTime(new Date());
-        }, 60000); // Check every minute
+        }, 60000);
         return () => clearInterval(interval);
     }, []);
 
-    // Helper to check if letter is locked
     const isLetterLocked = (letter: LetterWithReplies): boolean => {
         if (!letter.unlock_date) return false;
-        // Compare dates only (ignore time) - unlock at start of the day
-        // Use currentTime state for realtime updates
         const today = new Date(currentTime);
         today.setHours(0, 0, 0, 0);
         const unlockDate = new Date(letter.unlock_date);
@@ -142,7 +128,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         return today < unlockDate;
     };
 
-    // Helper to format unlock date
     const formatUnlockDate = (date: Date): string => {
         return new Date(date).toLocaleDateString("vi-VN", {
             day: "2-digit",
@@ -228,7 +213,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Mail className={`w-6 h-6 ${colors.text}`} />
@@ -244,7 +228,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                 </button>
             </div>
 
-            {/* Create Form Modal */}
             {showCreateForm && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className={`${isDark ? "bg-[#1f1e1c] text-slate-100 border border-slate-800" : "bg-white text-gray-900"} rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col`}>
@@ -297,7 +280,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                 />
                             </div>
 
-                            {/* Video URL */}
                             <div>
                                 <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     <Video className="w-4 h-4" />
@@ -323,7 +305,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                 )}
                             </div>
 
-                            {/* Voice Recording */}
                             <div>
                                 <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     <Mic className="w-4 h-4" />
@@ -348,7 +329,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                 )}
                             </div>
 
-                            {/* Unlock Date Picker */}
                             <div>
                                 <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
                                     <Calendar className="w-4 h-4" />
@@ -399,7 +379,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                 </div>
             )}
 
-            {/* Delete Confirmation Dialog */}
             <ConfirmDialog
                 isOpen={deleteConfirm !== null}
                 title={deleteConfirm?.type === "letter" ? "Xóa thư" : "Xóa trả lời"}
@@ -420,7 +399,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                 onCancel={() => setDeleteConfirm(null)}
             />
 
-            {/* Letters List */}
             {letters.length === 0 ? (
                 <div className={`text-center py-16 ${isDark ? "bg-zinc-900/50 border border-zinc-700/80" : colors.bg} rounded-2xl`}>
                     <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300 opacity-60" />
@@ -431,11 +409,11 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                 <div className={theme === "idol" ? "grid grid-cols-1 sm:grid-cols-2 gap-6 items-start" : "space-y-4"}>
                     {sortedLetters.map((letter, index) => {
                         const idolStickyColors = [
-                            { bg: "bg-[#fff9db]", border: "border-[#ffe066]", text: "text-[#f59f00]", pin: "bg-[#f59f00]" }, // Yellow
-                            { bg: "bg-[#fff0f6]", border: "border-[#ffdeeb]", text: "text-[#e64980]", pin: "bg-[#e64980]" }, // Pink
-                            { bg: "bg-[#f3f0ff]", border: "border-[#e5dbff]", text: "text-[#7048e8]", pin: "bg-[#7048e8]" }, // Purple
-                            { bg: "bg-[#e7f5ff]", border: "border-[#d0ebff]", text: "text-[#1c7ed6]", pin: "bg-[#1c7ed6]" }, // Blue
-                            { bg: "bg-[#e6fcf5]", border: "border-[#c3fae8]", text: "text-[#0ca678]", pin: "bg-[#0ca678]" }, // Teal
+                            { bg: "bg-[#fff9db]", border: "border-[#ffe066]", text: "text-[#f59f00]", pin: "bg-[#f59f00]" },
+                            { bg: "bg-[#fff0f6]", border: "border-[#ffdeeb]", text: "text-[#e64980]", pin: "bg-[#e64980]" },
+                            { bg: "bg-[#f3f0ff]", border: "border-[#e5dbff]", text: "text-[#7048e8]", pin: "bg-[#7048e8]" },
+                            { bg: "bg-[#e7f5ff]", border: "border-[#d0ebff]", text: "text-[#1c7ed6]", pin: "bg-[#1c7ed6]" },
+                            { bg: "bg-[#e6fcf5]", border: "border-[#c3fae8]", text: "text-[#0ca678]", pin: "bg-[#0ca678]" },
                         ];
                         const stickyColor = theme === "idol" 
                             ? idolStickyColors[index % idolStickyColors.length]
@@ -449,12 +427,10 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                 className={`rounded-2xl shadow-md border ${stickyColor.border} ${stickyColor.bg} overflow-hidden transition-all relative`}
                                 style={theme === "idol" ? { transform: `rotate(${rotationDeg}deg)` } : {}}
                             >
-                                {/* Push Pin */}
                                 {theme === "idol" && (
                                     <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full shadow-md bg-gradient-to-br from-red-400 to-red-600 z-10" />
                                 )}
                                 
-                                {/* Letter Header */}
                                 <div
                                     className={`p-4 cursor-pointer ${theme === "idol" ? "bg-transparent" : (isDark ? "bg-zinc-900/40 hover:bg-zinc-800" : colors.bg + " hover:bg-black/5")} transition-colors`}
                                     onClick={() =>
@@ -514,11 +490,9 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                     </div>
                                 </div>
                             </div>
- 
-                            {/* Expanded Content */}
+
                             {expandedId === letter.id && (
                                 <div className={`p-4 border-t ${isDark ? "border-zinc-800" : "border-gray-100"}`}>
-                                    {/* Check if letter is locked */}
                                     {isLetterLocked(letter) ? (
                                         <div className={`${isDark ? "bg-zinc-950/40 border border-zinc-700" : colors.bg} rounded-xl p-6 text-center`}>
                                             <Lock className={`w-12 h-12 mx-auto mb-3 ${colors.text}`} />
@@ -529,12 +503,10 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                         </div>
                                     ) : (
                                         <>
-                                            {/* Letter Content */}
                                             <div className="prose prose-sm max-w-none mb-4 overflow-hidden">
                                                 <p className={`whitespace-pre-wrap break-words ${isDark ? "text-slate-300" : "text-gray-700"}`}>{letter.content}</p>
                                             </div>
- 
-                                            {/* Image */}
+
                                             {letter.image_url && (
                                                 <div className="mb-4">
                                                     <Image
@@ -546,15 +518,13 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                                     />
                                                 </div>
                                             )}
- 
-                                            {/* Video */}
+
                                             {letter.video_url && (
                                                 <div className="mb-4">
                                                     <VideoPlayer url={letter.video_url} className="rounded-xl" />
                                                 </div>
                                             )}
- 
-                                            {/* Audio */}
+
                                             {letter.audio_url && (
                                                 <div className="mb-4">
                                                     <div className={`${isDark ? "bg-zinc-950/50 border border-zinc-700" : colors.bg} p-3 rounded-xl`}>
@@ -571,8 +541,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                                     </div>
                                                 </div>
                                             )}
- 
-                                            {/* Replies Thread */}
+
                                             {letter.replies.length > 0 && (
                                                 <div className="space-y-3 mb-4">
                                                     <h4 className={`text-sm font-medium ${isDark ? "text-slate-400" : "text-gray-600"} flex items-center gap-2`}>
@@ -604,8 +573,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                                                     ))}
                                                 </div>
                                             )}
- 
-                                            {/* Reply Input */}
+
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex gap-2">
                                                     <input
@@ -648,7 +616,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                     })}
                 </div>
             )}
-            {/* Decorative */}
             <div className="text-center py-4">
                 <Heart className={`w-6 h-6 mx-auto ${colors.text} fill-current opacity-30`} />
             </div>

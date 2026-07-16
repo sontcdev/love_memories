@@ -52,7 +52,7 @@ model Admin {
 model User {
   id            String   @id @default(cuid())
   username      String   @unique
-  password_hash String   @db.VarChar(6) // 6-digit PIN
+  password_hash String   @db.VarChar(255) // bcrypt hash
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 

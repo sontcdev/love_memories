@@ -1,43 +1,10 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAccess } from "@/lib/auth";
 
 const MAX_TIMELINE_EVENTS = 10;
-
-// ============================================================================
-// AUTH HELPER
-// ============================================================================
-
-async function verifyAccess(slug: string): Promise<{
-    success: boolean;
-    linkId?: string;
-    error?: string;
-}> {
-    const cookieStore = await cookies();
-    const cookieName = `access_token_${slug}`;
-    const accessToken = cookieStore.get(cookieName)?.value;
-
-    if (!accessToken) {
-        return { success: false, error: "Not authenticated" };
-    }
-
-    const link = await prisma.link.findUnique({
-        where: { slug },
-        select: { id: true, is_active: true },
-    });
-
-    if (!link || link.id !== accessToken) {
-        return { success: false, error: "Invalid access" };
-    }
-
-    return { success: true, linkId: link.id };
-}
-
-// ============================================================================
-// GET TIMELINE EVENTS
-// ============================================================================
 
 export async function getTimelineEvents(slug: string) {
     try {
@@ -54,18 +21,14 @@ export async function getTimelineEvents(slug: string) {
         return { success: true, data: events };
     } catch (error) {
         console.error("Get timeline events error:", error);
-        return { success: false, error: "Failed to fetch events", data: [] };
+        return { success: false, error: "Không thể tải dòng thời gian", data: [] };
     }
 }
 
-// ============================================================================
-// UPSERT TIMELINE EVENT (Create or Update)
-// ============================================================================
-
 interface TimelineEventData {
-    id?: string; // If provided, update; otherwise create
+    id?: string;
     title: string;
-    date: string; // ISO date string
+    date: string;
     description?: string;
     image_url?: string;
     video_url?: string;
@@ -74,13 +37,12 @@ interface TimelineEventData {
 
 export async function upsertTimelineEvent(slug: string, data: TimelineEventData) {
     try {
-        // Validation
         if (!data.title?.trim()) {
-            return { success: false, error: "Title is required" };
+            return { success: false, error: "Tiêu đề là bắt buộc" };
         }
 
         if (!data.date) {
-            return { success: false, error: "Date is required" };
+            return { success: false, error: "Ngày là bắt buộc" };
         }
 
         const access = await verifyAccess(slug);
@@ -88,7 +50,6 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
             return { success: false, error: access.error };
         }
 
-        // If creating new, check limit
         if (!data.id) {
             const currentCount = await prisma.timeline.count({
                 where: { link_id: access.linkId },
@@ -97,20 +58,18 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
             if (currentCount >= MAX_TIMELINE_EVENTS) {
                 return {
                     success: false,
-                    error: `Maximum ${MAX_TIMELINE_EVENTS} events allowed`,
+                    error: `Tối đa ${MAX_TIMELINE_EVENTS} sự kiện được phép`,
                 };
             }
         }
 
-        // Upsert
         if (data.id) {
-            // UPDATE existing event
             const existing = await prisma.timeline.findFirst({
                 where: { id: data.id, link_id: access.linkId },
             });
 
             if (!existing) {
-                return { success: false, error: "Event not found" };
+                return { success: false, error: "Không tìm thấy sự kiện" };
             }
 
             const updated = await prisma.timeline.update({
@@ -130,7 +89,6 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
 
             return { success: true, data: updated };
         } else {
-            // CREATE new event
             const created = await prisma.timeline.create({
                 data: {
                     link_id: access.linkId,
@@ -150,13 +108,9 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
         }
     } catch (error) {
         console.error("Upsert timeline event error:", error);
-        return { success: false, error: "Failed to save event" };
+        return { success: false, error: "Không thể lưu sự kiện" };
     }
 }
-
-// ============================================================================
-// DELETE TIMELINE EVENT
-// ============================================================================
 
 export async function deleteTimelineEvent(slug: string, eventId: string) {
     try {
@@ -165,13 +119,12 @@ export async function deleteTimelineEvent(slug: string, eventId: string) {
             return { success: false, error: access.error };
         }
 
-        // Verify ownership
         const existing = await prisma.timeline.findFirst({
             where: { id: eventId, link_id: access.linkId },
         });
 
         if (!existing) {
-            return { success: false, error: "Event not found" };
+            return { success: false, error: "Không tìm thấy sự kiện" };
         }
 
         await prisma.timeline.delete({
@@ -184,13 +137,9 @@ export async function deleteTimelineEvent(slug: string, eventId: string) {
         return { success: true };
     } catch (error) {
         console.error("Delete timeline event error:", error);
-        return { success: false, error: "Failed to delete event" };
+        return { success: false, error: "Không thể xóa sự kiện" };
     }
 }
-
-// ============================================================================
-// GET EVENT COUNT (for validation UI)
-// ============================================================================
 
 export async function getTimelineEventCount(slug: string) {
     try {

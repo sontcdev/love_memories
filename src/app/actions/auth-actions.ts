@@ -3,18 +3,19 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { generateSessionToken } from "@/lib/utils";
 
 export async function verifyLinkPassword(slug: string, pin: string) {
     if (!slug || !pin) {
-        return { success: false, error: "Slug and PIN are required" };
+        return { success: false, error: "Slug và mã PIN là bắt buộc" };
     }
 
     if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
-        return { success: false, error: "PIN must be 6 digits" };
+        return { success: false, error: "Mã PIN phải có 6 chữ số" };
     }
 
     try {
-        // Find link by slug
         const link = await prisma.link.findUnique({
             where: { slug },
             include: {
@@ -27,46 +28,44 @@ export async function verifyLinkPassword(slug: string, pin: string) {
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
         if (!link.is_active) {
-            return { success: false, error: "This link is not active" };
+            return { success: false, error: "Liên kết này không hoạt động" };
         }
 
-        // Verify PIN (stored as plain 6-digit string)
-        if (link.user.password_hash !== pin) {
-            return { success: false, error: "Invalid PIN" };
+        const isValid = await bcrypt.compare(pin, link.user.password_hash);
+        if (!isValid) {
+            return { success: false, error: "Mã PIN không đúng" };
         }
 
-        // Set session cookie (expires when browser closes)
+        const sessionToken = generateSessionToken();
+        const accessToken = generateSessionToken();
+
         const cookieStore = await cookies();
-        cookieStore.set(`session_${slug}`, link.id, {
+        cookieStore.set(`session_${slug}`, sessionToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            // No maxAge = session cookie (expires when browser closes)
         });
 
-        // Set access token cookie for edit page access (same as session)
-        cookieStore.set(`access_token_${slug}`, link.id, {
+        cookieStore.set(`access_token_${slug}`, accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            // No maxAge = session cookie (expires when browser closes)
         });
 
         return { success: true };
     } catch (error) {
         console.error("Verify link password error:", error);
-        return { success: false, error: "An error occurred" };
+        return { success: false, error: "Đã xảy ra lỗi" };
     }
 }
 
 export async function checkLinkAccess(slug: string): Promise<boolean> {
-    // Check for session cookie (set after PIN verification)
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get(`session_${slug}`)?.value;
 
@@ -74,16 +73,14 @@ export async function checkLinkAccess(slug: string): Promise<boolean> {
         return false;
     }
 
-    // Verify the session is still valid (link exists and matches)
     const link = await prisma.link.findUnique({
         where: { slug },
         select: { id: true, is_active: true },
     });
 
-    return link?.id === sessionToken && link?.is_active === true;
+    return link?.is_active === true;
 }
 
-// Cached version of getLinkData - prevents duplicate queries during same request
 const getCachedLinkData = cache(async (slug: string) => {
     const link = await prisma.link.findUnique({
         where: { slug },
@@ -127,12 +124,12 @@ export async function getLinkPublicData(slug: string) {
     try {
         const link = await getCachedPublicData(slug);
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
         return { success: true, data: link };
     } catch (error) {
         console.error("Get public data error:", error);
-        return { success: false, error: "Failed to fetch" };
+        return { success: false, error: "Không thể tải dữ liệu" };
     }
 }
 
@@ -142,7 +139,7 @@ export async function getLinkData(slug: string) {
         const sessionToken = cookieStore.get(`session_${slug}`)?.value;
 
         if (!sessionToken) {
-            return { success: false, error: "Unauthorized" };
+            return { success: false, error: "Chưa xác thực" };
         }
 
         const link = await prisma.link.findUnique({
@@ -150,19 +147,18 @@ export async function getLinkData(slug: string) {
             select: { id: true, is_active: true },
         });
 
-        if (!link || link.id !== sessionToken || !link.is_active) {
-            return { success: false, error: "Unauthorized" };
+        if (!link || !link.is_active) {
+            return { success: false, error: "Chưa xác thực" };
         }
 
         const fullLink = await getCachedLinkData(slug);
         if (!fullLink) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
         return { success: true, data: fullLink };
     } catch (error) {
         console.error("Get link data error:", error);
-        return { success: false, error: "Failed to fetch link data" };
+        return { success: false, error: "Không thể tải dữ liệu" };
     }
 }
-

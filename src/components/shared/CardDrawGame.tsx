@@ -4,20 +4,20 @@ import { useState } from "react";
 import { drawCard, DrawnCard } from "@/app/actions/game-actions";
 import { Sparkles, Heart, Flame, Star, RotateCcw, Loader2, RefreshCw } from "lucide-react";
 
-interface GameSectionProps {
+interface CardDrawGameProps {
     theme?: "love" | "every" | "idol";
     isDark?: boolean;
 }
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
-export function GameSection({ theme = "love", isDark = false }: GameSectionProps) {
+export function CardDrawGame({ theme = "love", isDark = false }: CardDrawGameProps) {
     const [isDrawing, setIsDrawing] = useState(false);
     const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
     const [drawnCard, setDrawnCard] = useState<DrawnCard | null>(null);
     const [isFlipped, setIsFlipped] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [shownCardIds, setShownCardIds] = useState<string[]>([]); // Track shown cards
+    const [shownCardIds, setShownCardIds] = useState<string[]>([]);
 
     const themeColors = {
         love: {
@@ -58,23 +58,17 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
         setIsFlipped(false);
         setDrawnCard(null);
 
-        // Small delay for animation
         await new Promise((resolve) => setTimeout(resolve, 300));
 
-        // If we have cards to exclude, pass them as comma-separated string
         const excludeParam = excludeIds && excludeIds.length > 0 ? excludeIds.join(",") : undefined;
         const result = await drawCard(difficulty, excludeParam);
 
         if (result.success && result.card) {
             setDrawnCard(result.card);
-            // Add this card to shown cards
             setShownCardIds(prev => [...prev, result.card!.id]);
-            // Flip after a brief moment
             setTimeout(() => setIsFlipped(true), 500);
         } else if (result.error === "All cards shown") {
-            // All cards in this difficulty have been shown, reset and try again
             setShownCardIds([]);
-            // Retry draw with no exclusions
             const retryResult = await drawCard(difficulty);
             if (retryResult.success && retryResult.card) {
                 setDrawnCard(retryResult.card);
@@ -95,12 +89,11 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
         setDrawnCard(null);
         setIsFlipped(false);
         setError(null);
-        setShownCardIds([]); // Clear shown cards when resetting
+        setShownCardIds([]);
     };
 
     const shuffleQuestion = async () => {
         if (!selectedDifficulty) return;
-        // Pass all shown card IDs to exclude them
         await handleDrawCard(selectedDifficulty, shownCardIds);
     };
 
@@ -121,7 +114,6 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
                 <p className={`${isDark ? "text-purple-200/70" : "text-gray-500"} text-sm`}>Chọn độ khó và khám phá thử thách của bạn!</p>
             </div>
 
-            {/* Difficulty Buttons */}
             {!selectedDifficulty && (
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     {difficulties.map(({ level, label, icon: Icon, gradient }) => (
@@ -135,30 +127,25 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
                                 <Icon className="w-5 h-5" />
                                 <span>{label}</span>
                             </div>
-                            {/* Shine effect */}
                             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
                     ))}
                 </div>
             )}
 
-            {/* Card Display */}
             {selectedDifficulty && (
                 <div className="flex flex-col items-center">
-                    {/* Card Container */}
                     <div
                         className="relative w-full max-w-[280px] sm:w-72 h-96 perspective-1000 mb-6"
                         style={{ perspective: "1000px" }}
                     >
                         <div
-                            className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${isFlipped ? "rotate-y-180" : ""
-                                }`}
+                            className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${isFlipped ? "rotate-y-180" : ""}`}
                             style={{
                                 transformStyle: "preserve-3d",
                                 transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
                             }}
                         >
-                            {/* Card Back */}
                             <div
                                 className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${colors.card} shadow-2xl flex items-center justify-center backface-hidden`}
                                 style={{ backfaceVisibility: "hidden" }}
@@ -173,7 +160,6 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
                                 )}
                             </div>
 
-                            {/* Card Front (Content) */}
                             <div
                                 className={`absolute inset-0 rounded-3xl shadow-2xl p-6 flex flex-col items-center justify-center backface-hidden ${
                                     isDark ? "bg-slate-950 border border-purple-500/30 text-white" : "bg-white text-gray-800"
@@ -190,22 +176,16 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
                                     </div>
                                 ) : drawnCard ? (
                                     <>
-                                        {/* Difficulty Badge */}
-                                        <div className={`px-4 py-1 rounded-full bg-gradient-to-r ${difficulties.find(d => d.level === drawnCard.level)?.gradient
-                                            } text-white text-sm font-medium mb-4`}>
+                                        <div className={`px-4 py-1 rounded-full bg-gradient-to-r ${difficulties.find(d => d.level === drawnCard.level)?.gradient} text-white text-sm font-medium mb-4`}>
                                             {drawnCard.level}
                                         </div>
 
-                                        {/* Card Content */}
                                         <div className="flex-1 flex items-center justify-center">
-                                            <p className={`text-xl md:text-2xl text-center font-medium leading-relaxed ${
-                                                isDark ? "text-white" : "text-gray-800"
-                                            }`}>
+                                            <p className={`text-xl md:text-2xl text-center font-medium leading-relaxed ${isDark ? "text-white" : "text-gray-800"}`}>
                                                 {drawnCard.content}
                                             </p>
                                         </div>
 
-                                        {/* Decorative */}
                                         <div className="flex gap-2 mt-4">
                                             <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
                                             <Heart className="w-5 h-5 text-rose-300 fill-rose-300" />
@@ -217,7 +197,6 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={shuffleQuestion}
@@ -232,16 +211,16 @@ export function GameSection({ theme = "love", isDark = false }: GameSectionProps
                             )}
                         </button>
                         <button
-                                onClick={resetGame}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-colors ${
-                                    isDark 
-                                        ? "bg-slate-800 hover:bg-slate-700 text-purple-200" 
-                                        : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                                }`}
-                            >
-                                <RotateCcw className="w-4 h-4" />
-                                Đổi độ khó
-                            </button>
+                            onClick={resetGame}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-colors ${
+                                isDark 
+                                    ? "bg-slate-800 hover:bg-slate-700 text-purple-200" 
+                                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            }`}
+                        >
+                            <RotateCcw className="w-4 h-4" />
+                            Đổi độ khó
+                        </button>
                     </div>
                 </div>
             )}

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { getLinkData, getLinkPublicData } from "@/app/actions/auth-actions";
 import { SlugPageClient } from "./page-client";
+import { sanitizeHexColor } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +32,9 @@ export default async function SlugPage({ params }: PageProps) {
                 </div>
             );
         }
-        const bgColor = linkResult.data.config?.background_color || '#ffffff';
-        const accentColor = linkResult.data.config?.accent_color || '#ec4899';
-        const textColor = linkResult.data.config?.text_color || '#1f2937';
+        const bgColor = sanitizeHexColor(linkResult.data.config?.background_color || '#ffffff');
+        const accentColor = sanitizeHexColor(linkResult.data.config?.accent_color || '#ec4899');
+        const textColor = sanitizeHexColor(linkResult.data.config?.text_color || '#1f2937');
         return (
             <>
                 <script
@@ -69,9 +70,9 @@ export default async function SlugPage({ params }: PageProps) {
         );
     }
 
-    const bgColor = publicResult.data.config?.background_color || '#ffffff';
-    const accentColor = publicResult.data.config?.accent_color || '#ec4899';
-    const textColor = publicResult.data.config?.text_color || '#1f2937';
+    const bgColor = sanitizeHexColor(publicResult.data.config?.background_color || '#ffffff');
+    const accentColor = sanitizeHexColor(publicResult.data.config?.accent_color || '#ec4899');
+    const textColor = sanitizeHexColor(publicResult.data.config?.text_color || '#1f2937');
 
     return (
         <>

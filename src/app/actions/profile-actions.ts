@@ -1,13 +1,9 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-
-// ============================================================================
-// PROFILE DATA TYPES
-// ============================================================================
+import { verifyAccess } from "@/lib/auth";
 
 export interface LoveProfileData {
     boy_name?: string;
@@ -111,10 +107,6 @@ export interface GradClassProfileData {
 
 export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData;
 
-// ============================================================================
-// CONFIG DATA TYPES
-// ============================================================================
-
 export interface LinkConfigData {
     background_color?: string;
     accent_color?: string;
@@ -124,55 +116,28 @@ export interface LinkConfigData {
     auto_play?: boolean;
 }
 
-// ============================================================================
-// AUTH HELPER
-// ============================================================================
-
-async function verifyAccess(slug: string): Promise<boolean> {
-    const cookieStore = await cookies();
-    const cookieName = `access_token_${slug}`;
-    const accessToken = cookieStore.get(cookieName)?.value;
-
-    if (!accessToken) return false;
-
-    const link = await prisma.link.findUnique({
-        where: { slug },
-        select: { id: true, is_active: true },
-    });
-
-    return link?.id === accessToken && link?.is_active === true;
-}
-
-// ============================================================================
-// UPDATE PROFILE DATA
-// ============================================================================
-
 export async function updateLinkProfile(
     slug: string,
     data: ProfileData
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        // Verify access
-        const hasAccess = await verifyAccess(slug);
-        if (!hasAccess) {
-            return { success: false, error: "Unauthorized" };
+        const access = await verifyAccess(slug);
+        if (!access.success) {
+            return { success: false, error: access.error };
         }
 
-        // Get current link
         const link = await prisma.link.findUnique({
             where: { slug },
             select: { id: true, profile_data: true },
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
-        // Merge with existing data
         const currentData = (link.profile_data as Record<string, unknown>) || {};
         const newData = { ...currentData, ...data };
 
-        // Update
         await prisma.link.update({
             where: { slug },
             data: { profile_data: newData as Prisma.InputJsonValue },
@@ -184,36 +149,29 @@ export async function updateLinkProfile(
         return { success: true };
     } catch (error) {
         console.error("Update profile error:", error);
-        return { success: false, error: "Failed to update profile" };
+        return { success: false, error: "Không thể cập nhật hồ sơ" };
     }
 }
-
-// ============================================================================
-// UPDATE LINK CONFIG
-// ============================================================================
 
 export async function updateLinkConfig(
     slug: string,
     config: LinkConfigData
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        // Verify access
-        const hasAccess = await verifyAccess(slug);
-        if (!hasAccess) {
-            return { success: false, error: "Unauthorized" };
+        const access = await verifyAccess(slug);
+        if (!access.success) {
+            return { success: false, error: access.error };
         }
 
-        // Get link
         const link = await prisma.link.findUnique({
             where: { slug },
             select: { id: true },
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
-        // Upsert config
         await prisma.linkConfig.upsert({
             where: { link_id: link.id },
             create: {
@@ -241,20 +199,15 @@ export async function updateLinkConfig(
         return { success: true };
     } catch (error) {
         console.error("Update config error:", error);
-        return { success: false, error: "Failed to update config" };
+        return { success: false, error: "Không thể cập nhật cài đặt" };
     }
 }
 
-// ============================================================================
-// GET LINK FOR EDIT
-// ============================================================================
-
 export async function getLinkForEdit(slug: string) {
     try {
-        // Verify access
-        const hasAccess = await verifyAccess(slug);
-        if (!hasAccess) {
-            return { success: false, error: "Unauthorized" };
+        const access = await verifyAccess(slug);
+        if (!access.success) {
+            return { success: false, error: access.error };
         }
 
         const link = await prisma.link.findUnique({
@@ -268,12 +221,12 @@ export async function getLinkForEdit(slug: string) {
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
         return { success: true, data: link };
     } catch (error) {
         console.error("Get link for edit error:", error);
-        return { success: false, error: "Failed to fetch link" };
+        return { success: false, error: "Không thể tải dữ liệu" };
     }
 }

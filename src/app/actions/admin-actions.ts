@@ -3,19 +3,15 @@
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import { generateSlug, generatePin } from "@/lib/utils";
+import { generateSlug, generatePin, generateSessionToken } from "@/lib/utils";
 import { LinkType } from "@prisma/client";
-
-// ============================================================================
-// ADMIN AUTHENTICATION
-// ============================================================================
 
 export async function loginAdmin(formData: FormData) {
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
 
     if (!username || !password) {
-        return { success: false, error: "Username and password are required" };
+        return { success: false, error: "Tên đăng nhập và mật khẩu là bắt buộc" };
     }
 
     try {
@@ -24,29 +20,29 @@ export async function loginAdmin(formData: FormData) {
         });
 
         if (!admin) {
-            return { success: false, error: "Invalid credentials" };
+            return { success: false, error: "Thông tin đăng nhập không đúng" };
         }
 
         const isValidPassword = await bcrypt.compare(password, admin.password_hash);
 
         if (!isValidPassword) {
-            return { success: false, error: "Invalid credentials" };
+            return { success: false, error: "Thông tin đăng nhập không đúng" };
         }
 
-        // Set session cookie
+        const sessionToken = generateSessionToken();
         const cookieStore = await cookies();
-        cookieStore.set("admin_session", admin.id, {
+        cookieStore.set("admin_session", sessionToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            maxAge: 60 * 60 * 24 * 7, // 7 days
+            maxAge: 60 * 60 * 24 * 7,
             path: "/",
         });
 
         return { success: true };
     } catch (error) {
         console.error("Login error:", error);
-        return { success: false, error: "An error occurred during login" };
+        return { success: false, error: "Đã xảy ra lỗi khi đăng nhập" };
     }
 }
 
@@ -72,30 +68,42 @@ export async function getAdminSession() {
     return admin;
 }
 
-// ============================================================================
-// LINK MANAGEMENT
-// ============================================================================
-
-export async function getLinks() {
+export async function getLinks(page: number = 1, pageSize: number = 50) {
     try {
-        const links = await prisma.link.findMany({
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
+        const skip = (page - 1) * pageSize;
+
+        const [links, total] = await Promise.all([
+            prisma.link.findMany({
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                        },
                     },
                 },
-            },
-            orderBy: {
-                created_at: "desc",
-            },
-        });
+                orderBy: {
+                    created_at: "desc",
+                },
+                skip,
+                take: pageSize,
+            }),
+            prisma.link.count(),
+        ]);
 
-        return { success: true, data: links };
+        return {
+            success: true,
+            data: links,
+            pagination: {
+                page,
+                pageSize,
+                total,
+                totalPages: Math.ceil(total / pageSize),
+            },
+        };
     } catch (error) {
         console.error("Get links error:", error);
-        return { success: false, error: "Failed to fetch links" };
+        return { success: false, error: "Không thể tải danh sách liên kết" };
     }
 }
 
@@ -105,23 +113,22 @@ export async function createLink(formData: FormData) {
     const linkType = formData.get("linkType") as LinkType;
 
     if (!username) {
-        return { success: false, error: "Username is required" };
+        return { success: false, error: "Tên người dùng là bắt buộc" };
     }
 
     try {
-        // Check if username already exists
         const existingUser = await prisma.user.findUnique({
             where: { username },
         });
 
         if (existingUser) {
-            return { success: false, error: "Username already exists" };
+            return { success: false, error: "Tên người dùng đã tồn tại" };
         }
 
-        // Generate password if not provided
         const finalPassword = password || generatePin();
 
-        // Generate unique slug
+        const password_hash = await bcrypt.hash(finalPassword, 10);
+
         let slug = generateSlug();
         let slugExists = await prisma.link.findUnique({ where: { slug } });
         while (slugExists) {
@@ -129,17 +136,14 @@ export async function createLink(formData: FormData) {
             slugExists = await prisma.link.findUnique({ where: { slug } });
         }
 
-        // Create user and link in a transaction
         const result = await prisma.$transaction(async (tx) => {
-            // Create user
             const user = await tx.user.create({
                 data: {
                     username,
-                    password_hash: finalPassword, // 6-digit PIN stored as-is
+                    password_hash,
                 },
             });
 
-            // Create link
             const link = await tx.link.create({
                 data: {
                     user_id: user.id,
@@ -149,7 +153,6 @@ export async function createLink(formData: FormData) {
                 },
             });
 
-            // Create default config
             await tx.linkConfig.create({
                 data: {
                     link_id: link.id,
@@ -171,7 +174,7 @@ export async function createLink(formData: FormData) {
         };
     } catch (error) {
         console.error("Create link error:", error);
-        return { success: false, error: "Failed to create link" };
+        return { success: false, error: "Không thể tạo liên kết" };
     }
 }
 
@@ -183,10 +186,9 @@ export async function deleteLink(linkId: string) {
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
-        // Delete user (cascades to link and all related data)
         await prisma.user.delete({
             where: { id: link.user_id },
         });
@@ -194,7 +196,7 @@ export async function deleteLink(linkId: string) {
         return { success: true };
     } catch (error) {
         console.error("Delete link error:", error);
-        return { success: false, error: "Failed to delete link" };
+        return { success: false, error: "Không thể xóa liên kết" };
     }
 }
 
@@ -205,7 +207,7 @@ export async function toggleLinkStatus(linkId: string) {
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
         const updatedLink = await prisma.link.update({
@@ -216,7 +218,7 @@ export async function toggleLinkStatus(linkId: string) {
         return { success: true, data: updatedLink };
     } catch (error) {
         console.error("Toggle link status error:", error);
-        return { success: false, error: "Failed to toggle link status" };
+        return { success: false, error: "Không thể thay đổi trạng thái" };
     }
 }
 
@@ -232,21 +234,20 @@ export async function resetLinkPin(linkId: string, customPin?: string) {
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
-        // Use custom PIN if provided, otherwise generate new one
         const newPin = customPin || generatePin();
 
-        // Validate PIN format (6 digits)
         if (!/^\d{6}$/.test(newPin)) {
-            return { success: false, error: "PIN must be exactly 6 digits" };
+            return { success: false, error: "Mã PIN phải có đúng 6 chữ số" };
         }
 
-        // Update user's password
+        const password_hash = await bcrypt.hash(newPin, 10);
+
         await prisma.user.update({
             where: { id: link.user_id },
-            data: { password_hash: newPin },
+            data: { password_hash },
         });
 
         return {
@@ -258,20 +259,16 @@ export async function resetLinkPin(linkId: string, customPin?: string) {
         };
     } catch (error) {
         console.error("Reset link PIN error:", error);
-        return { success: false, error: "Failed to reset PIN" };
+        return { success: false, error: "Không thể đặt lại mã PIN" };
     }
 }
-
-// ============================================================================
-// ADMIN SETUP (One-time use)
-// ============================================================================
 
 export async function createInitialAdmin(username: string, password: string) {
     try {
         const existingAdmin = await prisma.admin.findFirst();
 
         if (existingAdmin) {
-            return { success: false, error: "Admin already exists" };
+            return { success: false, error: "Quản trị viên đã tồn tại" };
         }
 
         const password_hash = await bcrypt.hash(password, 10);
@@ -286,6 +283,6 @@ export async function createInitialAdmin(username: string, password: string) {
         return { success: true, data: { id: admin.id, username: admin.username } };
     } catch (error) {
         console.error("Create admin error:", error);
-        return { success: false, error: "Failed to create admin" };
+        return { success: false, error: "Không thể tạo quản trị viên" };
     }
 }

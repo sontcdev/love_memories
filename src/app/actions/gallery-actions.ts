@@ -1,32 +1,8 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-
-// Verify user has access to this link
-async function verifyAccess(slug: string): Promise<{ success: boolean; linkId?: string; error?: string }> {
-    const cookieStore = await cookies();
-    const cookieName = `access_token_${slug}`;
-    const accessToken = cookieStore.get(cookieName)?.value;
-
-    if (!accessToken) {
-        return { success: false, error: "Not authenticated" };
-    }
-
-    const link = await prisma.link.findUnique({
-        where: { slug },
-        select: { id: true, is_active: true },
-    });
-
-    if (!link || link.id !== accessToken) {
-        return { success: false, error: "Invalid access" };
-    }
-
-    return { success: true, linkId: link.id };
-}
-
-// ============== GALLERY ACTIONS ==============
+import { verifyAccess } from "@/lib/auth";
 
 export async function addGalleryImage(slug: string, imageUrl: string, caption?: string) {
     try {
@@ -35,7 +11,6 @@ export async function addGalleryImage(slug: string, imageUrl: string, caption?: 
             return { success: false, error: access.error };
         }
 
-        // Get max sort order
         const maxOrder = await prisma.gallery.aggregate({
             where: { link_id: access.linkId },
             _max: { sort_order: true },
@@ -56,7 +31,7 @@ export async function addGalleryImage(slug: string, imageUrl: string, caption?: 
         return { success: true, data: newImage };
     } catch (error) {
         console.error("Add gallery image error:", error);
-        return { success: false, error: "Failed to add image" };
+        return { success: false, error: "Không thể thêm ảnh" };
     }
 }
 
@@ -78,7 +53,7 @@ export async function updateGalleryImage(slug: string, imageId: string, caption:
         return { success: true, data: updated };
     } catch (error) {
         console.error("Update gallery image error:", error);
-        return { success: false, error: "Failed to update image" };
+        return { success: false, error: "Không thể cập nhật ảnh" };
     }
 }
 
@@ -99,7 +74,7 @@ export async function deleteGalleryImage(slug: string, imageId: string) {
         return { success: true };
     } catch (error) {
         console.error("Delete gallery image error:", error);
-        return { success: false, error: "Failed to delete image" };
+        return { success: false, error: "Không thể xóa ảnh" };
     }
 }
 
@@ -110,8 +85,7 @@ export async function reorderGalleryImages(slug: string, imageIds: string[]) {
             return { success: false, error: access.error };
         }
 
-        // Update sort order for each image
-        await Promise.all(
+        await prisma.$transaction(
             imageIds.map((id, index) =>
                 prisma.gallery.update({
                     where: { id, link_id: access.linkId },
@@ -126,11 +100,9 @@ export async function reorderGalleryImages(slug: string, imageIds: string[]) {
         return { success: true };
     } catch (error) {
         console.error("Reorder gallery images error:", error);
-        return { success: false, error: "Failed to reorder images" };
+        return { success: false, error: "Không thể sắp xếp lại ảnh" };
     }
 }
-
-// ============== TIMELINE ACTIONS ==============
 
 export async function addTimelineEvent(
     slug: string,
@@ -158,7 +130,7 @@ export async function addTimelineEvent(
         return { success: true, data: newEvent };
     } catch (error) {
         console.error("Add timeline event error:", error);
-        return { success: false, error: "Failed to add event" };
+        return { success: false, error: "Không thể thêm sự kiện" };
     }
 }
 
@@ -189,7 +161,7 @@ export async function updateTimelineEvent(
         return { success: true, data: updated };
     } catch (error) {
         console.error("Update timeline event error:", error);
-        return { success: false, error: "Failed to update event" };
+        return { success: false, error: "Không thể cập nhật sự kiện" };
     }
 }
 
@@ -210,6 +182,6 @@ export async function deleteTimelineEvent(slug: string, eventId: string) {
         return { success: true };
     } catch (error) {
         console.error("Delete timeline event error:", error);
-        return { success: false, error: "Failed to delete event" };
+        return { success: false, error: "Không thể xóa sự kiện" };
     }
 }
