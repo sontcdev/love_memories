@@ -90,10 +90,6 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
     const [showImageUpload, setShowImageUpload] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Global loading state
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadingMessage, setLoadingMessage] = useState("");
-
     const isEditing = !!formData.id;
     const isLimitReached = timeline.length >= MAX_EVENTS;
     const isFormValid = formData.title.trim() !== "" && formData.date !== "";
@@ -136,8 +132,6 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         if (!isFormValid) return;
 
         setIsSaving(true);
-        setIsLoading(true);
-        setLoadingMessage(isEditing ? "Đang cập nhật..." : "Đang thêm...");
         setError(null);
 
         // Create optimistic event for immediate UI update
@@ -194,16 +188,12 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         }
 
         setIsSaving(false);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Delete event
     const handleDelete = async (eventId: string) => {
         setDeleteConfirmId(null);
         setDeletingId(eventId);
-        setIsLoading(true);
-        setLoadingMessage("Đang xóa...");
 
         startTransition(() => {
             addOptimistic({ type: "delete", payload: eventId });
@@ -216,8 +206,6 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         }
 
         setDeletingId(null);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Handle image upload
@@ -229,21 +217,6 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
 
     return (
         <div className="space-y-6">
-            {/* Global Loading Overlay */}
-            {isLoading && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-                    <div className={`rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 border transition-all ${
-                        isDark ? "bg-slate-900 border-purple-500/20 text-white shadow-[0_0_30px_rgba(168,85,247,0.2)]" : "bg-white border-gray-100 text-gray-700"
-                    }`}>
-                        <div className="relative">
-                            <div className={`w-12 h-12 border-4 rounded-full animate-pulse ${isDark ? "border-purple-900/50" : "border-indigo-200"}`} />
-                            <Loader2 className={`w-12 h-12 animate-spin absolute inset-0 ${isDark ? "text-purple-500" : "text-indigo-500"}`} />
-                        </div>
-                        <p className={`font-medium ${isDark ? "text-purple-200" : "text-gray-700"}`}>{loadingMessage}</p>
-                    </div>
-                </div>
-            )}
-
             {/* Delete Confirm Dialog */}
             <ConfirmDialog
                 isOpen={deleteConfirmId !== null}
@@ -267,7 +240,7 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
                 </div>
                 <Button
                     onClick={handleAddNew}
-                    disabled={isLimitReached || isLoading}
+                    disabled={isLimitReached}
                     className={`text-white transition-all shadow-md ${
                         isDark 
                             ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35 hover:shadow-purple-500/20" 

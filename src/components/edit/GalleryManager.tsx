@@ -48,34 +48,15 @@ interface GalleryManagerProps {
     isDark?: boolean;
 }
 
-// Full-screen loading overlay component
-// Full-screen loading overlay component
-function LoadingOverlay({ message, isDark }: { message: string; isDark?: boolean }) {
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-            <div className={`rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 border transition-all ${
-                isDark ? "bg-slate-900 border-purple-500/20 text-white shadow-[0_0_30px_rgba(168,85,247,0.2)]" : "bg-white border-gray-100 text-gray-700"
-            }`}>
-                <div className="relative">
-                    <div className={`w-12 h-12 border-4 rounded-full animate-pulse ${isDark ? "border-purple-900/50" : "border-pink-200"}`} />
-                    <Loader2 className={`w-12 h-12 animate-spin absolute inset-0 ${isDark ? "text-purple-500" : "text-pink-500"}`} />
-                </div>
-                <p className={`font-medium ${isDark ? "text-purple-200" : "text-gray-700"}`}>{message}</p>
-            </div>
-        </div>
-    );
-}
-
 // Sortable Image Component
 interface SortableImageProps {
     image: Gallery;
     isDeleting: boolean;
-    isLoading: boolean;
     onEdit: () => void;
     onDelete: () => void;
 }
 
-function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: SortableImageProps) {
+function SortableImage({ image, isDeleting, onEdit, onDelete }: SortableImageProps) {
     const {
         attributes,
         listeners,
@@ -129,15 +110,14 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
                 <div className="absolute top-2 right-2 flex gap-1 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
                     <button
                         onClick={onEdit}
-                        disabled={isLoading}
-                        className="p-2 bg-white/90 rounded-full hover:bg-white shadow-sm disabled:opacity-50"
+                        className="p-2 bg-white/90 rounded-full hover:bg-white shadow-sm"
                         title="Sửa chú thích"
                     >
                         <Edit3 className="w-4 h-4 text-gray-600" />
                     </button>
                     <button
                         onClick={onDelete}
-                        disabled={isLoading || isDeleting}
+                        disabled={isDeleting}
                         className="p-2 bg-white/90 rounded-full hover:bg-red-50 shadow-sm disabled:opacity-50"
                         title="Xóa"
                     >
@@ -167,10 +147,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
     const [editCaption, setEditCaption] = useState("");
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-    // Loading states
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadingMessage, setLoadingMessage] = useState("");
     const [savingCaption, setSavingCaption] = useState(false);
 
     const isLimitReached = gallery.length >= MAX_PHOTOS;
@@ -179,9 +155,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
     // Handle multiple image uploads
     const handleUploadComplete = useCallback(
         async (urls: string[]) => {
-            setIsLoading(true);
-            setLoadingMessage(`Đang lưu ${urls.length} ảnh...`);
-
             // Add all images in parallel
             const results = await Promise.all(
                 urls.map(url => addGalleryImage(slug, url))
@@ -196,8 +169,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
             }
 
             setIsAddingNew(false);
-            setIsLoading(false);
-            setLoadingMessage("");
         },
         [slug]
     );
@@ -206,8 +177,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
     const handleDelete = async (imageId: string) => {
         setDeleteConfirmId(null);
         setDeletingId(imageId);
-        setIsLoading(true);
-        setLoadingMessage("Đang xóa ảnh...");
 
         const result = await deleteGalleryImage(slug, imageId);
 
@@ -216,8 +185,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
         }
 
         setDeletingId(null);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Handle edit caption
@@ -235,8 +202,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
         if (!editingImage) return;
 
         setSavingCaption(true);
-        setIsLoading(true);
-        setLoadingMessage("Đang lưu...");
 
         const result = await updateGalleryImage(slug, editingImage.id, editCaption);
 
@@ -248,8 +213,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
 
         closeEditDialog();
         setSavingCaption(false);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Drag and drop sensors
@@ -277,22 +240,13 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
             setGallery(newGallery);
 
             // Persist to database
-            setIsLoading(true);
-            setLoadingMessage("Đang lưu thứ tự...");
-
             const imageIds = newGallery.map((img) => img.id);
             await reorderGalleryImages(slug, imageIds);
-
-            setIsLoading(false);
-            setLoadingMessage("");
         }
     };
 
     return (
         <div className="space-y-6">
-            {/* Global Loading Overlay */}
-            {isLoading && <LoadingOverlay message={loadingMessage} isDark={isDark} />}
-
             {/* Delete Confirm Dialog */}
             <ConfirmDialog
                 isOpen={deleteConfirmId !== null}
@@ -316,7 +270,7 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
                 </div>
                 <button
                     onClick={() => setIsAddingNew(true)}
-                    disabled={isLoading || isLimitReached}
+                    disabled={isLimitReached}
                     className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
                         isDark 
                             ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35 hover:shadow-purple-500/20" 
@@ -355,8 +309,7 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
                             </div>
                             <button
                                 onClick={() => setIsAddingNew(false)}
-                                disabled={isLoading}
-                                className={`p-2 rounded-full disabled:opacity-50 transition-colors ${
+                                className={`p-2 rounded-full transition-colors ${
                                     isDark ? "hover:bg-slate-800 text-purple-300 hover:text-white" : "hover:bg-gray-100 text-gray-500"
                                 }`}
                             >
@@ -413,7 +366,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
                                         key={image.id}
                                         image={image}
                                         isDeleting={deletingId === image.id}
-                                        isLoading={isLoading}
                                         onEdit={() => startEdit(image)}
                                         onDelete={() => setDeleteConfirmId(image.id)}
                                     />

@@ -8,6 +8,7 @@ import { EditConfigForm } from "@/components/edit/EditConfigForm";
 import { EditIdolConfigForm } from "@/components/edit/EditIdolConfigForm";
 import { GalleryManager } from "@/components/edit/GalleryManager";
 import { TimelineManager } from "@/components/edit/TimelineManager";
+import { EditTemplateLoading } from "./edit-template-loading";
 import {
     User,
     Image as ImageIcon,
@@ -46,8 +47,17 @@ const TABS: { id: TabId; label: string; icon: typeof User; description: string }
 
 export function EditPageClient({ slug, linkData }: EditPageClientProps) {
     const [activeTab, setActiveTab] = useState<TabId>("profile");
+    const [isInitializing, setIsInitializing] = useState(true);
+    const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [fullUrl, setFullUrl] = useState(`https://love-memories.com/${slug}`);
+    const isLove = linkData.type === "LOVE";
+    const isLove2 = linkData.type === "LOVE2";
     const isIdol = linkData.type === "IDOL";
     const isGrad = linkData.type === "GRAD_PERSONAL" || linkData.type === "GRAD_CLASS" || linkData.type === "GRAD_GROUP";
+    const isWedding = linkData.type === "WEDDING";
+    const isTravel = linkData.type === "TRAVEL";
+    const isFriendship = linkData.type === "FRIENDSHIP";
 
     let gradTheme = "emerald";
     if (linkData.type === "GRAD_CLASS") {
@@ -57,9 +67,10 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         gradTheme = (profileData?.theme as string) || "caravan";
     }
 
-    const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
-    const [copied, setCopied] = useState(false);
-    const [fullUrl, setFullUrl] = useState(`https://love-memories.com/${slug}`);
+    useEffect(() => {
+        const timer = setTimeout(() => setIsInitializing(false), 800);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         setFullUrl(`${window.location.origin}/${slug}`);
@@ -256,6 +267,65 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         }
     }
 
+    if (isLove) {
+        wrapperClass = "min-h-screen relative overflow-x-hidden bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 py-6";
+        containerClass = "rounded-3xl border-2 border-rose-200 shadow-[0_20px_50px_rgba(244,114,182,0.2)] overflow-hidden bg-white/95 backdrop-blur-sm text-rose-900 max-w-6xl mx-auto";
+        sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 border-rose-100 bg-gradient-to-b from-rose-50 to-pink-50 text-rose-800 relative";
+        mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-white/80 text-rose-900 relative";
+        headerClass = "sticky top-0 z-10 md:z-20 border-b-2 border-rose-100 bg-white/90 backdrop-blur-md text-rose-800";
+        headerTextClass = "text-rose-800";
+        headerBackLinkClass = "hover:bg-rose-50 text-rose-600";
+        headerViewLinkClass = "text-rose-600 hover:text-rose-800";
+    }
+
+    if (isLove2) {
+        wrapperClass = "min-h-screen relative overflow-x-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 py-6";
+        containerClass = "rounded-3xl border-2 border-amber-200 shadow-[0_20px_50px_rgba(217,119,6,0.15)] overflow-hidden bg-[#fef3c7]/95 backdrop-blur-sm text-amber-900 max-w-6xl mx-auto";
+        sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 border-amber-200 bg-gradient-to-b from-amber-100 to-orange-100 text-amber-800 relative";
+        mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-[#fffbeb]/80 text-amber-900 relative";
+        headerClass = "sticky top-0 z-10 md:z-20 border-b-2 border-amber-200 bg-[#fef3c7]/90 backdrop-blur-md text-amber-800";
+        headerTextClass = "text-amber-800";
+        headerBackLinkClass = "hover:bg-amber-50 text-amber-600";
+        headerViewLinkClass = "text-amber-600 hover:text-amber-800";
+    }
+
+    if (isWedding) {
+        wrapperClass = "min-h-screen relative overflow-x-hidden bg-gradient-to-br from-amber-50 via-rose-50 to-amber-100 py-6";
+        containerClass = "rounded-3xl border-2 border-amber-200 shadow-[0_20px_50px_rgba(180,83,9,0.15)] overflow-hidden bg-white/95 backdrop-blur-sm text-amber-900 max-w-6xl mx-auto";
+        sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 border-amber-100 bg-gradient-to-b from-amber-50 to-rose-50 text-amber-800 relative";
+        mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-white/80 text-amber-900 relative";
+        headerClass = "sticky top-0 z-10 md:z-20 border-b-2 border-amber-100 bg-white/90 backdrop-blur-md text-amber-800";
+        headerTextClass = "text-amber-800";
+        headerBackLinkClass = "hover:bg-amber-50 text-amber-600";
+        headerViewLinkClass = "text-amber-600 hover:text-amber-800";
+    }
+
+    if (isTravel) {
+        wrapperClass = "min-h-screen relative overflow-x-hidden bg-gradient-to-br from-sky-100 via-emerald-50 to-sky-50 py-6";
+        containerClass = "rounded-3xl border-2 border-sky-200 shadow-[0_20px_50px_rgba(14,165,233,0.15)] overflow-hidden bg-white/95 backdrop-blur-sm text-sky-900 max-w-6xl mx-auto";
+        sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 border-sky-100 bg-gradient-to-b from-sky-50 to-emerald-50 text-sky-800 relative";
+        mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-white/80 text-sky-900 relative";
+        headerClass = "sticky top-0 z-10 md:z-20 border-b-2 border-sky-100 bg-white/90 backdrop-blur-md text-sky-800";
+        headerTextClass = "text-sky-800";
+        headerBackLinkClass = "hover:bg-sky-50 text-sky-600";
+        headerViewLinkClass = "text-sky-600 hover:text-sky-800";
+    }
+
+    if (isFriendship) {
+        wrapperClass = "min-h-screen relative overflow-x-hidden bg-gradient-to-br from-violet-100 via-purple-50 to-pink-50 py-6";
+        containerClass = "rounded-3xl border-2 border-violet-200 shadow-[0_20px_50px_rgba(139,92,246,0.15)] overflow-hidden bg-white/95 backdrop-blur-sm text-violet-900 max-w-6xl mx-auto";
+        sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 border-violet-100 bg-gradient-to-b from-violet-50 to-pink-50 text-violet-800 relative";
+        mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-white/80 text-violet-900 relative";
+        headerClass = "sticky top-0 z-10 md:z-20 border-b-2 border-violet-100 bg-white/90 backdrop-blur-md text-violet-800";
+        headerTextClass = "text-violet-800";
+        headerBackLinkClass = "hover:bg-violet-50 text-violet-600";
+        headerViewLinkClass = "text-violet-600 hover:text-violet-800";
+    }
+
+    if (isInitializing) {
+        return <EditTemplateLoading linkType={linkData.type} />;
+    }
+
     return (
         <div className={wrapperClass}
             style={isIdol ? { backgroundColor: 'var(--theme-bg, #fff0f5)' } : {}}
@@ -279,6 +349,87 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                         <div className={`bokeh-bubble w-[250px] h-[250px] top-[50%] left-[60%] ${isDark ? "bg-cyan-500/5" : "bg-cyan-300/15"}`} style={{ animationDuration: '20s', animationDelay: '-10s' }} />
                     </div>
                 </>
+            )}
+
+            {/* LOVE - Storybook decorations */}
+            {isLove && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    {[...Array(8)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute animate-float-heart"
+                            style={{
+                                left: `${10 + Math.random() * 80}%`,
+                                top: `${10 + Math.random() * 80}%`,
+                                animationDelay: `${i * 0.7}s`,
+                                animationDuration: `${3 + Math.random() * 2}s`,
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-rose-300/30">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* LOVE2 - Desk Collage decorations */}
+            {isLove2 && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    <div className="absolute top-10 left-10 w-32 h-32 bg-amber-200/20 rounded-full blur-3xl" />
+                    <div className="absolute bottom-20 right-20 w-40 h-40 bg-orange-200/20 rounded-full blur-3xl" />
+                    <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-yellow-200/20 rounded-full blur-2xl" />
+                </div>
+            )}
+
+            {/* WEDDING - Invitation Card decorations */}
+            {isWedding && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    {[...Array(10)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute animate-float-heart"
+                            style={{
+                                left: `${5 + Math.random() * 90}%`,
+                                top: `${5 + Math.random() * 90}%`,
+                                animationDelay: `${i * 0.6}s`,
+                                animationDuration: `${4 + Math.random() * 2}s`,
+                            }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-amber-300/25">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* TRAVEL - Map decorations */}
+            {isTravel && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    <div className="absolute inset-0 opacity-10" style={{
+                        backgroundImage: `
+                            linear-gradient(rgba(56, 189, 248, 0.3) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(56, 189, 248, 0.3) 1px, transparent 1px)
+                        `,
+                        backgroundSize: "50px 50px"
+                    }} />
+                    <div className="absolute top-20 left-[15%] w-12 h-12 text-emerald-300/30">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>
+                    </div>
+                    <div className="absolute top-40 right-[20%] w-10 h-10 text-sky-300/30">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    </div>
+                </div>
+            )}
+
+            {/* FRIENDSHIP - Chat decorations */}
+            {isFriendship && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    <div className="absolute top-10 left-10 w-40 h-20 bg-violet-200/20 rounded-3xl blur-xl rotate-12" />
+                    <div className="absolute bottom-20 right-10 w-36 h-16 bg-pink-200/20 rounded-3xl blur-xl -rotate-6" />
+                    <div className="absolute top-1/3 right-1/4 w-32 h-14 bg-purple-200/20 rounded-3xl blur-xl rotate-3" />
+                </div>
             )}
 
             {/* Header */}
@@ -399,6 +550,46 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                         }
                                     }
 
+                                    if (isLove) {
+                                        tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
+                                            isActive
+                                                ? "bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-md"
+                                                : "text-rose-700 hover:bg-rose-50"
+                                        }`;
+                                    }
+
+                                    if (isLove2) {
+                                        tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
+                                            isActive
+                                                ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md"
+                                                : "text-amber-700 hover:bg-amber-50"
+                                        }`;
+                                    }
+
+                                    if (isWedding) {
+                                        tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
+                                            isActive
+                                                ? "bg-gradient-to-r from-amber-500 to-rose-400 text-white shadow-md"
+                                                : "text-amber-700 hover:bg-amber-50"
+                                        }`;
+                                    }
+
+                                    if (isTravel) {
+                                        tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
+                                            isActive
+                                                ? "bg-gradient-to-r from-sky-400 to-emerald-500 text-white shadow-md"
+                                                : "text-sky-700 hover:bg-sky-50"
+                                        }`;
+                                    }
+
+                                    if (isFriendship) {
+                                        tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
+                                            isActive
+                                                ? "bg-gradient-to-r from-violet-500 to-pink-500 text-white shadow-md"
+                                                : "text-violet-700 hover:bg-violet-50"
+                                        }`;
+                                    }
+
                                     return (
                                         <button
                                             key={tab.id}
@@ -421,20 +612,40 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                             </nav>
 
                             {/* Page Status / QR Code Widget (Desktop sidebar space filler) */}
-                            {(isIdol || isGrad) && (
-                                <div className={`hidden md:flex flex-col gap-4 p-4 rounded-2xl border transition-all ${
-                                    isDark 
-                                        ? isGrad
+                            <div className={`hidden md:flex flex-col gap-4 p-4 rounded-2xl border transition-all ${
+                                isIdol
+                                    ? isDark
+                                        ? "bg-slate-950/40 border-purple-500/10"
+                                        : "bg-white border-gray-200/60 shadow-sm"
+                                    : isGrad
+                                        ? isDark
                                             ? "bg-black/25 border-white/5"
-                                            : "bg-slate-950/40 border-purple-500/10" 
-                                        : isGrad
-                                            ? "bg-white/40 border-black/5"
-                                            : "bg-white border-gray-200/60 shadow-sm"
-                                }`}>
-                                    <div className="flex items-center gap-2 border-b pb-2" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
-                                        <QrCode className={`w-4 h-4 ${isDark ? isGrad ? "text-yellow-400" : "text-purple-400" : "text-purple-600"}`} />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
-                                    </div>
+                                            : "bg-white/40 border-black/5"
+                                        : isLove
+                                            ? "bg-rose-50/50 border-rose-100"
+                                            : isLove2
+                                                ? "bg-amber-50/50 border-amber-100"
+                                                : isWedding
+                                                    ? "bg-amber-50/50 border-amber-100"
+                                                    : isTravel
+                                                        ? "bg-sky-50/50 border-sky-100"
+                                                        : isFriendship
+                                                            ? "bg-violet-50/50 border-violet-100"
+                                                            : "bg-white border-gray-100 shadow-sm"
+                            }`}>
+                                <div className="flex items-center gap-2 border-b pb-2" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
+                                    <QrCode className={`w-4 h-4 ${
+                                        isIdol ? (isDark ? "text-purple-400" : "text-purple-600")
+                                            : isGrad ? (isDark ? "text-yellow-400" : "text-purple-600")
+                                            : isLove ? "text-rose-500"
+                                            : isLove2 ? "text-amber-500"
+                                            : isWedding ? "text-amber-600"
+                                            : isTravel ? "text-sky-500"
+                                            : isFriendship ? "text-violet-500"
+                                            : "text-gray-600"
+                                    }`} />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
+                                </div>
                                     
                                     {/* URL slug & Copy Link */}
                                     <div className="space-y-1.5">
@@ -465,8 +676,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                         </div>
                                         <span className="text-[9px] text-center opacity-60">Quét bằng điện thoại để xem trực tiếp</span>
                                     </div>
-                                </div>
-                            )}
+                            </div>
                         </aside>
 
                         {/* Right Column (Forms Content Panel) */}
@@ -529,20 +739,40 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                 </div>
 
                 {/* Page Status / QR Code Widget (Only visible on mobile at the bottom to avoid blocking form) */}
-                {(isIdol || isGrad) && (
-                    <div className={`md:hidden mt-6 p-4 rounded-3xl border transition-all ${
-                        isDark 
-                            ? isGrad
+                <div className={`md:hidden mt-6 p-4 rounded-3xl border transition-all ${
+                    isIdol
+                        ? isDark
+                            ? "bg-slate-900/85 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] text-white backdrop-blur-sm"
+                            : "bg-white border-gray-100 shadow-lg text-gray-800"
+                        : isGrad
+                            ? isDark
                                 ? "bg-black/25 border-white/5 text-slate-100 shadow-lg"
-                                : "bg-slate-900/85 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] text-white backdrop-blur-sm" 
-                            : isGrad
-                                ? "bg-white/40 border-black/5 text-slate-800 shadow-md"
-                                : "bg-white border-gray-100 shadow-lg text-gray-800"
-                    }`}>
-                        <div className="flex items-center gap-2 border-b pb-2 mb-3" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
-                            <QrCode className={`w-4 h-4 ${isDark ? isGrad ? "text-yellow-400" : "text-purple-500" : "text-purple-600"}`} />
-                            <span className="text-xs font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
-                        </div>
+                                : "bg-white/40 border-black/5 text-slate-800 shadow-md"
+                            : isLove
+                                ? "bg-rose-50/50 border-rose-100 text-rose-800 shadow-md"
+                                : isLove2
+                                    ? "bg-amber-50/50 border-amber-100 text-amber-800 shadow-md"
+                                    : isWedding
+                                        ? "bg-amber-50/50 border-amber-100 text-amber-800 shadow-md"
+                                        : isTravel
+                                            ? "bg-sky-50/50 border-sky-100 text-sky-800 shadow-md"
+                                            : isFriendship
+                                                ? "bg-violet-50/50 border-violet-100 text-violet-800 shadow-md"
+                                                : "bg-white border-gray-100 shadow-lg text-gray-800"
+                }`}>
+                    <div className="flex items-center gap-2 border-b pb-2 mb-3" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
+                        <QrCode className={`w-4 h-4 ${
+                            isIdol ? (isDark ? "text-purple-500" : "text-purple-600")
+                                : isGrad ? (isDark ? "text-yellow-400" : "text-purple-600")
+                                : isLove ? "text-rose-500"
+                                : isLove2 ? "text-amber-500"
+                                : isWedding ? "text-amber-600"
+                                : isTravel ? "text-sky-500"
+                                : isFriendship ? "text-violet-500"
+                                : "text-gray-600"
+                        }`} />
+                        <span className="text-xs font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
+                    </div>
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                             <div className="flex-1 w-full space-y-2">
                                 <p className="text-xs opacity-75">Đường dẫn xem trang của bạn:</p>
@@ -569,8 +799,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                 <span className="text-[9px] opacity-60">Quét bằng điện thoại để xem trực tiếp</span>
                             </div>
                         </div>
-                    </div>
-                )}
+                </div>
             </div>
             
             <style jsx>{`
@@ -637,6 +866,58 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                     0% { transform: translate(0, 0) scale(1); }
                     50% { transform: translate(40px, -60px) scale(1.2); }
                     100% { transform: translate(-30px, 40px) scale(0.9); }
+                }
+
+                /* LOVE Template - Floating Hearts */
+                @keyframes float-heart {
+                    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { transform: translateY(-100px) scale(1); opacity: 0; }
+                }
+
+                .animate-float-heart {
+                    animation: float-heart linear infinite;
+                }
+
+                /* LOVE2 Template - Desk Blur Effects */
+                @keyframes desk-float {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-10px); }
+                }
+
+                .animate-desk-float {
+                    animation: desk-float 3s ease-in-out infinite;
+                }
+
+                /* TRAVEL Template - Grid Pattern */
+                .travel-grid {
+                    background-size: 50px 50px;
+                    background-image: 
+                        linear-gradient(to right, rgba(14, 165, 233, 0.05) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
+                }
+
+                /* FRIENDSHIP Template - Chat Bubbles */
+                @keyframes chat-bubble-float {
+                    0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+                    10% { opacity: 0.6; }
+                    90% { opacity: 0.6; }
+                    100% { transform: translateY(-100px) translateX(20px) scale(1); opacity: 0; }
+                }
+
+                .animate-chat-bubble {
+                    animation: chat-bubble-float linear infinite;
+                }
+
+                /* WEDDING Template - Sparkle */
+                @keyframes sparkle {
+                    0%, 100% { opacity: 0; transform: scale(0); }
+                    50% { opacity: 1; transform: scale(1); }
+                }
+
+                .animate-sparkle {
+                    animation: sparkle 2s ease-in-out infinite;
                 }
             `}</style>
         </div>

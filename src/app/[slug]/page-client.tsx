@@ -45,11 +45,9 @@ interface SlugPageClientProps {
 export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkData, publicData }: SlugPageClientProps) {
     const [authenticated, setAuthenticated] = useState(isAuthenticated);
     const [linkData, setLinkData] = useState<LinkWithRelations | null>(initialLinkData);
-    const [isLoadingData, setIsLoadingData] = useState(false);
     const musicPlayerRef = useRef<MusicPlayerRef>(null);
 
     const handleUnlock = useCallback(async () => {
-        setIsLoadingData(true);
         try {
             const result = await getLinkData(slug);
             if (result.success && result.data) {
@@ -61,7 +59,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
         } catch {
             window.location.reload();
         }
-        setIsLoadingData(false);
     }, [slug]);
 
     const handleWelcomeOpen = useCallback(() => {
@@ -95,14 +92,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                     <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
                 ) : (
                     <LockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
-                )}
-                {isLoadingData && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl p-6 flex items-center gap-3 shadow-xl">
-                            <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
-                            <span className="text-gray-700 font-medium">Đang tải nội dung...</span>
-                        </div>
-                    </div>
                 )}
             </ThemeWrapper>
         );
@@ -167,7 +156,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
             case "WEDDING":
                 return <WeddingTemplate data={linkData} slug={slug} />;
             case "TRAVEL":
-                return <TravelTemplate data={linkData} slug={slug} />;
+                return <TravelTemplate data={linkData} slug={slug} isAuthenticated={isAuthenticated} />;
             case "FRIENDSHIP":
                 return <FriendshipTemplate data={linkData} slug={slug} />;
             case "EVERY":

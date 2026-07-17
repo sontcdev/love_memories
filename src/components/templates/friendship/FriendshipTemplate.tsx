@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, X, Smile, Users, Star, Zap } from "lucide-react";
-import { CardDrawGame } from "@/components/shared/CardDrawGame";
-import { LetterBox } from "@/components/shared/LetterBox";
+import { Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, X, Smile, Users, Star, Zap, Send, Phone, Video, Heart, MessageCircle } from "lucide-react";
+import { FriendshipLetterBox } from "./FriendshipLetterBox";
+import { FriendshipGameSection } from "./FriendshipGameSection";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -22,29 +22,18 @@ interface FriendshipTemplateProps {
     slug: string;
 }
 
+type ChatTab = "chat" | "gallery" | "guestbook" | "quiz";
+
 export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
-    const [activeSection, setActiveSection] = useState<string>("home");
-    const [showScrollTop, setShowScrollTop] = useState(false);
+    const [activeTab, setActiveTab] = useState<ChatTab>("chat");
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const chatEndRef = useRef<HTMLDivElement>(null);
     const profileData = data.profile_data as Record<string, string> | null;
 
     const groupName = profileData?.group_name || "Nhóm bạn";
     const motto = profileData?.motto;
     const memberCount = profileData?.member_count;
     const since = profileData?.since;
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setShowScrollTop(window.scrollY > 400);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
 
     const getYearsTogether = () => {
         if (!since) return null;
@@ -55,240 +44,284 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
 
     const years = getYearsTogether();
 
-    const navItems = [
-        { id: "home", label: "Trang chủ", icon: Smile },
-        { id: "story", label: "Kỷ niệm", icon: Calendar },
-        { id: "gallery", label: "Album", icon: ImageIcon },
-        { id: "guestbook", label: "Lưu bút", icon: Mail },
-        { id: "quiz", label: "Thử thách", icon: Zap },
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [activeTab]);
+
+    const tabs = [
+        { id: "chat" as const, label: "Trò chuyện", icon: MessageCircle },
+        { id: "gallery" as const, label: "Ảnh", icon: ImageIcon },
+        { id: "guestbook" as const, label: "Lưu bút", icon: Mail },
+        { id: "quiz" as const, label: "Thử thách", icon: Zap },
     ];
 
-    const scrollToSection = (sectionId: string) => {
-        setActiveSection(sectionId);
-        const element = document.getElementById(sectionId);
-        if (element) {
-            const offset = 80;
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
-            window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-        }
-    };
+    const avatarColors = [
+        "bg-violet-400", "bg-pink-400", "bg-sky-400", "bg-emerald-400",
+        "bg-amber-400", "bg-rose-400", "bg-indigo-400", "bg-teal-400",
+    ];
+
+    const getAvatarColor = (index: number) => avatarColors[index % avatarColors.length];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-pink-50">
-            {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-violet-100 shadow-sm">
-                <div className="max-w-4xl mx-auto px-4">
-                    <div className="flex items-center justify-between h-16">
+        <div className="h-screen flex flex-col bg-violet-50">
+            {/* Chat Header */}
+            <div className="bg-gradient-to-r from-violet-600 to-pink-500 text-white shadow-lg z-40">
+                <div className="max-w-2xl mx-auto px-4 py-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h1 className="font-semibold text-lg">{groupName}</h1>
+                                <div className="flex items-center gap-2 text-xs text-white/80">
+                                    {memberCount && <span>{memberCount} thành viên</span>}
+                                    {years !== null && <span>{years} năm gắn bó</span>}
+                                </div>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-2">
-                            <Smile className="w-5 h-5 text-violet-500" />
-                            <span className="font-medium text-lg text-violet-800">{groupName}</span>
+                            <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                                <Phone className="w-5 h-5" />
+                            </button>
+                            <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                                <Video className="w-5 h-5" />
+                            </button>
+                            <Link
+                                href={`/${slug}/edit`}
+                                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                            >
+                                <Settings className="w-5 h-5" />
+                            </Link>
                         </div>
-                        <div className="hidden md:flex items-center gap-1">
-                            {navItems.map((item) => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => scrollToSection(item.id)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        activeSection === item.id
-                                            ? "bg-violet-100 text-violet-700"
-                                            : "text-gray-600 hover:bg-violet-50"
-                                    }`}
-                                >
-                                    <item.icon className="w-4 h-4" />
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
-                        <Link
-                            href={`/${slug}/edit`}
-                            className="p-2 rounded-lg text-gray-500 hover:bg-violet-50 hover:text-violet-600 transition-colors"
-                        >
-                            <Settings className="w-5 h-5" />
-                        </Link>
                     </div>
                 </div>
-            </nav>
+            </div>
 
-            {/* Mobile Nav */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/90 backdrop-blur-md border-t border-violet-100 shadow-lg">
-                <div className="flex items-center justify-around py-2">
-                    {navItems.map((item) => (
+            {/* Tab bar */}
+            <div className="bg-white border-b border-violet-100 shadow-sm z-30">
+                <div className="max-w-2xl mx-auto flex">
+                    {tabs.map((tab) => (
                         <button
-                            key={item.id}
-                            onClick={() => scrollToSection(item.id)}
-                            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                                activeSection === item.id
-                                    ? "text-violet-600"
-                                    : "text-gray-500"
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                                activeTab === tab.id
+                                    ? "border-violet-500 text-violet-600"
+                                    : "border-transparent text-gray-500 hover:text-violet-400"
                             }`}
                         >
-                            <item.icon className="w-5 h-5" />
-                            {item.label}
+                            <tab.icon className="w-4 h-4" />
+                            {tab.label}
                         </button>
                     ))}
                 </div>
             </div>
 
-            <main className="max-w-4xl mx-auto px-4 pt-20 pb-24 md:pb-8">
-                {/* Hero Section */}
-                <section id="home" className="py-12 text-center">
-                    <div className="mb-8">
-                        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-violet-200 to-pink-200 mb-6">
-                            <Users className="w-12 h-12 text-violet-600" />
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-bold text-violet-900 mb-4">
-                            {groupName}
-                        </h1>
-                        {motto && (
-                            <p className="text-lg text-violet-600 italic mb-4">&ldquo;{motto}&rdquo;</p>
-                        )}
-                        {memberCount && (
-                            <div className="flex items-center justify-center gap-2 text-pink-500 mb-2">
-                                <Users className="w-5 h-5" />
-                                <span>{memberCount} thành viên</span>
+            {/* Chat Content Area */}
+            <div className="flex-1 overflow-y-auto">
+                <div className="max-w-2xl mx-auto">
+                    {activeTab === "chat" && (
+                        <div className="p-4 space-y-4">
+                            {/* Group intro message */}
+                            <div className="flex justify-center">
+                                <div className="bg-violet-100 text-violet-700 text-xs px-4 py-2 rounded-full">
+                                    {motto ? `"${motto}"` : `${groupName} đã bắt đầu trò chuyện`}
+                                </div>
                             </div>
-                        )}
-                        {since && years !== null && (
-                            <div className="flex items-center justify-center gap-2 text-violet-500">
-                                <Star className="w-4 h-4 fill-violet-500" />
-                                <span>{years} năm gắn bó</span>
-                            </div>
-                        )}
-                    </div>
-                </section>
 
-                {/* Timeline Section */}
-                {data.timelines.length > 0 && (
-                    <section id="story" className="py-12">
-                        <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-violet-900 mb-2">Kỷ niệm đáng nhớ</h2>
-                            <div className="flex items-center justify-center gap-2">
-                                <div className="h-px w-12 bg-violet-300" />
-                                <Calendar className="w-4 h-4 text-violet-500" />
-                                <div className="h-px w-12 bg-violet-300" />
-                            </div>
-                        </div>
-                        <div className="relative">
-                            <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-violet-200" />
-                            {data.timelines.map((item, index) => (
-                                <div
-                                    key={item.id}
-                                    className={`relative flex items-start gap-4 mb-8 ${
-                                        index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-                                    }`}
-                                >
-                                    <div className="absolute left-4 md:left-1/2 w-3 h-3 -translate-x-1/2 rounded-full bg-violet-400 border-2 border-white shadow" />
-                                    <div className={`ml-10 md:ml-0 md:w-1/2 ${index % 2 === 0 ? "md:pr-8" : "md:pl-8"}`}>
-                                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-violet-100 shadow-sm">
-                                            <div className="text-sm text-violet-600 font-medium mb-1">
-                                                {new Date(item.date).toLocaleDateString("vi-VN", {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                })}
-                                            </div>
-                                            <h3 className="text-lg font-semibold text-violet-900 mb-2">{item.title}</h3>
-                                            {item.description && (
-                                                <p className="text-sm text-gray-600">{item.description}</p>
-                                            )}
-                                            {item.image_url && (
-                                                <Image
-                                                    src={item.image_url}
-                                                    alt={item.title}
-                                                    width={400}
-                                                    height={300}
-                                                    className="mt-3 rounded-lg object-cover w-full"
-                                                />
-                                            )}
+                            {/* Timeline events as chat messages */}
+                            {data.timelines.length > 0 && (
+                                <>
+                                    <div className="flex justify-center">
+                                        <div className="bg-violet-100 text-violet-700 text-xs px-4 py-2 rounded-full">
+                                            Kỷ niệm đáng nhớ
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
+                                    {data.timelines.map((item, index) => {
+                                        const isLeft = index % 2 === 0;
+                                        return (
+                                            <div key={item.id} className={`flex gap-2 ${isLeft ? "" : "flex-row-reverse"}`}>
+                                                <div className={`w-8 h-8 rounded-full ${getAvatarColor(index)} flex items-center justify-center flex-shrink-0`}>
+                                                    <Smile className="w-4 h-4 text-white" />
+                                                </div>
+                                                <div className={`max-w-[75%] ${isLeft ? "" : "items-end"}`}>
+                                                    <div className={`rounded-2xl overflow-hidden shadow-sm ${
+                                                        isLeft
+                                                            ? "bg-white rounded-tl-sm"
+                                                            : "bg-gradient-to-r from-violet-500 to-pink-500 text-white rounded-tr-sm"
+                                                    }`}>
+                                                        {item.image_url && (
+                                                            <Image
+                                                                src={item.image_url}
+                                                                alt={item.title}
+                                                                width={300}
+                                                                height={200}
+                                                                className="w-full object-cover max-h-48"
+                                                            />
+                                                        )}
+                                                        <div className="p-3">
+                                                            <div className={`text-xs mb-1 ${isLeft ? "text-violet-500" : "text-white/80"}`}>
+                                                                {new Date(item.date).toLocaleDateString("vi-VN", {
+                                                                    day: "2-digit",
+                                                                    month: "short",
+                                                                    year: "numeric",
+                                                                })}
+                                                            </div>
+                                                            <h3 className={`font-semibold ${isLeft ? "text-gray-800" : "text-white"}`}>
+                                                                {item.title}
+                                                            </h3>
+                                                            {item.description && (
+                                                                <p className={`text-sm mt-1 ${isLeft ? "text-gray-600" : "text-white/90"}`}>
+                                                                    {item.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className={`text-xs text-gray-400 mt-1 ${isLeft ? "" : "text-right"}`}>
+                                                        {new Date(item.date).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </>
+                            )}
 
-                {/* Gallery Section */}
-                {data.galleries.length > 0 && (
-                    <section id="gallery" className="py-12">
-                        <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-violet-900 mb-2">Khoảnh khắc vui vẻ</h2>
-                            <div className="flex items-center justify-center gap-2">
-                                <div className="h-px w-12 bg-violet-300" />
-                                <ImageIcon className="w-4 h-4 text-violet-500" />
-                                <div className="h-px w-12 bg-violet-300" />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {data.galleries.map((photo, index) => (
-                                <div
-                                    key={photo.id}
-                                    className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group border-2 border-violet-100"
-                                    onClick={() => setLightboxIndex(index)}
-                                >
-                                    <Image
-                                        src={photo.image_url}
-                                        alt={photo.caption || `Photo ${index + 1}`}
-                                        fill
-                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                    {photo.caption && (
-                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                                            <p className="text-white text-xs text-center truncate">{photo.caption}</p>
+                            {/* Gallery preview in chat */}
+                            {data.galleries.length > 0 && (
+                                <>
+                                    <div className="flex justify-center">
+                                        <div className="bg-violet-100 text-violet-700 text-xs px-4 py-2 rounded-full">
+                                            {data.galleries.length} ảnh đã được chia sẻ
                                         </div>
-                                    )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-violet-400 flex items-center justify-center flex-shrink-0">
+                                            <ImageIcon className="w-4 h-4 text-white" />
+                                        </div>
+                                        <div className="max-w-[75%]">
+                                            <div className="bg-white rounded-2xl rounded-tl-sm p-2 shadow-sm">
+                                                <div className="grid grid-cols-3 gap-1">
+                                                    {data.galleries.slice(0, 6).map((photo, index) => (
+                                                        <div
+                                                            key={photo.id}
+                                                            className="relative aspect-square rounded-lg overflow-hidden cursor-pointer"
+                                                            onClick={() => setLightboxIndex(index)}
+                                                        >
+                                                            <Image
+                                                                src={photo.image_url}
+                                                                alt={photo.caption || `Photo ${index + 1}`}
+                                                                fill
+                                                                className="object-cover hover:scale-105 transition-transform"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {data.galleries.length > 6 && (
+                                                    <p className="text-xs text-violet-500 text-center mt-2">
+                                                        +{data.galleries.length - 6} ảnh nữa
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Reaction message */}
+                            <div className="flex justify-center">
+                                <div className="bg-white rounded-full px-4 py-2 shadow-sm flex items-center gap-2">
+                                    <Heart className="w-4 h-4 text-pink-400 fill-pink-400" />
+                                    <span className="text-sm text-gray-600">Mãi bên nhau nhé!</span>
+                                    <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                                 </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
+                            </div>
 
-                {/* Guest Book Section */}
-                <section id="guestbook" className="py-12">
-                    <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold text-violet-900 mb-2">Lưu bút</h2>
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="h-px w-12 bg-violet-300" />
-                            <Mail className="w-4 h-4 text-violet-500" />
-                            <div className="h-px w-12 bg-violet-300" />
+                            <div ref={chatEndRef} />
                         </div>
-                        <p className="text-sm text-gray-500 mt-2">Chia sẻ kỷ niệm với nhóm</p>
-                    </div>
-                    <LetterBox slug={slug} initialLetters={data.letters} theme="friendship" onPopupOpenChange={setIsPopupOpen} />
-                </section>
+                    )}
 
-                {/* Quiz Section */}
-                <section id="quiz" className="py-12">
-                    <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold text-violet-900 mb-2">Thử thách nhóm</h2>
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="h-px w-12 bg-violet-300" />
-                            <Zap className="w-4 h-4 text-violet-500" />
-                            <div className="h-px w-12 bg-violet-300" />
+                    {activeTab === "gallery" && (
+                        <div className="p-4">
+                            <div className="text-center mb-4">
+                                <h2 className="text-xl font-bold text-violet-900">Khoảnh khắc vui vẻ</h2>
+                                <p className="text-sm text-gray-500">{data.galleries.length} ảnh</p>
+                            </div>
+                            {data.galleries.length > 0 ? (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {data.galleries.map((photo, index) => (
+                                        <div
+                                            key={photo.id}
+                                            className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group border-2 border-violet-100 shadow-sm"
+                                            onClick={() => setLightboxIndex(index)}
+                                        >
+                                            <Image
+                                                src={photo.image_url}
+                                                alt={photo.caption || `Photo ${index + 1}`}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                            {photo.caption && (
+                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
+                                                    <p className="text-white text-xs text-center truncate">{photo.caption}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-gray-400 italic py-8">Chưa có ảnh nào</p>
+                            )}
                         </div>
+                    )}
+
+                    {activeTab === "guestbook" && (
+                        <div className="p-4">
+                            <div className="text-center mb-4">
+                                <h2 className="text-xl font-bold text-violet-900">Lưu bút</h2>
+                                <p className="text-sm text-gray-500">Chia sẻ kỷ niệm với nhóm</p>
+                            </div>
+                            <FriendshipLetterBox slug={slug} initialLetters={data.letters} onPopupOpenChange={() => {}} />
+                        </div>
+                    )}
+
+                    {activeTab === "quiz" && (
+                        <div className="p-4">
+                            <div className="text-center mb-4">
+                                <h2 className="text-xl font-bold text-violet-900">Thử thách nhóm</h2>
+                            </div>
+                            <FriendshipGameSection />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Chat Input Bar (decorative) */}
+            {activeTab === "chat" && (
+                <div className="bg-white border-t border-violet-100 p-3 z-30">
+                    <div className="max-w-2xl mx-auto flex items-center gap-2">
+                        <button className="p-2 rounded-full text-violet-400 hover:bg-violet-50 transition-colors">
+                            <Smile className="w-6 h-6" />
+                        </button>
+                        <div className="flex-1 bg-violet-50 rounded-full px-4 py-2.5 text-sm text-gray-400">
+                            Nhập tin nhắn...
+                        </div>
+                        <button className="p-2 rounded-full bg-gradient-to-r from-violet-500 to-pink-500 text-white shadow-md hover:shadow-lg transition-shadow">
+                            <Send className="w-5 h-5" />
+                        </button>
                     </div>
-                    <CardDrawGame theme="friendship" />
-                </section>
-            </main>
+                </div>
+            )}
 
             {/* Lightbox */}
             {lightboxIndex !== null && data.galleries.length > 0 && (
-                <div
-                    className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
-                    onClick={() => setLightboxIndex(null)}
-                >
-                    <button
-                        onClick={() => setLightboxIndex(null)}
-                        className="absolute top-4 right-4 p-2 text-white/80 hover:text-white"
-                    >
+                <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" onClick={() => setLightboxIndex(null)}>
+                    <button onClick={() => setLightboxIndex(null)} className="absolute top-4 right-4 p-2 text-white/80 hover:text-white">
                         <X className="w-6 h-6" />
                     </button>
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setLightboxIndex(Math.max(lightboxIndex - 1, 0));
-                        }}
+                        onClick={(e) => { e.stopPropagation(); setLightboxIndex(Math.max(lightboxIndex - 1, 0)); }}
                         disabled={lightboxIndex === 0}
                         className="absolute left-4 p-2 text-white/80 hover:text-white disabled:opacity-30"
                     >
@@ -307,10 +340,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                         )}
                     </div>
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setLightboxIndex(Math.min(lightboxIndex + 1, data.galleries.length - 1));
-                        }}
+                        onClick={(e) => { e.stopPropagation(); setLightboxIndex(Math.min(lightboxIndex + 1, data.galleries.length - 1)); }}
                         disabled={lightboxIndex === data.galleries.length - 1}
                         className="absolute right-4 p-2 text-white/80 hover:text-white disabled:opacity-30"
                     >
@@ -320,16 +350,6 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                         {lightboxIndex + 1} / {data.galleries.length}
                     </div>
                 </div>
-            )}
-
-            {/* Scroll to top */}
-            {showScrollTop && !isPopupOpen && (
-                <button
-                    onClick={scrollToTop}
-                    className="fixed bottom-20 md:bottom-8 right-4 p-3 rounded-full bg-violet-500 text-white shadow-lg hover:bg-violet-600 transition-all z-30"
-                >
-                    <ChevronUp className="w-5 h-5" />
-                </button>
             )}
         </div>
     );

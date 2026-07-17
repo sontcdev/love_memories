@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Coffee, Sun, Moon, Users, Facebook, Instagram, Calendar } from "lucide-react";
-import { useSwipeable } from "react-swipeable";
+import { Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Sun, Moon, Users, MapPin, Navigation, Calendar, Flag } from "lucide-react";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
 
@@ -35,161 +34,86 @@ interface GroupMember {
     instagram?: string;
 }
 
-interface Particle {
-    id: number;
-    left: number;
-    size: number;
-    delay: number;
-    duration: number;
-    angle: number;
-    content: string; // emoji or character
+interface Goal {
+    id: string;
+    title: string;
+    description: string;
+    status: string;
 }
 
-interface ThrownAvatar {
-    id: number;
-    left: number;
-    delay: number;
-    avatar?: string;
-    name: string;
+interface GradGroupProfile {
+    theme?: string;
+    group_name?: string;
+    group_avatar?: string;
+    title?: string;
+    slogan?: string;
+    graduation_year?: string;
+    members?: GroupMember[];
+    goals?: Goal[];
+    quiz?: { question: string; options: string[]; correctIndex: number }[];
+    quiz_badges?: {
+        perfect_title?: string; perfect_desc?: string;
+        good_title?: string; good_desc?: string;
+        normal_title?: string; normal_desc?: string;
+    };
 }
+
+type RoadStop = "start" | "crew" | "gallery" | "timeline" | "goals" | "game" | "letters";
 
 export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
-    const [activeSection, setActiveSection] = useState<string>("members");
-    interface Goal {
-        id: string;
-        title: string;
-        description: string;
-        status: string;
-    }
-
-    interface GradGroupProfile {
-        theme?: string;
-        group_name?: string;
-        group_avatar?: string;
-        title?: string;
-        slogan?: string;
-        graduation_year?: string;
-        members?: GroupMember[];
-        goals?: Goal[];
-        quiz?: {
-            question: string;
-            options: string[];
-            correctIndex: number;
-        }[];
-        quiz_badges?: {
-            perfect_title?: string;
-            perfect_desc?: string;
-            good_title?: string;
-            good_desc?: string;
-            normal_title?: string;
-            normal_desc?: string;
-        };
-    }
-
-    const [showScrollTop, setShowScrollTop] = useState(false);
+    const [currentStop, setCurrentStop] = useState<RoadStop>("start");
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const profileData = data.profile_data as unknown as GradGroupProfile | null;
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
     const isDark = overrideDark !== null ? overrideDark : false;
 
-    // Selected Sub-theme config
-    const subTheme = profileData?.theme || "caravan"; // "caravan" | "scrapbook" | "station"
+    const subTheme = profileData?.theme || "caravan";
 
-    // Card flip state for mobile taps
-    const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
-
-    // Gói 1: Particle States
-    const [particles, setParticles] = useState<Particle[]>([]);
-    const [thrownAvatars, setThrownAvatars] = useState<ThrownAvatar[]>([]);
-
-    // Get theme properties
     const getThemeProps = () => {
         switch (subTheme) {
             case "station":
                 return {
                     bgClass: isDark ? "from-[#05040a] to-[#100c1e]" : "from-[#0f0c1b] to-[#211a3b]",
                     accentColor: "#8b5cf6",
-                    particleEmoji: "✨",
-                    deskTextureOpacity: "opacity-5",
-                    woodColor: "from-[#1a103c] via-[#2d1b6b] to-[#1a103c]",
-                    ribbonBg: "bg-violet-950/90 text-violet-200 border-violet-800/30",
-                    deskOverlay: "ga-tau",
-                    badgeBg: "bg-violet-500/10",
-                    accentText: "text-violet-500",
+                    roadColor: isDark ? "bg-violet-900/40" : "bg-violet-300/60",
+                    stopColor: isDark ? "bg-violet-600" : "bg-violet-500",
+                    cardBg: isDark ? "bg-[#1a103c]/90" : "bg-white/90",
+                    textColor: isDark ? "text-violet-100" : "text-violet-900",
+                    mutedText: isDark ? "text-violet-300/70" : "text-violet-600",
                 };
             case "scrapbook":
                 return {
                     bgClass: isDark ? "from-[#1c1611] to-[#2b2118]" : "from-[#e5d4bc] to-[#c7b399]",
                     accentColor: "#855430",
-                    particleEmoji: "🌸",
-                    deskTextureOpacity: "opacity-15",
-                    woodColor: "from-[#4a3424] via-[#6e4e37] to-[#4a3424]",
-                    ribbonBg: "bg-[#faf3e0]/95 text-[#5c3a21] border-[#855430]/20",
-                    deskOverlay: "kraft",
-                    badgeBg: "bg-[#855430]/10",
-                    accentText: "text-[#855430]",
+                    roadColor: isDark ? "bg-amber-900/40" : "bg-amber-300/60",
+                    stopColor: isDark ? "bg-amber-700" : "bg-amber-600",
+                    cardBg: isDark ? "bg-[#2b2118]/90" : "bg-white/90",
+                    textColor: isDark ? "text-amber-100" : "text-amber-900",
+                    mutedText: isDark ? "text-amber-300/70" : "text-amber-700",
                 };
             case "caravan":
             default:
                 return {
                     bgClass: isDark ? "from-[#0f0a07] to-[#1d120a]" : "from-[#3a2213] to-[#53331c]",
                     accentColor: "#d97706",
-                    particleEmoji: "✈️",
-                    deskTextureOpacity: "opacity-10",
-                    woodColor: "from-[#5c3a21] via-[#855430] to-[#5c3a21]",
-                    ribbonBg: "bg-amber-50/90 text-amber-950 border-amber-900/15",
-                    deskOverlay: "xe-phuot",
-                    badgeBg: "bg-amber-500/10",
-                    accentText: "text-amber-600",
+                    roadColor: isDark ? "bg-amber-900/40" : "bg-amber-300/60",
+                    stopColor: isDark ? "bg-amber-600" : "bg-amber-500",
+                    cardBg: isDark ? "bg-[#1d120a]/90" : "bg-white/90",
+                    textColor: isDark ? "text-amber-100" : "text-amber-900",
+                    mutedText: isDark ? "text-amber-300/70" : "text-amber-700",
                 };
         }
     };
 
-    const themeProps = getThemeProps();
+    const theme = getThemeProps();
 
-    // Generate falling/floating elements on mount
-    useEffect(() => {
-        const generated = Array.from({ length: 15 }).map((_, i) => ({
-            id: i,
-            left: Math.random() * 100,
-            size: subTheme === "station" ? Math.random() * 6 + 4 : Math.random() * 16 + 12,
-            delay: Math.random() * 8,
-            duration: Math.random() * 7 + 6,
-            angle: Math.random() * 360,
-            content: themeProps.particleEmoji,
-        }));
-        setParticles(generated);
-    }, [subTheme, themeProps.particleEmoji]);
-
-    const handleThrowStickers = () => {
-        const membersList = profileData?.members || [];
-        if (membersList.length === 0) return;
-
-        const generated = Array.from({ length: 8 }).map((_, i) => {
-            const member = membersList[i % membersList.length];
-            return {
-                id: Date.now() + i,
-                left: 10 + Math.random() * 80,
-                delay: Math.random() * 0.4,
-                avatar: member.avatar,
-                name: member.name
-            };
-        });
-
-        setThrownAvatars(prev => [...prev, ...generated]);
-        setTimeout(() => {
-            setThrownAvatars(prev => prev.filter(a => !generated.find(gg => gg.id === a.id)));
-        }, 2800);
-    };
-
-    // Read theme mode from localStorage
     useEffect(() => {
         const saved = localStorage.getItem(`theme_mode_${slug}`);
         if (saved) {
             const isSavedDark = saved === "dark";
             setOverrideDark(isSavedDark);
-            
             const root = document.documentElement;
             if (isSavedDark) {
                 const darkBg = subTheme === "station" ? "#05040a" : subTheme === "scrapbook" ? "#1c1611" : "#0f0a07";
@@ -198,14 +122,13 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                 root.style.setProperty("--theme-bg", data.config?.background_color || "#3a2213");
             }
         }
-    }, [slug, data.config?.background_color, subTheme]);
+    }, [slug, subTheme, data.config?.background_color]);
 
     const handleThemeToggle = () => {
         const newDark = !isDark;
         setOverrideDark(newDark);
         localStorage.setItem(`theme_mode_${slug}`, newDark ? "dark" : "light");
         window.dispatchEvent(new CustomEvent("theme-change", { detail: { isDark: newDark } }));
-        
         const root = document.documentElement;
         if (newDark) {
             const darkBg = subTheme === "station" ? "#05040a" : subTheme === "scrapbook" ? "#1c1611" : "#0f0a07";
@@ -217,26 +140,33 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
 
     const groupName = profileData?.group_name || "Nhóm bạn";
     const groupAvatar = profileData?.group_avatar;
-    const slogan = profileData?.slogan || "Cùng nhau đi qua giông bão, thanh xuân này trọn vẹn vì có nhau.";
+    const title = profileData?.title || groupName;
+    const slogan = profileData?.slogan || "Thanh xuân rực rỡ cùng nhau.";
     const graduationYear = profileData?.graduation_year || "2026";
-    const title = profileData?.title || "";
-    const members: GroupMember[] = profileData?.members || [];
+    const members = profileData?.members || [];
+    const goals = profileData?.goals || [];
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setShowScrollTop(window.scrollY > 400);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    const stops: { id: RoadStop; label: string; icon: typeof MapPin }[] = [
+        { id: "start", label: "Xuất Phát", icon: Flag },
+        { id: "crew", label: "Đồng Đội", icon: Users },
+        { id: "gallery", label: "Khoảnh Khắc", icon: ImageIcon },
+        { id: "timeline", label: "Hành Trình", icon: Calendar },
+        { id: "goals", label: "Đích Đến", icon: Target },
+        { id: "game", label: "Thử Thách", icon: Sparkles },
+        { id: "letters", label: "Lưu Bút", icon: Mail },
+    ];
 
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const goToStop = (stop: RoadStop) => {
+        setIsTransitioning(true);
+        setTimeout(() => {
+            setCurrentStop(stop);
+            setIsTransitioning(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 250);
     };
 
-    // Lightbox navigation
-    const openLightbox = (index: number) => { setLightboxIndex(index); setIsPopupOpen(true); };
-    const closeLightbox = () => { setLightboxIndex(null); setIsPopupOpen(false); };
+    const openLightbox = (index: number) => { setLightboxIndex(index); };
+    const closeLightbox = () => { setLightboxIndex(null); };
     const nextImage = useCallback(() => {
         if (lightboxIndex !== null && data.galleries.length > 0) {
             setLightboxIndex((lightboxIndex + 1) % data.galleries.length);
@@ -248,7 +178,6 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
         }
     }, [lightboxIndex, data.galleries.length]);
 
-    // Keyboard navigation for lightbox
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (lightboxIndex === null) return;
@@ -260,652 +189,358 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [lightboxIndex, nextImage, prevImage]);
 
-    // Swipe handlers for mobile gallery navigation
-    const swipeHandlers = useSwipeable({
-        onSwipedLeft: () => {
-            if (lightboxIndex !== null) nextImage();
-        },
-        onSwipedRight: () => {
-            if (lightboxIndex !== null) prevImage();
-        },
-        preventScrollOnSwipe: true,
-        trackMouse: false,
-    });
+    const currentStopIdx = stops.findIndex(s => s.id === currentStop);
 
     return (
-        <div className={`min-h-screen relative pb-16 transition-colors duration-500 bg-gradient-to-b ${themeProps.bgClass} overflow-x-hidden`}>
-            {/* 3D card flip & Particle animations */}
-            <style dangerouslySetInnerHTML={{__html: `
-                .perspective-1000 { perspective: 1000px; }
-                .preserve-3d { transform-style: preserve-3d; }
-                .backface-hidden { backface-visibility: hidden; }
-                .rotate-y-180 { transform: rotateY(180deg); }
-                
-                @keyframes float-plane {
-                    0% { transform: translateY(-20px) rotate(var(--rot, 0deg)) translateX(0); opacity: 0; }
-                    10% { opacity: 0.7; }
-                    90% { opacity: 0.7; }
-                    100% { transform: translateY(105vh) rotate(calc(var(--rot, 0deg) + 180deg)) translateX(60px); opacity: 0; }
+        <div className={`min-h-screen relative transition-colors duration-500 bg-gradient-to-b ${theme.bgClass}`}>
+            <style jsx>{`
+                @keyframes road-dash {
+                    0% { background-position: 0 0; }
+                    100% { background-position: 0 40px; }
                 }
-                .animate-custom-particle {
-                    animation: float-plane linear infinite;
+                @keyframes stop-pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.15); }
                 }
-                
-                @keyframes avatar-pop-up {
-                    0% { transform: translateY(100vh) scale(0.4) rotate(0deg); opacity: 0; }
-                    15% { opacity: 1; }
-                    50% { transform: translateY(-30vh) scale(1.1) rotate(180deg); }
-                    85% { opacity: 0.8; }
-                    100% { transform: translateY(100vh) scale(0.6) rotate(360deg); opacity: 0; }
+                @keyframes car-drive {
+                    0% { transform: translateX(-10px) rotate(-2deg); }
+                    50% { transform: translateX(10px) rotate(2deg); }
+                    100% { transform: translateX(-10px) rotate(-2deg); }
                 }
-                .animate-thrown-avatar {
-                    animation: avatar-pop-up 2.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                .road-dash { animation: road-dash 1s linear infinite; }
+                .stop-pulse { animation: stop-pulse 2s ease-in-out infinite; }
+                .car-drive { animation: car-drive 3s ease-in-out infinite; }
+                @keyframes fade-slide {
+                    0% { opacity: 0; transform: translateY(20px); }
+                    100% { opacity: 1; transform: translateY(0); }
                 }
-            `}} />
+                .fade-slide { animation: fade-slide 0.4s ease-out; }
+            `}</style>
 
-            {/* Falling particles */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
-                {particles.map((p) => (
-                    <div
-                        key={p.id}
-                        style={{
-                            left: `${p.left}%`,
-                            fontSize: `${p.size}px`,
-                            animationDelay: `${p.delay}s`,
-                            animationDuration: `${p.duration}s`,
-                            '--rot': `${p.angle}deg`,
-                        } as React.CSSProperties}
-                        className="absolute -top-10 animate-custom-particle opacity-0"
-                    >
-                        {p.content}
-                    </div>
-                ))}
-            </div>
-
-            {/* Sticker avatar shower overlay */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-40">
-                {thrownAvatars.map((a) => (
-                    <div
-                        key={a.id}
-                        style={{
-                            left: `${a.left}%`,
-                            animationDelay: `${a.delay}s`,
-                        }}
-                        className="absolute bottom-0 animate-thrown-avatar opacity-0 flex flex-col items-center gap-1"
-                    >
-                        <div className="w-14 h-14 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100">
-                            {a.avatar ? (
-                                <Image src={a.avatar} alt={a.name} width={56} height={56} className="object-cover w-full h-full" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-xl bg-amber-100">🧑‍🤝‍🧑</div>
-                            )}
-                        </div>
-                        <span className="bg-black/80 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow">
-                            {a.name}
-                        </span>
-                    </div>
-                ))}
-            </div>
-
-            {/* Simulated background wood grain */}
-            <div className={`absolute inset-0 pointer-events-none overflow-hidden z-0 ${themeProps.deskTextureOpacity} bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]`} />
-
-            {/* Theme Toggle */}
-            {!isPopupOpen && (
-                <button
-                    onClick={handleThemeToggle}
-                    className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
-                        isDark 
-                            ? "bg-[#25201b]/95 text-yellow-400 border border-amber-900/30 hover:bg-[#332e28]" 
-                            : "bg-white/95 text-amber-900 hover:bg-white border border-amber-900/10"
-                    }`}
-                    title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
-                >
-                    {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-            )}
-
-            {/* Edit Button */}
-            {!isPopupOpen && (
-                <Link
-                    href={`/${slug}/edit`}
-                    className={`fixed top-4 right-4 z-30 p-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all border ${
-                        isDark 
-                            ? "bg-[#25201b]/95 border-amber-900/30 text-amber-200 hover:bg-[#332e28]" 
-                            : "bg-[#fefefe]/95 border-amber-900/10 text-[#3a2213] hover:bg-white"
-                    }`}
-                    title="Chỉnh sửa trang"
-                >
-                    <Settings className="w-5 h-5" />
-                </Link>
-            )}
-
-            {/* Extra Caravan Decor items on PC */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 hidden lg:block opacity-75">
-                {subTheme === "caravan" && (
-                    <>
-                        {/* Mug */}
-                        <div className={`absolute top-12 left-12 w-20 h-20 rounded-full shadow-2xl flex items-center justify-center border-4 ${isDark ? "bg-[#28201a] border-[#3e3229]" : "bg-[#ece6e2] border-[#dacdbf]"}`}>
-                            <div className="w-12 h-12 rounded-full bg-[#855430] flex items-center justify-center text-xs font-mono text-amber-100 font-semibold">
-                                <Coffee className="w-5 h-5 animate-pulse" />
-                            </div>
-                        </div>
-                        {/* Pinned map tag */}
-                        <div className={`absolute top-24 right-16 w-36 h-36 shadow-xl rotate-[6deg] p-3 border flex flex-col justify-between ${isDark ? "bg-[#2d2722]/95 border-amber-950/30 text-slate-400" : "bg-orange-50/95 border-orange-200 text-slate-700"}`}>
-                            <div className="w-3.5 h-3.5 bg-red-500 rounded-full shadow absolute -top-1.5 left-1/2 -translate-x-1/2" />
-                            <p className="text-[10px] font-mono italic font-semibold">TRIP: Cùng nhau đi khắp thế gian! 🗺️</p>
-                            <span className="text-[8px] text-right text-slate-400 font-mono">2026/06</span>
-                        </div>
-                    </>
-                )}
-                {subTheme === "scrapbook" && (
-                    <>
-                        {/* Clips and tapes */}
-                        <div className="absolute top-16 left-16 w-32 h-6 bg-slate-300/40 border border-slate-400/20 rotate-[12deg] shadow-sm" />
-                        <div className="absolute bottom-16 left-12 w-24 h-24 border-2 border-dashed border-amber-800/20 rotate-[-15deg] rounded" />
-                        {/* Note */}
-                        <div className={`absolute top-24 right-16 w-32 h-32 shadow-lg rotate-[-6deg] p-3 border flex flex-col justify-between ${isDark ? "bg-[#24211e] border-amber-900/30 text-slate-300" : "bg-yellow-50/90 border-yellow-200 text-slate-700"}`}>
-                            <div className="w-3 h-3 bg-blue-500 rounded-full shadow absolute -top-1 left-1/2 -translate-x-1/2" />
-                            <p className="text-[10px] font-serif italic font-bold">KÝ ỨC: Thanh xuân rực rỡ dưới nắng 🌻</p>
-                        </div>
-                    </>
-                )}
-                {subTheme === "station" && (
-                    <>
-                        {/* Neon ticket stub */}
-                        <div className="absolute top-20 left-16 w-36 h-14 bg-gradient-to-r from-violet-900/40 to-indigo-950/40 border border-violet-500/20 rounded-md rotate-[-8deg] shadow-lg flex items-center justify-center p-3 text-violet-300 text-[10px] font-mono uppercase tracking-widest">
-                            🎟️ Ticket 2026
-                        </div>
-                    </>
-                )}
-            </div>
-
-            {/* Hero Header */}
-            <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-16 pb-8 max-w-4xl mx-auto text-center">
-                <div className="text-center px-4 w-full max-w-xl mx-auto">
-                    
-                    {/* Polaroid Group photo */}
-                    <div 
-                        onClick={handleThrowStickers}
-                        className={`relative inline-block ${isDark ? "bg-[#25201b] border-amber-950/20 text-slate-100" : "bg-white border-slate-200 text-slate-700"} p-3 pb-6 border rounded-md shadow-2xl rotate-[-1.5deg] hover:rotate-0 transition-transform duration-300 mb-8 cursor-pointer group`}
-                        title="Click để thả pháo hoa sticker nhóm! 🎉"
-                    >
-                        {/* Tape decoration */}
-                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-24 h-5 bg-yellow-100/70 border border-yellow-200/40 rotate-[1deg] shadow-xs" />
-                        
-                        <div className="w-48 h-32 sm:w-64 sm:h-44 bg-slate-50 relative overflow-hidden rounded-sm border border-slate-100 mx-auto">
-                            {groupAvatar ? (
-                                <Image
-                                    src={groupAvatar}
-                                    alt={groupName}
-                                    fill
-                                    className="object-cover"
-                                    priority
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-4xl gap-2 text-slate-400">
-                                    🧑‍🤝‍🧑
-                                    <span className="text-xs font-mono font-semibold">Tải ảnh nhóm lên</span>
-                                </div>
-                            )}
-                        </div>
-                        <span className={`block font-serif italic text-sm mt-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-700"}`}>
-                            ✨ Nhóm {groupName}
-                        </span>
-                    </div>
-
-                    {/* School detail tags */}
-                    {title && (
-                        <p className="text-[#e2c19e] font-serif font-bold text-base sm:text-lg mb-1">
-                            {title}
-                        </p>
-                    )}
-                    <p className="text-[#e2c19e] font-serif font-semibold text-sm sm:text-base mb-2">
-                        {graduationYear}
-                    </p>
-                    <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto mb-6 italic font-serif leading-relaxed">
-                        &ldquo;{slogan}&rdquo;
-                    </p>
-
-                    {/* Desk Drawer Navigation Tabs */}
-                    <div className="inline-flex flex-wrap justify-center gap-2 bg-black/35 p-1.5 rounded-full border border-white/5 shadow-md">
-                        {[
-                            { id: "members", icon: Users, label: "Thành Viên" },
-                            { id: "gallery", icon: ImageIcon, label: "Kỷ Niệm Đẹp" },
-                            { id: "timeline", icon: Calendar, label: "Dòng Thời Gian" },
-                            { id: "roadmap", icon: Target, label: "Lộ Trình Nhóm" },
-                            { id: "game", icon: Sparkles, label: "Đố Vui Đồng Đội" },
-                            { id: "letters", icon: Mail, label: "Bảng Lưu Bút" },
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => {
-                                    setActiveSection(tab.id);
-                                    setFlippedCardId(null);
-                                }}
-                                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
-                                    activeSection === tab.id
-                                        ? "text-[#3a2213] shadow-md scale-105"
-                                        : "text-slate-300 hover:text-[#e2c19e] hover:bg-white/5"
-                                }`}
-                                style={activeSection === tab.id ? { backgroundColor: themeProps.accentColor, color: "#fff" } : {}}
-                            >
-                                <tab.icon className="w-4 h-4" />
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+            {/* Top Bar */}
+            <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-2">
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${theme.cardBg} ${theme.textColor} backdrop-blur-md border border-white/10`}>
+                    <Navigation className="w-3.5 h-3.5" />
+                    {graduationYear}
                 </div>
-            </section>
+                <div className="flex items-center gap-2">
+                    <button onClick={handleThemeToggle} className={`p-2.5 rounded-full shadow-lg transition-all hover:scale-110 ${theme.cardBg} ${theme.textColor} backdrop-blur-md`}>
+                        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    </button>
+                    <Link href={`/${slug}/edit`} className={`p-2.5 rounded-full shadow-lg transition-all hover:scale-110 ${theme.cardBg} ${theme.textColor} backdrop-blur-md`}>
+                        <Settings className="w-4 h-4" />
+                    </Link>
+                </div>
+            </div>
 
-            {/* Main Notebook panel */}
-            <main className="max-w-4xl mx-auto px-4 relative z-10">
-                <div className={`rounded-3xl p-6 sm:p-8 border-t-8 border-[#dacdbf] shadow-2xl relative transition-colors duration-500 ${isDark ? "bg-[#181512] text-slate-100" : "bg-[#fcfbf9] text-slate-800"}`}>
-                    
-                    {/* Ring binder spirals */}
-                    <div className="absolute left-4 top-10 bottom-10 w-4 hidden md:flex flex-col justify-between pointer-events-none opacity-40 z-15">
-                        {[...Array(10)].map((_, i) => (
-                            <div key={i} className={`w-3.5 h-3.5 rounded-full ${isDark ? "bg-black/40 border-r border-[#181512]" : "bg-slate-900/20 border-r border-white"} flex items-center justify-center`}>
-                                <div className={`w-2 h-2 rounded-full ${isDark ? "bg-amber-950/40" : "bg-[#53331c]/50"}`} />
-                            </div>
-                        ))}
+            {/* Road Navigation (bottom) */}
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-lg px-4">
+                <div className={`relative ${theme.cardBg} backdrop-blur-md rounded-2xl border border-white/10 p-2 shadow-xl`}>
+                    <div className="flex items-center justify-between gap-0.5 overflow-x-auto">
+                        {stops.map((stop, idx) => {
+                            const isActive = currentStop === stop.id;
+                            const isVisited = idx < currentStopIdx;
+                            return (
+                                <button
+                                    key={stop.id}
+                                    onClick={() => goToStop(stop.id)}
+                                    className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all min-w-[48px]"
+                                >
+                                    <div className={`relative w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                                        isActive ? `${theme.stopColor} text-white shadow-lg stop-pulse` :
+                                        isVisited ? `${theme.stopColor}/60 text-white` :
+                                        isDark ? "bg-white/10 text-white/40" : "bg-black/10 text-black/40"
+                                    }`}>
+                                        <stop.icon className="w-3.5 h-3.5" />
+                                        {isActive && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-white" />}
+                                    </div>
+                                    <span className={`text-[8px] font-medium whitespace-nowrap ${isActive ? theme.textColor : isDark ? "text-white/40" : "text-black/40"}`}>
+                                        {stop.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
+                    {/* Road line connecting stops */}
+                    <div className={`absolute top-[22px] left-8 right-8 h-0.5 ${theme.roadColor} -z-10`} />
+                </div>
+            </div>
 
-                    <div className="md:pl-8">
-                        {/* Member Cards Grid */}
-                        {activeSection === "members" && (
-                            <section className="space-y-6">
-                                <h2 className="text-xl sm:text-2xl font-serif font-bold mb-2 flex items-center gap-2">
-                                    <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">🧑‍🤝‍🧑</span>
-                                    Những Mảnh Ghép Thanh Xuân
-                                </h2>
-                                <p className={`text-xs sm:text-sm mb-6 font-serif italic ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                                    Chạm vào thẻ bài của từng người để lật mặt sau và khám phá những điều thú vị hằng mơ ước nhé!
-                                </p>
+            {/* Content Area */}
+            <div className={`pt-14 pb-28 px-4 max-w-3xl mx-auto min-h-screen ${isTransitioning ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"} transition-all duration-250`}>
 
-                                {members.length === 0 ? (
-                                    <div className="text-center py-16 text-slate-400 font-serif italic">
-                                        <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                                        <p>Chưa có thành viên nào được thiết lập. Hãy truy cập trang Edit để tạo thẻ thành viên.</p>
-                                    </div>
+                {/* STOP: Start (Xuất Phát) */}
+                {currentStop === "start" && (
+                    <div className="flex flex-col items-center justify-center min-h-[75vh] text-center space-y-6 fade-slide">
+                        <div className="relative">
+                            <div className={`w-28 h-28 rounded-full overflow-hidden border-4 shadow-2xl ${isDark ? "border-white/20" : "border-white/60"}`}>
+                                {groupAvatar ? (
+                                    <Image src={groupAvatar} alt={groupName} width={112} height={112} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                        {members.map((member) => {
-                                            const isFlipped = flippedCardId === member.id;
-                                            return (
-                                                <div 
-                                                    key={member.id}
-                                                    onClick={() => setFlippedCardId(isFlipped ? null : member.id)}
-                                                    className="w-full h-64 perspective-1000 cursor-pointer group"
-                                                >
-                                                    <div className={`relative w-full h-full duration-700 preserve-3d transition-transform ${isFlipped ? "rotate-y-180" : "md:group-hover:rotate-y-180"}`}>
-                                                        
-                                                        {/* Front Side Card */}
-                                                        <div className={`absolute inset-0 rounded-2xl border p-4 flex flex-col justify-between backface-hidden shadow-md ${
-                                                            isDark ? "bg-zinc-950/40 border-zinc-800" : "bg-white border-slate-200"
-                                                        }`}>
-                                                            {/* Push Pin corner */}
-                                                            <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-red-500 shadow-sm border border-red-700" />
-                                                            
-                                                            <div className="space-y-3 pt-2">
-                                                                {/* Avatar image */}
-                                                                <div className="w-28 h-28 rounded-2xl mx-auto overflow-hidden border-2 border-amber-900/10 bg-slate-50 relative">
-                                                                    {member.avatar ? (
-                                                                        <Image src={member.avatar} alt={member.name} fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover rounded-2xl" />
-                                                                    ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center text-4xl">🧑</div>
-                                                                    )}
-                                                                </div>
-                                                                
-                                                                <div className="text-center space-y-1">
-                                                                    <h3 className="font-serif font-bold text-sm sm:text-base">{member.name}</h3>
-                                                                    {member.nickname && (
-                                                                        <span className="text-[10px] italic opacity-70">({member.nickname})</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="space-y-2 border-t pt-3 border-amber-900/5">
-                                                                {member.dream_university && (
-                                                                    <div className="text-[10px] text-center font-serif leading-tight">
-                                                                        🎓 {member.dream_university}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Back Side Card */}
-                                                        <div className={`absolute inset-0 rounded-2xl border p-5 flex flex-col justify-between rotate-y-180 backface-hidden shadow-lg ${
-                                                            isDark ? "bg-zinc-900/90 border-amber-900/20 text-slate-100" : "bg-[#fdfbf7] border-amber-900/10 text-amber-950"
-                                                        }`}
-                                                            style={{ backgroundImage: "radial-gradient(#faf6ec 40%, #f3ede0 100%)" }}
-                                                        >
-                                                            {/* Personal Quote */}
-                                                            <div className="space-y-3 pt-2">
-                                                                <span className="text-[8px] font-mono tracking-wider uppercase opacity-50 block">Quote cá nhân</span>
-                                                                <p className="text-xs italic font-serif leading-relaxed text-[#5c3a21]">
-                                                                    &ldquo;{member.quote || "Thanh xuân rực rỡ..."}&rdquo;
-                                                                </p>
-                                                            </div>
-
-                                                            {/* Career / Dream details & Social */}
-                                                            <div className="space-y-3 border-t pt-3 border-[#dacdbf]">
-                                                                {member.dream_job && (
-                                                                    <div className="text-[10px] font-serif text-[#8c6239]">
-                                                                        💼 Mơ ước: {member.dream_job}
-                                                                    </div>
-                                                                )}
-                                                                
-                                                                {/* Social icons */}
-                                                                <div className="flex gap-2 justify-center">
-                                                                    {member.facebook && (
-                                                                        <a 
-                                                                            href={member.facebook} 
-                                                                            target="_blank" 
-                                                                            rel="noopener noreferrer"
-                                                                            onClick={(e) => e.stopPropagation()}
-                                                                            className="p-1.5 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                                                                        >
-                                                                            <Facebook className="w-3.5 h-3.5" />
-                                                                        </a>
-                                                                    )}
-                                                                    {member.instagram && (
-                                                                        <a 
-                                                                            href={member.instagram} 
-                                                                            target="_blank" 
-                                                                            rel="noopener noreferrer"
-                                                                            onClick={(e) => e.stopPropagation()}
-                                                                            className="p-1.5 rounded-full bg-pink-100 text-pink-700 hover:bg-pink-200 transition-colors"
-                                                                        >
-                                                                            <Instagram className="w-3.5 h-3.5" />
-                                                                        </a>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    <div className={`w-full h-full flex items-center justify-center text-4xl ${isDark ? "bg-white/10" : "bg-white/40"}`}>🚗</div>
                                 )}
-                            </section>
-                        )}
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 car-drive text-2xl">🚗</div>
+                        </div>
 
-                        {/* Gallery Section */}
-                        {activeSection === "gallery" && (
-                            <section className="space-y-6">
-                                <h2 className="text-xl sm:text-2xl font-serif font-bold mb-6 flex items-center gap-2">
-                                    <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">📸</span>
-                                    Album Ảnh Tập Thể
-                                </h2>
-                                {data.galleries.length === 0 ? (
-                                    <div className="text-center py-16 text-slate-400 font-serif italic">
-                                        <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                                        <p>Chưa có kỷ niệm ảnh nào.</p>
+                        <div className="space-y-3">
+                            <h1 className={`text-3xl sm:text-4xl font-black ${isDark ? "text-white" : "text-white"}`}>{title}</h1>
+                            <p className={`text-lg ${isDark ? "text-white/70" : "text-white/80"}`}>{groupName}</p>
+                            <p className={`italic max-w-md mx-auto ${isDark ? "text-white/50" : "text-white/60"}`}>&ldquo;{slogan}&rdquo;</p>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-3">
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${theme.cardBg} backdrop-blur-md border border-white/10`}>
+                                <Users className={`w-4 h-4 ${theme.mutedText}`} />
+                                <span className={`text-sm font-bold ${theme.textColor}`}>{members.length}</span>
+                                <span className={`text-xs ${theme.mutedText}`}>thành viên</span>
+                            </div>
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${theme.cardBg} backdrop-blur-md border border-white/10`}>
+                                <ImageIcon className={`w-4 h-4 ${theme.mutedText}`} />
+                                <span className={`text-sm font-bold ${theme.textColor}`}>{data.galleries.length}</span>
+                                <span className={`text-xs ${theme.mutedText}`}>ảnh</span>
+                            </div>
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${theme.cardBg} backdrop-blur-md border border-white/10`}>
+                                <Calendar className={`w-4 h-4 ${theme.mutedText}`} />
+                                <span className={`text-sm font-bold ${theme.textColor}`}>{data.timelines.length}</span>
+                                <span className={`text-xs ${theme.mutedText}`}>kỷ niệm</span>
+                            </div>
+                        </div>
+
+                        <button onClick={() => goToStop("crew")} className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white transition-all hover:scale-105 ${theme.stopColor} shadow-lg`}>
+                            Bắt đầu hành trình <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
+                {/* STOP: Crew (Đồng Đội) */}
+                {currentStop === "crew" && (
+                    <div className="py-8 space-y-6 fade-slide">
+                        <div className="text-center space-y-2">
+                            <MapPin className={`w-6 h-6 mx-auto ${isDark ? "text-white/60" : "text-white/80"}`} />
+                            <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-white"}`}>Đồng Đội</h2>
+                            <p className={`text-sm ${isDark ? "text-white/50" : "text-white/60"}`}>{members.length} chiến hữu</p>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {members.map((member, idx) => (
+                                <button
+                                    key={member.id || idx}
+                                    onClick={() => setSelectedMember(member)}
+                                    className={`${theme.cardBg} backdrop-blur-md rounded-xl p-4 border border-white/10 text-center hover:scale-105 transition-all`}
+                                >
+                                    <div className="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-white/20 shadow-md">
+                                        {member.avatar ? (
+                                            <Image src={member.avatar} alt={member.name} width={64} height={64} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className={`w-full h-full flex items-center justify-center text-xl font-bold ${isDark ? "bg-white/10 text-white/60" : "bg-white/30 text-white/80"}`}>
+                                                {member.name.charAt(0)}
+                                            </div>
+                                        )}
                                     </div>
-                                ) : (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                        {data.galleries.map((item, index) => (
-                                            <div
-                                                key={item.id}
-                                                onClick={() => openLightbox(index)}
-                                                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all hover:scale-[1.01] border ${isDark ? "bg-zinc-950/40 border-zinc-800" : "bg-slate-50 border-slate-100"}`}
-                                            >
-                                                <Image
-                                                    src={item.image_url}
-                                                    alt={item.caption || "Photo"}
-                                                    fill
-                                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                                />
-                                                {item.caption && (
-                                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent p-3 pt-6 z-10">
-                                                        <p className="text-white text-xs sm:text-sm truncate font-serif italic">{item.caption}</p>
+                                    <p className={`mt-2 text-sm font-bold ${theme.textColor} truncate`}>{member.name}</p>
+                                    {member.nickname && <p className={`text-xs ${theme.mutedText}`}>{member.nickname}</p>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* STOP: Gallery (Khoảnh Khắc) */}
+                {currentStop === "gallery" && (
+                    <div className="py-8 space-y-6 fade-slide">
+                        <div className="text-center space-y-2">
+                            <MapPin className={`w-6 h-6 mx-auto ${isDark ? "text-white/60" : "text-white/80"}`} />
+                            <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-white"}`}>Khoảnh Khắc</h2>
+                        </div>
+                        {data.galleries.length === 0 ? (
+                            <div className="text-center py-16 text-white/40">
+                                <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                <p>Chưa có ảnh nào...</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                {data.galleries.map((item, index) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => openLightbox(index)}
+                                        className={`${theme.cardBg} backdrop-blur-md p-2 pb-4 rounded-xl border border-white/10 shadow-lg hover:scale-105 transition-all cursor-pointer`}
+                                    >
+                                        <div className="relative aspect-square rounded-lg overflow-hidden">
+                                            <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover" />
+                                        </div>
+                                        {item.caption && <p className={`text-center text-xs mt-2 truncate ${theme.mutedText}`}>{item.caption}</p>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* STOP: Timeline (Hành Trình) */}
+                {currentStop === "timeline" && (
+                    <div className="py-8 space-y-6 fade-slide">
+                        <div className="text-center space-y-2">
+                            <MapPin className={`w-6 h-6 mx-auto ${isDark ? "text-white/60" : "text-white/80"}`} />
+                            <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-white"}`}>Hành Trình</h2>
+                        </div>
+                        {data.timelines.length === 0 ? (
+                            <div className="text-center py-16 text-white/40">
+                                <Calendar className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                <p>Chưa có kỷ niệm nào...</p>
+                            </div>
+                        ) : (
+                            <div className="relative pl-8">
+                                <div className={`absolute left-3 top-0 bottom-0 w-0.5 ${theme.roadColor}`} />
+                                <div className="space-y-6">
+                                    {data.timelines.map((event) => (
+                                        <div key={event.id} className="relative">
+                                            <div className={`absolute -left-5 top-2 w-4 h-4 rounded-full ${theme.stopColor} border-2 border-white shadow-md`} />
+                                            <div className={`${theme.cardBg} backdrop-blur-md rounded-xl p-4 border border-white/10`}>
+                                                <div className={`text-xs font-bold mb-1 ${theme.mutedText}`}>
+                                                    {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
+                                                </div>
+                                                <h3 className={`font-bold text-lg ${theme.textColor}`}>{event.title}</h3>
+                                                {event.description && <p className={`text-sm mt-1 ${theme.mutedText}`}>{event.description}</p>}
+                                                {event.image_url && (
+                                                    <div className="mt-3 rounded-lg overflow-hidden max-w-xs shadow-md">
+                                                        <Image src={event.image_url} alt={event.title} width={300} height={200} className="w-full h-auto" />
                                                     </div>
                                                 )}
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </section>
-                        )}
-
-                        {/* Timeline Section */}
-                        {activeSection === "timeline" && (
-                            <section className="space-y-6">
-                                <h2 className="text-xl sm:text-2xl font-serif font-bold mb-2 flex items-center gap-2">
-                                    <span className={`p-2 rounded-xl ${themeProps.badgeBg} ${themeProps.accentText}`}>⌛</span>
-                                    Dòng Thời Gian Chúng Mình
-                                </h2>
-                                <p className={`text-xs sm:text-sm mb-6 font-serif italic ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                                    Nhìn lại những cột mốc đáng nhớ cùng nhau đi qua năm tháng...
-                                </p>
-
-                                {data.timelines.length === 0 ? (
-                                    <div className="text-center py-16 text-slate-400 font-serif italic">
-                                        <Calendar className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                                        <p>Chưa có sự kiện nào được ghi nhận. Hãy truy cập trang Edit để tạo dòng thời gian.</p>
-                                    </div>
-                                ) : (
-                                    <div className="relative pl-6 border-l-2 ml-4 space-y-8" style={{ borderColor: themeProps.accentColor }}>
-                                        {data.timelines.map((event) => (
-                                            <div key={event.id} className="relative animate-note-pop">
-                                                {/* Connecting Dot */}
-                                                <div 
-                                                    className={`absolute -left-[33px] top-1 w-5 h-5 rounded-full border-4 shadow-md flex items-center justify-center text-[10px] text-white transition-colors duration-300`}
-                                                    style={{ 
-                                                        backgroundColor: themeProps.accentColor,
-                                                        borderColor: isDark ? "#181512" : "#fcfbf9"
-                                                    }}
-                                                >
-                                                    🎓
-                                                </div>
-
-                                                <div className={`border rounded-2xl p-5 shadow-sm transition-all ${
-                                                    isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800" : "bg-[#fbfbfa] border-slate-200/50 hover:bg-[#f8f8f6]"
-                                                }`}>
-                                                    <div className={`text-xs font-bold mb-1 flex items-center gap-1.5 ${themeProps.accentText}`}>
-                                                        <Calendar className="w-3.5 h-3.5" />
-                                                        {new Date(event.date).toLocaleDateString("vi-VN", {
-                                                            year: "numeric",
-                                                            month: "long",
-                                                            day: "numeric",
-                                                        })}
-                                                    </div>
-                                                    <h3 className="text-base sm:text-lg font-serif font-bold mb-2">
-                                                        {event.title}
-                                                    </h3>
-                                                    
-                                                    {event.description && (
-                                                        <p className={`text-sm leading-relaxed mb-4 whitespace-pre-wrap ${isDark ? "text-slate-300" : "text-gray-600"}`}>
-                                                            {event.description}
-                                                        </p>
-                                                    )}
-
-                                                    {event.image_url && (
-                                                        <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-inner border ${isDark ? "border-zinc-800" : "border-slate-100"}`}>
-                                                            <Image src={event.image_url} alt={event.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </section>
-                        )}
-
-                        {/* Gói 4: Bản Đồ Lộ Trình Nhóm */}
-                        {activeSection === "roadmap" && (
-                            <section className="space-y-6">
-                                <h2 className="text-xl sm:text-2xl font-serif font-bold mb-2 flex items-center gap-2">
-                                    <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">🎯</span>
-                                    Bản Đồ Chuyến Đi & Tương Lai
-                                </h2>
-                                <p className={`text-xs sm:text-sm mb-6 font-serif italic ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                                    Sơ đồ lộ trình kỷ niệm và kế hoạch du hí tương lai của cả nhóm.
-                                </p>
-
-                                <div className="relative py-8 px-2 max-w-lg mx-auto">
-                                    {/* Central connector */}
-                                    <div className={`absolute left-6 md:left-1/2 top-4 bottom-4 w-0.5 border-l-2 border-dashed ${isDark ? "border-amber-700/40" : "border-amber-900/20"} -translate-x-1/2`} />
-
-                                    <div className="space-y-12">
-                                        {(profileData?.goals || [
-                                            { id: "g1", title: "Ngày đầu lập nhóm", description: "Lần gặp mặt đầu tiên khởi nguồn một tình bạn bền chặt", status: "done" },
-                                            { id: "g2", title: "Chuyến dã ngoại đầu tiên", description: "Cùng đi trốn ở vùng biển đầy nắng gió", status: "done" },
-                                            { id: "g3", title: "Vượt ải tốt nghiệp", description: "Cùng nhau nắm tay vượt qua kỳ thi quyết định cuộc đời", status: "todo" },
-                                            { id: "g4", title: "Reunion 2028", description: "Lịch hẹn hội ngộ sau 2 năm đại học của cả nhóm bạn", status: "todo" }
-                                        ]).map((goal: Goal, idx: number) => {
-                                            const isDone = goal.status === "done";
-                                            const alignmentClass = idx % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row";
-                                            const textAlignmentClass = idx % 2 === 0 ? "md:text-right" : "md:text-left";
-                                            const offsetClass = idx % 2 === 0 ? "md:pr-10" : "md:pl-10";
-
-                                            return (
-                                                <div key={goal.id} className={`flex items-start ${alignmentClass} relative w-full`}>
-                                                    {/* Node */}
-                                                    <div className={`absolute left-6 md:left-1/2 w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 -translate-x-1/2 transition-all duration-300 ${
-                                                        isDone 
-                                                            ? "bg-emerald-500 border-emerald-200 text-white shadow-lg shadow-emerald-500/20" 
-                                                            : "bg-slate-200 border-slate-300 text-slate-500"
-                                                    }`}>
-                                                        {isDone ? "✓" : idx + 1}
-                                                    </div>
-
-                                                    {/* Goal info card */}
-                                                    <div className={`w-full pl-12 md:pl-0 md:w-1/2 ${offsetClass}`}>
-                                                        <div className={`p-5 rounded-2xl border transition-all hover:shadow-md ${
-                                                            isDone 
-                                                                ? (isDark ? "bg-emerald-950/20 border-emerald-900/30 text-slate-100" : "bg-emerald-50/50 border-emerald-100 text-slate-800")
-                                                                : (isDark ? "bg-zinc-900/40 border-zinc-800 text-slate-400" : "bg-slate-50 border-slate-100 text-slate-600")
-                                                        }`}>
-                                                            <div className={`flex items-center gap-2 mb-1.5 ${idx % 2 === 0 ? "md:justify-end" : "md:justify-start"}`}>
-                                                                <h4 className="font-serif font-bold text-sm sm:text-base leading-tight">
-                                                                    {goal.title}
-                                                                </h4>
-                                                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-sans font-bold uppercase ${
-                                                                    isDone ? "bg-emerald-500/10 text-emerald-500" : "bg-slate-500/10 text-slate-500"
-                                                                }`}>
-                                                                    {isDone ? "Đã đạt" : "Mục tiêu"}
-                                                                </span>
-                                                            </div>
-                                                            <p className={`text-xs ${textAlignmentClass} font-serif italic`}>
-                                                                {goal.description}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            </section>
-                        )}
-
-                        {/* Challenges / Group Trivia Section (Gói 3) */}
-                        {activeSection === "game" && (
-                            <section className="space-y-6">
-                                <h2 className="text-xl sm:text-2xl font-serif font-bold mb-6 flex items-center gap-2">
-                                    <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">🎲</span>
-                                    Thử Thách Độ Hiểu Đồng Đội
-                                </h2>
-                                <GameSection 
-                                    slug={slug}
-                                    quiz={profileData?.quiz} 
-                                    quizBadges={profileData?.quiz_badges}
-                                    members={profileData?.members}
-                                    groupName={groupName} 
-                                    isDark={isDark} 
-                                    accentColor={themeProps.accentColor}
-                                />
-                            </section>
-                        )}
-
-                        {/* LetterBox / Wish Corkboard Section (Gói 2) */}
-                        {activeSection === "letters" && (
-                            <section className="space-y-6">
-                                <h2 className="text-xl sm:text-2xl font-serif font-bold mb-6 flex items-center gap-2">
-                                    <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">✉️</span>
-                                    Lưu Bút Cho Nhóm Bạn
-                                </h2>
-                                <LetterBox 
-                                    initialLetters={data.letters} 
-                                    slug={slug} 
-                                    isDark={isDark} 
-                                    accentColor={themeProps.accentColor} 
-                                    onPopupOpenChange={setIsPopupOpen}
-                                />
-                            </section>
+                            </div>
                         )}
                     </div>
-                </div>
-            </main>
+                )}
 
-            {/* Gallery Lightbox */}
-            {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={closeLightbox}>
-                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#181512] text-slate-100 border border-amber-900/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
-                        {/* Header */}
-                        <div className="p-4 text-white flex-shrink-0" style={{ background: `linear-gradient(to right, ${themeProps.accentColor}, ${themeProps.accentColor}dd)` }}>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">
-                                    {lightboxIndex + 1} / {data.galleries.length}
-                                </span>
-                                <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
+                {/* STOP: Goals (Đích Đến) */}
+                {currentStop === "goals" && (
+                    <div className="py-8 space-y-6 fade-slide">
+                        <div className="text-center space-y-2">
+                            <MapPin className={`w-6 h-6 mx-auto ${isDark ? "text-white/60" : "text-white/80"}`} />
+                            <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-white"}`}>Đích Đến</h2>
                         </div>
-                        {/* Image */}
-                        <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
-                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
-                                <Image
-                                    src={data.galleries[lightboxIndex].image_url}
-                                    alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                    fill
-                                    className="object-contain"
-                                    priority
-                                />
+                        {goals.length === 0 ? (
+                            <div className="text-center py-16 text-white/40">
+                                <Target className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                <p>Chưa có mục tiêu nào...</p>
                             </div>
-                        </div>
-                        {/* Caption */}
-                        {data.galleries[lightboxIndex].caption && (
-                            <div className={`px-4 py-2 text-center text-sm font-serif italic ${isDark ? "text-slate-300" : "text-gray-600"}`}>
-                                {data.galleries[lightboxIndex].caption}
+                        ) : (
+                            <div className="space-y-3">
+                                {goals.map((goal) => (
+                                    <div key={goal.id} className={`${theme.cardBg} backdrop-blur-md rounded-xl p-4 border border-white/10 flex items-start gap-3`}>
+                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${goal.status === "done" ? "bg-green-500 border-green-400" : isDark ? "border-white/30" : "border-white/50"}`}>
+                                            {goal.status === "done" && <span className="text-white text-xs">✓</span>}
+                                        </div>
+                                        <div>
+                                            <h4 className={`font-bold text-sm ${theme.textColor} ${goal.status === "done" ? "line-through opacity-60" : ""}`}>{goal.title}</h4>
+                                            {goal.description && <p className={`text-xs mt-0.5 ${theme.mutedText}`}>{goal.description}</p>}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
-                        {/* Navigation */}
-                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-amber-900/20" : "border-gray-100"}`}>
-                            <button
-                                onClick={prevImage}
-                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-amber-950/30 text-amber-400 hover:bg-amber-950/50" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}
-                                aria-label="Ảnh trước"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={nextImage}
-                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-amber-950/30 text-amber-400 hover:bg-amber-950/50" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}
-                                aria-label="Ảnh tiếp theo"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                    </div>
+                )}
+
+                {/* STOP: Game (Thử Thách) */}
+                {currentStop === "game" && (
+                    <div className="py-8 space-y-6 fade-slide">
+                        <div className="text-center space-y-2">
+                            <MapPin className={`w-6 h-6 mx-auto ${isDark ? "text-white/60" : "text-white/80"}`} />
+                            <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-white"}`}>Thử Thách</h2>
+                        </div>
+                        <GameSection
+                            slug={slug}
+                            quiz={profileData?.quiz}
+                            quizBadges={profileData?.quiz_badges}
+                            members={members.map(m => ({ id: m.id, name: m.name }))}
+                            groupName={groupName}
+                            isDark={isDark}
+                            accentColor={theme.accentColor}
+                        />
+                    </div>
+                )}
+
+                {/* STOP: Letters (Lưu Bút) */}
+                {currentStop === "letters" && (
+                    <div className="py-8 space-y-6 fade-slide">
+                        <div className="text-center space-y-2">
+                            <MapPin className={`w-6 h-6 mx-auto ${isDark ? "text-white/60" : "text-white/80"}`} />
+                            <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-white"}`}>Lưu Bút</h2>
+                        </div>
+                        <LetterBox slug={slug} initialLetters={data.letters} isDark={isDark} accentColor={theme.accentColor} />
+                    </div>
+                )}
+            </div>
+
+            {/* Member Modal */}
+            {selectedMember && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedMember(null)}>
+                    <div className={`max-w-sm w-full rounded-2xl shadow-2xl overflow-hidden ${theme.cardBg} backdrop-blur-md border border-white/10`} onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 text-center">
+                            <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-white/20 shadow-lg">
+                                {selectedMember.avatar ? (
+                                    <Image src={selectedMember.avatar} alt={selectedMember.name} width={96} height={96} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className={`w-full h-full flex items-center justify-center text-3xl font-bold ${isDark ? "bg-white/10 text-white/60" : "bg-white/30 text-white/80"}`}>
+                                        {selectedMember.name.charAt(0)}
+                                    </div>
+                                )}
+                            </div>
+                            <h3 className={`mt-3 text-xl font-bold ${theme.textColor}`}>{selectedMember.name}</h3>
+                            {selectedMember.nickname && <p className={`text-sm ${theme.mutedText}`}>{selectedMember.nickname}</p>}
+                        </div>
+                        {selectedMember.quote && (
+                            <div className="px-5 pb-4">
+                                <p className={`italic text-center ${theme.mutedText}`}>&ldquo;{selectedMember.quote}&rdquo;</p>
+                            </div>
+                        )}
+                        {(selectedMember.dream_university || selectedMember.dream_job) && (
+                            <div className="px-5 pb-4 flex flex-wrap gap-2 justify-center">
+                                {selectedMember.dream_job && (
+                                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${isDark ? "bg-white/10 text-white/70" : "bg-white/20 text-white/90"}`}>
+                                        {selectedMember.dream_job}
+                                    </span>
+                                )}
+                                {selectedMember.dream_university && (
+                                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${isDark ? "bg-white/10 text-white/70" : "bg-white/20 text-white/90"}`}>
+                                        {selectedMember.dream_university}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                        <div className="p-4 flex justify-center">
+                            <button onClick={() => setSelectedMember(null)} className={`px-6 py-2 rounded-full text-sm font-medium text-white ${theme.stopColor} hover:opacity-90 transition-opacity`}>Đóng</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Scroll To Top */}
-            {showScrollTop && !isPopupOpen && (
-                <button
-                    onClick={scrollToTop}
-                    className="fixed bottom-6 right-6 z-30 p-3 bg-gradient-to-r from-amber-500 to-[#3a2213] text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
-                    style={{ backgroundColor: themeProps.accentColor }}
-                >
-                    <ChevronUp className="w-5 h-5" />
-                </button>
+            {/* Lightbox */}
+            {lightboxIndex !== null && data.galleries[lightboxIndex] && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
+                    <div className={`rounded-xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${theme.cardBg} ${theme.textColor}`} onClick={(e) => e.stopPropagation()}>
+                        <div className={`p-3 flex items-center justify-between border-b border-white/10`}>
+                            <span className="text-sm font-medium">{lightboxIndex + 1} / {data.galleries.length}</span>
+                            <button onClick={closeLightbox} className="hover:scale-110 transition-transform"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
+                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                                <Image src={data.galleries[lightboxIndex].image_url} alt={data.galleries[lightboxIndex].caption || "Photo"} fill className="object-contain" priority />
+                            </div>
+                        </div>
+                        {data.galleries[lightboxIndex].caption && (
+                            <div className={`px-4 py-2 text-center text-sm ${theme.mutedText}`}>{data.galleries[lightboxIndex].caption}</div>
+                        )}
+                        <div className="flex justify-center items-center gap-4 p-3 border-t border-white/10">
+                            <button onClick={prevImage} className={`p-2 rounded-lg ${isDark ? "bg-white/10 text-white" : "bg-white/20 text-white"}`}><ChevronLeft className="w-5 h-5" /></button>
+                            <button onClick={nextImage} className={`p-2 rounded-lg ${isDark ? "bg-white/10 text-white" : "bg-white/20 text-white"}`}><ChevronRight className="w-5 h-5" /></button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

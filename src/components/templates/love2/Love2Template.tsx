@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Heart, Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Sun, Moon } from "lucide-react";
+import { Heart, Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Sun, Moon, Coffee } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
-import { CardDrawGame } from "@/components/shared/CardDrawGame";
-import { LetterBox } from "@/components/shared/LetterBox";
+import { Love2LetterBox } from "./Love2LetterBox";
+import { Love2GameSection } from "./Love2GameSection";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -23,21 +23,20 @@ interface Love2TemplateProps {
     slug: string;
 }
 
+type DeskItem = "home" | "gallery" | "timeline" | "game" | "letters";
+
 export function Love2Template({ data, slug }: Love2TemplateProps) {
-    const [activeSection, setActiveSection] = useState<string>("home");
-    const [showScrollTop, setShowScrollTop] = useState(false);
+    const [activeItem, setActiveItem] = useState<DeskItem | null>(null);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
-    // Read from localStorage and apply on mount
     useEffect(() => {
         const saved = localStorage.getItem(`theme_mode_${slug}`);
         if (saved) {
             const isSavedDark = saved === "dark";
             setOverrideDark(isSavedDark);
-            
             const root = document.documentElement;
             if (isSavedDark) {
                 root.style.setProperty("--theme-bg", "#181614");
@@ -54,7 +53,6 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
         setOverrideDark(newDark);
         localStorage.setItem(`theme_mode_${slug}`, newDark ? "dark" : "light");
         window.dispatchEvent(new CustomEvent("theme-change", { detail: { isDark: newDark } }));
-        
         const root = document.documentElement;
         if (newDark) {
             root.style.setProperty("--theme-bg", "#181614");
@@ -70,20 +68,14 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
     const anniversaryDate = profileData?.anniversary_date;
     const title = profileData?.title || `${boyName} & ${girlName}`;
 
-    // Track scroll position to show/hide scroll to top button
-    useEffect(() => {
-        const handleScroll = () => {
-            setShowScrollTop(window.scrollY > 400);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const getDaysTogether = () => {
+        if (!anniversaryDate) return null;
+        const start = new Date(anniversaryDate);
+        const today = new Date();
+        return Math.ceil(Math.abs(today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     };
+    const daysTogether = getDaysTogether();
 
-    // Lightbox navigation
     const openLightbox = (index: number) => { setLightboxIndex(index); setIsPopupOpen(true); };
     const closeLightbox = () => { setLightboxIndex(null); setIsPopupOpen(false); };
     const nextImage = useCallback(() => {
@@ -97,389 +89,36 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
         }
     }, [lightboxIndex, data.galleries.length]);
 
-    // Keyboard navigation for lightbox
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (lightboxIndex === null) return;
-            if (e.key === 'ArrowRight') nextImage();
-            if (e.key === 'ArrowLeft') prevImage();
-            if (e.key === 'Escape') closeLightbox();
+            if (lightboxIndex !== null) {
+                if (e.key === 'ArrowRight') nextImage();
+                if (e.key === 'ArrowLeft') prevImage();
+                if (e.key === 'Escape') closeLightbox();
+            } else if (activeItem) {
+                if (e.key === 'Escape') setActiveItem(null);
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [lightboxIndex, nextImage, prevImage]);
+    }, [lightboxIndex, nextImage, prevImage, activeItem]);
 
-    // Calculate days together
-    const getDaysTogether = () => {
-        if (!anniversaryDate) return null;
-        const start = new Date(anniversaryDate);
-        const today = new Date();
-        const diffTime = Math.abs(today.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
-    };
-
-    const daysTogether = getDaysTogether();
-
-    // Swipe handlers for mobile gallery navigation
     const swipeHandlers = useSwipeable({
-        onSwipedLeft: () => {
-            if (lightboxIndex !== null) nextImage();
-        },
-        onSwipedRight: () => {
-            if (lightboxIndex !== null) prevImage();
-        },
+        onSwipedLeft: () => { if (lightboxIndex !== null) nextImage(); },
+        onSwipedRight: () => { if (lightboxIndex !== null) prevImage(); },
         preventScrollOnSwipe: true,
         trackMouse: false,
     });
 
+    const deskItems: { id: DeskItem; label: string; icon: typeof Heart; rotation: string; position: string; color: string }[] = [
+        { id: "gallery", label: "Scrapbook", icon: ImageIcon, rotation: "rotate-[-3deg]", position: "top-8 left-4 sm:left-12", color: "from-amber-100 to-yellow-50" },
+        { id: "timeline", label: "Nhật Ký", icon: Calendar, rotation: "rotate-[2deg]", position: "top-8 right-4 sm:right-12", color: "from-rose-100 to-pink-50" },
+        { id: "letters", label: "Lưu Bút", icon: Mail, rotation: "rotate-[-1deg]", position: "bottom-8 left-4 sm:left-16", color: "from-purple-100 to-violet-50" },
+        { id: "game", label: "Trò Chơi", icon: Sparkles, rotation: "rotate-[3deg]", position: "bottom-8 right-4 sm:right-16", color: "from-emerald-100 to-teal-50" },
+    ];
+
     return (
-        <div className={`min-h-screen relative pb-20 font-sans selection:bg-rose-200 transition-colors duration-500 ${isDark ? "dark bg-[#1a1816] text-slate-100" : "bg-[#faf6f0] text-gray-800"}`}>
-            {/* Scrapbook grid patterns and tape assets decoration */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-[0.15]">
-                <div className={`absolute inset-0 bg-[linear-gradient(rgba(0,0,0,${isDark ? "0.15" : "0.05"})_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,${isDark ? "0.15" : "0.05"})_1px,transparent_1px)] bg-[size:30px_30px]`} />
-                <div className={`absolute w-[500px] h-[500px] rounded-full ${isDark ? "bg-rose-950/20" : "bg-rose-300"} blur-3xl top-10 left-[-100px]`} />
-                <div className={`absolute w-[600px] h-[600px] rounded-full ${isDark ? "bg-purple-950/20" : "bg-purple-300"} blur-3xl bottom-10 right-[-150px]`} />
-            </div>
-
-            {/* Theme Toggle Button */}
-            {!isPopupOpen && (
-                <button
-                    onClick={handleThemeToggle}
-                    className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
-                        isDark 
-                            ? "bg-[#282420]/95 text-yellow-400 border border-rose-950/30 hover:bg-[#332e28]" 
-                            : "bg-white/95 text-rose-500 hover:bg-white border border-rose-100/30"
-                    }`}
-                    title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
-                >
-                    {isDark ? (
-                        <Sun className="w-5 h-5" />
-                    ) : (
-                        <Moon className="w-5 h-5" />
-                    )}
-                </button>
-            )}
-
-            {/* Edit Button */}
-            {!isPopupOpen && (
-                <Link
-                    href={`/${slug}/edit`}
-                    className={`fixed top-4 right-4 z-30 p-3 rounded-full shadow-lg transition-all border hover:scale-105 ${
-                        isDark
-                            ? "bg-[#282420]/95 border-rose-950/30 text-rose-400 hover:bg-[#332e28]"
-                            : "bg-white/95 border-rose-100/30 text-rose-500 hover:bg-white"
-                    }`}
-                    title="Chỉnh sửa trang"
-                    aria-label="Chỉnh sửa trang"
-                >
-                    <Settings className="w-5 h-5" />
-                </Link>
-            )}
-
-            {/* Main Header / Cover */}
-            <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-16 pb-8 max-w-3xl mx-auto text-center">
-                {/* Anniversary Counter Pinned */}
-                {daysTogether && (
-                    <div className="mb-6 relative animate-bounce-slow">
-                        {/* Washi tape graphic mock */}
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-yellow-100/70 border border-yellow-200/50 rotate-[-2deg] z-10 shadow-sm flex items-center justify-center text-[10px] text-gray-500/70 font-mono">
-                            ★ SWEET DAYS ★
-                        </div>
-                        <div className={`border-2 border-dashed ${isDark ? "bg-[#282420] border-rose-900/40" : "bg-white border-rose-200"} px-6 py-4 rounded-3xl shadow-xl flex flex-col items-center`}>
-                            <span className="text-4xl font-bold text-rose-500 tracking-tight">{daysTogether}</span>
-                            <span className="text-xs uppercase tracking-wider text-rose-400 font-semibold mt-0.5">Ngày bên nhau</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Profiles card */}
-                <div className={`${isDark ? "bg-[#282420]/95 border-rose-900/30 text-slate-100" : "bg-white/95 border-rose-100/50 text-gray-800"} border backdrop-blur-md rounded-[2rem] p-6 sm:p-8 shadow-2xl w-full max-w-md mx-auto mb-8 relative`}>
-                    {/* Corner photo corners styling */}
-                    <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-rose-300 rounded-tl-lg" />
-                    <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-rose-300 rounded-tr-lg" />
-                    <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-rose-300 rounded-bl-lg" />
-                    <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-rose-300 rounded-br-lg" />
-
-                    <div className="flex items-center justify-center gap-6 mb-4">
-                        {/* Boy Avatar */}
-                        <div className="flex flex-col items-center">
-                            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-1 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[-3deg] hover:rotate-0 transition-transform duration-300`}>
-                                {boyAvatar ? (
-                                    <Image src={boyAvatar} alt={boyName} width={96} height={96} className="w-full h-full object-cover rounded-xl" />
-                                ) : (
-                                    <div className="w-full h-full bg-rose-50 flex items-center justify-center text-2xl font-bold text-rose-300">👦</div>
-                                )}
-                            </div>
-                            <span className={`text-xs sm:text-sm font-semibold mt-2 truncate max-w-[90px] ${isDark ? "text-slate-200" : "text-slate-700"}`}>{boyName}</span>
-                        </div>
-
-                        {/* Pulsing Heart Connect */}
-                        <div className="flex flex-col items-center">
-                            <Heart className="w-8 h-8 text-rose-500 fill-rose-500 animate-heartbeat" />
-                        </div>
-
-                        {/* Girl Avatar */}
-                        <div className="flex flex-col items-center">
-                            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-1 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[3deg] hover:rotate-0 transition-transform duration-300`}>
-                                {girlAvatar ? (
-                                    <Image src={girlAvatar} alt={girlName} width={96} height={96} className="w-full h-full object-cover rounded-xl" />
-                                ) : (
-                                    <div className="w-full h-full bg-rose-50 flex items-center justify-center text-2xl font-bold text-rose-300">👧</div>
-                                )}
-                            </div>
-                            <span className={`text-xs sm:text-sm font-semibold mt-2 truncate max-w-[90px] ${isDark ? "text-slate-200" : "text-slate-700"}`}>{girlName}</span>
-                        </div>
-                    </div>
-
-                    <h1 className={`text-3xl font-serif font-bold tracking-tight mb-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
-                        {title}
-                    </h1>
-
-                    {profileData?.short_note && (
-                        <p className={`italic text-sm font-serif max-w-xs mx-auto ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                            &ldquo;{profileData.short_note}&rdquo;
-                        </p>
-                    )}
-                </div>
-
-                {/* Scrapbook Tabs Header */}
-                <div className={`inline-flex flex-wrap justify-center gap-2 p-1.5 rounded-full border shadow-md ${isDark ? "bg-[#282420]/75 border-rose-900/30 text-slate-100" : "bg-white/70 border-rose-100 text-gray-800"} backdrop-blur-md`}>
-                    {[
-                        { id: "home", icon: Heart, label: "Home" },
-                        { id: "gallery", icon: ImageIcon, label: "Scrapbook" },
-                        { id: "timeline", icon: Calendar, label: "Kỷ Niệm" },
-                        { id: "game", icon: Sparkles, label: "Trò Chơi" },
-                        { id: "letters", icon: Mail, label: "Lưu Bút" },
-                    ].map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveSection(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
-                                activeSection === tab.id
-                                    ? "bg-rose-500 text-white shadow-md scale-105"
-                                    : "text-slate-600 hover:bg-rose-50"
-                            }`}
-                        >
-                            <tab.icon className="w-3.5 h-3.5" />
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-            </section>
-
-            {/* Content Display */}
-            <main className="max-w-4xl mx-auto px-4 relative z-10">
-                {/* Home Cover / Sweet Note Page */}
-                {activeSection === "home" && (
-                    <div className={`${isDark ? "bg-[#282420]/80 border-rose-900/30 text-slate-100" : "bg-white/80 border-rose-100/50 text-gray-800"} backdrop-blur-md rounded-3xl p-6 sm:p-8 border shadow-xl max-w-xl mx-auto text-center space-y-6`}>
-                        <h2 className={`text-2xl font-serif font-bold ${isDark ? "text-slate-100" : "text-gray-800"}`}>Gửi Cậu, Người Tớ Thương 💕</h2>
-                        <div className={`relative p-6 ${isDark ? "bg-rose-950/20 border-rose-900/40 text-slate-300" : "bg-rose-50/50 border-rose-200 text-slate-600"} border border-dashed rounded-2xl italic font-serif text-sm sm:text-base leading-relaxed`}>
-                            {/* Washi tape decoration */}
-                            <div className="absolute -top-2.5 left-6 w-16 h-5 bg-pink-100/70 rotate-[-1deg] border border-pink-200/50 shadow-sm" />
-                            &ldquo;Thanh xuân của tớ thật đẹp vì có sự xuất hiện của cậu. Cám ơn cậu vì đã luôn đồng hành, luôn yêu thương và là một phần quan trọng nhất trong cuộc đời tớ.&rdquo;
-                        </div>
-                        <div className="text-xs text-rose-400 font-semibold uppercase tracking-widest flex items-center justify-center gap-2">
-                            <span>Forever & Always</span>
-                            <Heart className="w-3 h-3 fill-rose-400" />
-                        </div>
-                    </div>
-                )}
-
-                {/* Polaroid Scrapbook Gallery */}
-                {activeSection === "gallery" && (
-                    <section className={`${isDark ? "bg-[#282420]/85 border-rose-900/30 text-slate-100" : "bg-white/85 border-rose-100/40 text-gray-800"} backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border shadow-2xl`}>
-                        <h2 className={`text-2xl font-serif font-bold ${isDark ? "text-slate-100" : "text-gray-800"} text-center mb-8 flex items-center justify-center gap-2`}>
-                            <span className="text-xl">📸</span> Album Scrapbook Polaroid
-                        </h2>
-                        {data.galleries.length === 0 ? (
-                            <div className="text-center py-16 text-slate-400">
-                                <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                                <p>Cuốn album ảnh hiện chưa có ảnh nào...</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                {data.galleries.map((item, index) => {
-                                    // Random skew rotation for a natural scrapbook feel
-                                    const rotations = ["rotate-[-2deg]", "rotate-[1deg]", "rotate-[2deg]", "rotate-[-1deg]"];
-                                    const rotClass = rotations[index % rotations.length];
-                                    return (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => openLightbox(index)}
-                                            className={`${isDark ? "bg-[#332e28] border-rose-900/20 text-slate-200" : "bg-white border-slate-200 text-gray-800"} p-3 pb-6 border rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${rotClass} relative`}
-                                        >
-                                            {/* Washi tape effect */}
-                                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-16 h-5 bg-yellow-100/60 border border-yellow-200/40 shadow-sm opacity-80" />
-                                            
-                                            {/* Image container */}
-                                            <div className={`aspect-square relative overflow-hidden ${isDark ? "bg-zinc-950 border-rose-950/20" : "bg-slate-50 border-slate-100"} rounded-md border`}>
-                                                <Image
-                                                    src={item.image_url}
-                                                    alt={item.caption || "Love Memory"}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            </div>
-
-                                            {/* Caption styled as handwriting */}
-                                            {item.caption && (
-                                                <p className={`text-center font-serif italic text-xs mt-3 truncate px-1 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-                                                    {item.caption}
-                                                </p>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </section>
-                )}
-
-                {/* Timeline Story Ribbon */}
-                {activeSection === "timeline" && (
-                    <section className={`${isDark ? "bg-[#282420]/85 border-rose-900/30 text-slate-100" : "bg-white/85 border-rose-100/40 text-gray-800"} backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border shadow-2xl`}>
-                        <h2 className={`text-2xl font-serif font-bold ${isDark ? "text-slate-100" : "text-gray-800"} text-center mb-10 flex items-center justify-center gap-2`}>
-                            <span className="text-xl">🌸</span> Nhật Ký Câu Chuyện Chúng Ta
-                        </h2>
-                        {data.timelines.length === 0 ? (
-                            <div className="text-center py-16 text-slate-400">
-                                <Calendar className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                                <p>Dòng thời gian câu chuyện hiện chưa ghi nhận sự kiện nào.</p>
-                            </div>
-                        ) : (
-                            <div className="relative pl-6 border-l-2 border-dashed border-rose-300 ml-4 space-y-8">
-                                {data.timelines.map((event) => (
-                                    <div key={event.id} className="relative">
-                                        {/* Heart Icon Connector */}
-                                        <div className="absolute -left-[33px] top-1 w-5 h-5 rounded-full bg-rose-500 border-4 border-white flex items-center justify-center shadow-md" style={isDark ? { borderColor: "#1a1816" } : {}}>
-                                            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                                        </div>
-
-                                        {/* Scrapbook Diary Card */}
-                                        <div className={`${isDark ? "bg-[#332e28]/50 hover:bg-[#332e28] border-rose-900/20 text-slate-200" : "bg-slate-50/50 hover:bg-slate-50 border-rose-50/50"} border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
-                                            <div className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1.5">
-                                                <Calendar className="w-3.5 h-3.5" />
-                                                {new Date(event.date).toLocaleDateString("vi-VN", {
-                                                    year: "numeric",
-                                                    month: "long",
-                                                    day: "numeric",
-                                                })}
-                                            </div>
-                                            <h3 className={`text-base sm:text-lg font-serif font-bold mb-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
-                                                {event.title}
-                                            </h3>
-                                            
-                                            {event.description && (
-                                                <p className={`text-sm leading-relaxed mb-4 whitespace-pre-wrap font-serif italic ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-                                                    &ldquo;{event.description}&rdquo;
-                                                </p>
-                                            )}
-
-                                            {event.image_url && (
-                                                <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-md border ${isDark ? "border-rose-950/20" : "border-rose-100/40"}`}>
-                                                    <Image src={event.image_url} alt={event.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                )}
-
-                {/* Interactive Envelope Letterbox */}
-                {activeSection === "letters" && (
-                    <section className={`${isDark ? "bg-[#282420]/85 border-rose-900/30 text-slate-100" : "bg-white/85 border-rose-100/40 text-gray-800"} backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border shadow-2xl`}>
-                        <h2 className={`text-2xl font-serif font-bold ${isDark ? "text-slate-100" : "text-gray-800"} text-center mb-2 flex items-center justify-center gap-2`}>
-                            <span className="text-xl">✉️</span> Thư Tình Bỏ Túi
-                        </h2>
-                        <p className={`text-xs sm:text-sm text-center mb-6 max-w-sm mx-auto ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                            Tất cả những lá thư ngọt ngào nhất được lưu trữ tại hòm thư này.
-                        </p>
-                        <LetterBox initialLetters={data.letters} slug={slug} theme="love" isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
-                    </section>
-                )}
-
-                {/* Challenge Game Section */}
-                {activeSection === "game" && (
-                    <section className={`${isDark ? "bg-[#282420]/85 border-rose-900/30 text-slate-100" : "bg-white/85 border-rose-100/40 text-gray-800"} backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border shadow-2xl`}>
-                        <h2 className={`text-2xl font-serif font-bold ${isDark ? "text-slate-100" : "text-gray-800"} text-center mb-6 flex items-center justify-center gap-2`}>
-                            <span className="text-xl">🎲</span> Thử Thách Tình Yêu
-                        </h2>
-                        <CardDrawGame theme="love" isDark={isDark} />
-                    </section>
-                )}
-            </main>
-
-            {/* Gallery Lightbox */}
-            {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={closeLightbox}>
-                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#282420] text-slate-100" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-4 text-white flex-shrink-0">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">
-                                    {lightboxIndex + 1} / {data.galleries.length}
-                                </span>
-                                <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        {/* Image */}
-                        <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
-                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
-                                <Image
-                                    src={data.galleries[lightboxIndex].image_url}
-                                    alt={data.galleries[lightboxIndex].caption || "Photo"}
-                                    fill
-                                    className="object-contain"
-                                    priority
-                                />
-                            </div>
-                        </div>
-                        {/* Caption */}
-                        {data.galleries[lightboxIndex].caption && (
-                            <div className={`px-4 py-2 text-center text-sm font-serif italic ${isDark ? "text-slate-300" : "text-gray-600"}`}>
-                                {data.galleries[lightboxIndex].caption}
-                            </div>
-                        )}
-                        {/* Navigation */}
-                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-rose-900/30" : "border-gray-100"}`}>
-                            <button
-                                onClick={prevImage}
-                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-rose-950/30 text-rose-400 hover:bg-rose-950/50" : "bg-rose-50 text-rose-500 hover:bg-rose-100"}`}
-                                aria-label="Ảnh trước"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={nextImage}
-                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-rose-950/30 text-rose-400 hover:bg-rose-950/50" : "bg-rose-50 text-rose-500 hover:bg-rose-100"}`}
-                                aria-label="Ảnh tiếp theo"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Scroll to top */}
-            {showScrollTop && !isPopupOpen && (
-                <button
-                    onClick={scrollToTop}
-                    className="fixed bottom-6 right-6 z-30 p-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
-                    title="Lên đầu trang"
-                    aria-label="Lên đầu trang"
-                >
-                    <ChevronUp className="w-5 h-5" />
-                </button>
-            )}
-
-            {/* Styles */}
+        <div className={`min-h-screen relative font-sans selection:bg-rose-200 transition-colors duration-500 overflow-hidden ${isDark ? "dark bg-[#1a1816] text-slate-100" : "bg-[#faf6f0] text-gray-800"}`}>
             <style jsx>{`
                 @keyframes heartbeat {
                     0% { transform: scale(1); }
@@ -488,17 +127,249 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                     42% { transform: scale(1.12); }
                     70% { transform: scale(1); }
                 }
-                .animate-heartbeat {
-                    animation: heartbeat 1.4s infinite ease-in-out;
-                }
-                @keyframes bounce-slow {
+                .animate-heartbeat { animation: heartbeat 1.4s infinite ease-in-out; }
+                @keyframes floatItem {
                     0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-8px); }
+                    50% { transform: translateY(-6px); }
                 }
-                .animate-bounce-slow {
-                    animation: bounce-slow 3s infinite ease-in-out;
+                .animate-float-item { animation: floatItem 4s ease-in-out infinite; }
+                @keyframes modalIn {
+                    0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+                    100% { opacity: 1; transform: scale(1) translateY(0); }
                 }
+                .animate-modal-in { animation: modalIn 0.3s ease-out; }
             `}</style>
+
+            {/* Desk texture background */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-br from-[#2a2520] via-[#1f1c18] to-[#252018]" : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"}`} />
+                <div className={`absolute inset-0 opacity-[0.08] bg-[repeating-linear-gradient(90deg,transparent,transparent_40px,rgba(0,0,0,0.1)_40px,rgba(0,0,0,0.1)_41px)]`} />
+            </div>
+
+            {/* Buttons */}
+            {!isPopupOpen && !activeItem && (
+                <>
+                    <button
+                        onClick={handleThemeToggle}
+                        className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${isDark ? "bg-[#282420]/95 text-yellow-400 border border-rose-950/30" : "bg-white/95 text-rose-500 border border-rose-100/30"}`}
+                    >
+                        {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </button>
+                    <Link
+                        href={`/${slug}/edit`}
+                        className={`fixed top-4 right-4 z-30 p-3 rounded-full shadow-lg transition-all border hover:scale-105 ${isDark ? "bg-[#282420]/95 border-rose-950/30 text-rose-400" : "bg-white/95 border-rose-100/30 text-rose-500"}`}
+                    >
+                        <Settings className="w-5 h-5" />
+                    </Link>
+                </>
+            )}
+
+            {/* DESK VIEW - when no item is open */}
+            {!activeItem && (
+                <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-8">
+                    {/* Center profile card - like a photo frame on desk */}
+                    <div className={`relative z-10 ${isDark ? "bg-[#282420] border-rose-900/30" : "bg-white border-amber-200"} border-4 rounded-xl p-6 sm:p-8 shadow-2xl max-w-sm w-full text-center`}>
+                        {/* Washi tape */}
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-yellow-100/70 border border-yellow-200/50 rotate-[-1deg] z-10 shadow-sm flex items-center justify-center text-[10px] text-gray-500/70 font-mono">
+                            OUR DESK
+                        </div>
+
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden p-0.5 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[-3deg]`}>
+                                {boyAvatar ? (
+                                    <Image src={boyAvatar} alt={boyName} width={80} height={80} className="w-full h-full object-cover rounded-lg" />
+                                ) : (
+                                    <div className="w-full h-full bg-rose-50 flex items-center justify-center text-xl font-bold text-rose-300">👦</div>
+                                )}
+                            </div>
+                            <Heart className="w-6 h-6 text-rose-500 fill-rose-500 animate-heartbeat" />
+                            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden p-0.5 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[3deg]`}>
+                                {girlAvatar ? (
+                                    <Image src={girlAvatar} alt={girlName} width={80} height={80} className="w-full h-full object-cover rounded-lg" />
+                                ) : (
+                                    <div className="w-full h-full bg-rose-50 flex items-center justify-center text-xl font-bold text-rose-300">👧</div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h1 className={`text-2xl font-serif font-bold mb-1 ${isDark ? "text-slate-100" : "text-slate-800"}`}>{title}</h1>
+                        {profileData?.short_note && (
+                            <p className={`italic text-xs font-serif mb-3 ${isDark ? "text-slate-400" : "text-slate-500"}`}>&ldquo;{profileData.short_note}&rdquo;</p>
+                        )}
+                        {daysTogether && (
+                            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm ${isDark ? "bg-rose-950/30 text-rose-300" : "bg-rose-50 text-rose-500"}`}>
+                                <Heart className="w-3.5 h-3.5 fill-current" />
+                                <span className="font-bold">{daysTogether}</span>
+                                <span className="text-xs">ngày</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desk items scattered around */}
+                    <div className="absolute inset-0 pointer-events-none">
+                        {deskItems.map((item, idx) => (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveItem(item.id)}
+                                className={`absolute pointer-events-auto ${item.position} ${item.rotation} animate-float-item group`}
+                                style={{ animationDelay: `${idx * 0.5}s` }}
+                            >
+                                <div className={`bg-gradient-to-br ${item.color} ${isDark ? "!from-[#332e28] !to-[#282420] border-rose-900/30" : "border-white/60"} border-2 rounded-xl p-4 sm:p-5 shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 cursor-pointer`}>
+                                    <item.icon className={`w-8 h-8 sm:w-10 sm:h-10 ${isDark ? "text-rose-400" : "text-gray-600"} group-hover:scale-110 transition-transform`} />
+                                    <span className={`block text-xs font-semibold mt-2 ${isDark ? "text-slate-300" : "text-gray-600"}`}>{item.label}</span>
+                                </div>
+                            </button>
+                        ))}
+
+                        {/* Decorative coffee cup */}
+                        <div className={`absolute top-1/2 left-2 sm:left-8 ${isDark ? "text-amber-900/30" : "text-amber-300/40"}`}>
+                            <Coffee className="w-10 h-10" />
+                        </div>
+
+                        {/* Decorative sticky notes */}
+                        <div className={`absolute top-1/3 right-2 sm:right-8 w-16 h-16 ${isDark ? "bg-yellow-900/20" : "bg-yellow-100/60"} rotate-[5deg] rounded-sm shadow-md flex items-center justify-center`}>
+                            <Heart className={`w-6 h-6 ${isDark ? "text-rose-800/30" : "text-rose-300"} fill-current`} />
+                        </div>
+                    </div>
+
+                    {/* Tap hint */}
+                    <div className={`mt-8 text-center ${isDark ? "text-slate-500" : "text-gray-400"}`}>
+                        <p className="text-xs">Nhấn vào các vật trên bàn để khám phá</p>
+                    </div>
+                </div>
+            )}
+
+            {/* EXPANDED ITEM MODAL */}
+            {activeItem && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setActiveItem(null)} />
+                    <div className={`relative w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-modal-in ${isDark ? "bg-[#282420] text-slate-100" : "bg-white text-gray-800"}`}>
+                        {/* Modal header */}
+                        <div className={`flex items-center justify-between p-4 border-b ${isDark ? "border-rose-900/30" : "border-amber-100"}`}>
+                            <div className="flex items-center gap-2">
+                                {activeItem === "gallery" && <ImageIcon className="w-5 h-5 text-amber-500" />}
+                                {activeItem === "timeline" && <Calendar className="w-5 h-5 text-rose-400" />}
+                                {activeItem === "letters" && <Mail className="w-5 h-5 text-purple-400" />}
+                                {activeItem === "game" && <Sparkles className="w-5 h-5 text-emerald-400" />}
+                                <h2 className="text-lg font-serif font-bold">
+                                    {activeItem === "gallery" && "Scrapbook Polaroid"}
+                                    {activeItem === "timeline" && "Nhật Ký"}
+                                    {activeItem === "letters" && "Lưu Bút"}
+                                    {activeItem === "game" && "Trò Chơi"}
+                                </h2>
+                            </div>
+                            <button onClick={() => setActiveItem(null)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal content */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {activeItem === "gallery" && (
+                                <>
+                                    {data.galleries.length === 0 ? (
+                                        <div className="text-center py-16 text-gray-400">
+                                            <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                            <p>Chưa có ảnh nào...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            {data.galleries.map((item, index) => {
+                                                const rotations = ["rotate-[-2deg]", "rotate-[1deg]", "rotate-[2deg]", "rotate-[-1deg]"];
+                                                return (
+                                                    <div
+                                                        key={item.id}
+                                                        onClick={() => openLightbox(index)}
+                                                        className={`${isDark ? "bg-[#332e28] border-rose-900/20" : "bg-white border-slate-200"} p-2 pb-4 border rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${rotations[index % 4]} relative`}
+                                                    >
+                                                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-12 h-4 bg-yellow-100/60 border border-yellow-200/40 shadow-sm" />
+                                                        <div className="aspect-square relative overflow-hidden rounded-md">
+                                                            <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover" />
+                                                        </div>
+                                                        {item.caption && (
+                                                            <p className={`text-center font-serif italic text-xs mt-2 truncate ${isDark ? "text-slate-300" : "text-slate-600"}`}>{item.caption}</p>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {activeItem === "timeline" && (
+                                <>
+                                    {data.timelines.length === 0 ? (
+                                        <div className="text-center py-16 text-gray-400">
+                                            <Calendar className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                            <p>Chưa có sự kiện nào...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="relative pl-6 border-l-2 border-dashed border-rose-300 space-y-6">
+                                            {data.timelines.map((event) => (
+                                                <div key={event.id} className="relative">
+                                                    <div className="absolute -left-[29px] top-1 w-5 h-5 rounded-full bg-rose-500 border-4 border-white flex items-center justify-center shadow-md" style={isDark ? { borderColor: "#282420" } : {}}>
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                                    </div>
+                                                    <div className={`${isDark ? "bg-[#332e28]/50 border-rose-900/20" : "bg-rose-50/50 border-rose-100"} border rounded-xl p-4 shadow-sm`}>
+                                                        <div className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1.5">
+                                                            <Calendar className="w-3.5 h-3.5" />
+                                                            {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
+                                                        </div>
+                                                        <h3 className="text-base font-serif font-bold mb-2">{event.title}</h3>
+                                                        {event.description && (
+                                                            <p className={`text-sm leading-relaxed mb-3 whitespace-pre-wrap font-serif italic ${isDark ? "text-slate-300" : "text-slate-600"}`}>&ldquo;{event.description}&rdquo;</p>
+                                                        )}
+                                                        {event.image_url && (
+                                                            <div className="relative aspect-video rounded-lg overflow-hidden shadow-md">
+                                                                <Image src={event.image_url} alt={event.title} fill className="object-cover" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {activeItem === "letters" && (
+                                <Love2LetterBox initialLetters={data.letters} slug={slug} isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
+                            )}
+
+                            {activeItem === "game" && (
+                                <Love2GameSection photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))} isDark={isDark} />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Lightbox */}
+            {lightboxIndex !== null && data.galleries[lightboxIndex] && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
+                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#282420] text-slate-100" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-gradient-to-r from-amber-400 to-orange-500 p-4 text-white flex-shrink-0">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">{lightboxIndex + 1} / {data.galleries.length}</span>
+                                <button onClick={closeLightbox} className="hover:scale-110 transition-transform"><X className="w-5 h-5" /></button>
+                            </div>
+                        </div>
+                        <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
+                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                                <Image src={data.galleries[lightboxIndex].image_url} alt={data.galleries[lightboxIndex].caption || "Photo"} fill className="object-contain" priority />
+                            </div>
+                        </div>
+                        {data.galleries[lightboxIndex].caption && (
+                            <div className={`px-4 py-2 text-center text-sm font-serif italic ${isDark ? "text-slate-300" : "text-gray-600"}`}>{data.galleries[lightboxIndex].caption}</div>
+                        )}
+                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-rose-900/30" : "border-gray-100"}`}>
+                            <button onClick={prevImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-rose-950/30 text-rose-400" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}><ChevronLeft className="w-5 h-5" /></button>
+                            <button onClick={nextImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-rose-950/30 text-rose-400" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}><ChevronRight className="w-5 h-5" /></button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
