@@ -98,6 +98,29 @@ echo "2) Run in Background (detached, does not hang terminal)"
 printf "Enter choice [1-2]: "
 read -r exec_choice
 
+# 3. Select Log Level
+echo ""
+echo "Select log level:"
+echo "1) Normal (default logs)"
+echo "2) Verbose (full debug logs including Prisma queries)"
+printf "Enter choice [1-2]: "
+read -r log_choice
+
+case $log_choice in
+    1)
+        export DEBUG=""
+        export NEXT_DEBUG=""
+        ;;
+    2)
+        export DEBUG="prisma:client,prisma:engine,prisma:query"
+        export NEXT_DEBUG="true"
+        print_success "Verbose logging enabled (Prisma queries + Next.js debug)"
+        ;;
+    *)
+        print_error "Invalid option."
+        exit 1
+        ;;
+esac
 
 # Launch Server
 case $exec_choice in
@@ -105,9 +128,15 @@ case $exec_choice in
         # Foreground Execution
         if [ "$RUN_DEV" = true ]; then
             print_status "Starting Development Server in foreground..."
+            if [ -n "$DEBUG" ]; then
+                print_status "Debug mode: Prisma queries will be logged"
+            fi
             npm run dev
         else
             print_status "Starting Production Server in foreground..."
+            if [ -n "$DEBUG" ]; then
+                print_status "Debug mode: Prisma queries will be logged"
+            fi
             npm run start
         fi
         ;;
@@ -121,27 +150,49 @@ case $exec_choice in
             pm2 delete "$PM2_NAME" > /dev/null 2>&1
             
             if [ "$RUN_DEV" = true ]; then
-                pm2 start npm --name "$PM2_NAME" -- run dev
+                if [ -n "$DEBUG" ]; then
+                    pm2 start npm --name "$PM2_NAME" -- run dev --env DEBUG="$DEBUG"
+                else
+                    pm2 start npm --name "$PM2_NAME" -- run dev
+                fi
             else
-                pm2 start npm --name "$PM2_NAME" -- start
+                if [ -n "$DEBUG" ]; then
+                    pm2 start npm --name "$PM2_NAME" -- start --env DEBUG="$DEBUG"
+                else
+                    pm2 start npm --name "$PM2_NAME" -- start
+                fi
             fi
             
             print_success "Application started successfully under PM2 in background!"
             echo "You can check status using: pm2 status"
             echo "You can view logs using:   pm2 logs $PM2_NAME"
+            if [ -n "$DEBUG" ]; then
+                echo "Debug logs are enabled. View with: pm2 logs $PM2_NAME --raw"
+            fi
         else
             print_warning "PM2 is not installed. Falling back to nohup..."
             
             if [ "$RUN_DEV" = true ]; then
-                nohup npm run dev > "$LOG_FILE" 2>&1 &
+                if [ -n "$DEBUG" ]; then
+                    nohup env DEBUG="$DEBUG" npm run dev > "$LOG_FILE" 2>&1 &
+                else
+                    nohup npm run dev > "$LOG_FILE" 2>&1 &
+                fi
             else
-                nohup npm run start > "$LOG_FILE" 2>&1 &
+                if [ -n "$DEBUG" ]; then
+                    nohup env DEBUG="$DEBUG" npm run start > "$LOG_FILE" 2>&1 &
+                else
+                    nohup npm run start > "$LOG_FILE" 2>&1 &
+                fi
             fi
             
             PID=$!
             print_success "Application started in background using nohup!"
             echo "Process ID (PID): $PID"
             echo "Console logs are being saved to: ./$LOG_FILE"
+            if [ -n "$DEBUG" ]; then
+                echo "Debug logs are enabled. View with: tail -f $LOG_FILE"
+            fi
             echo "To stop this application, run:    kill $PID"
         fi
         ;;

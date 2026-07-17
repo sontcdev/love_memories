@@ -30,6 +30,12 @@ export async function loginAdmin(formData: FormData) {
         }
 
         const sessionToken = generateSessionToken();
+        
+        await prisma.admin.update({
+            where: { id: admin.id },
+            data: { session_token: sessionToken },
+        });
+        
         const cookieStore = await cookies();
         cookieStore.set("admin_session", sessionToken, {
             httpOnly: true,
@@ -48,20 +54,29 @@ export async function loginAdmin(formData: FormData) {
 
 export async function logoutAdmin() {
     const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("admin_session")?.value;
+    
+    if (sessionToken) {
+        await prisma.admin.updateMany({
+            where: { session_token: sessionToken },
+            data: { session_token: null },
+        });
+    }
+    
     cookieStore.delete("admin_session");
     return { success: true };
 }
 
 export async function getAdminSession() {
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get("admin_session")?.value;
+    const sessionToken = cookieStore.get("admin_session")?.value;
 
-    if (!sessionId) {
+    if (!sessionToken) {
         return null;
     }
 
     const admin = await prisma.admin.findUnique({
-        where: { id: sessionId },
+        where: { session_token: sessionToken },
         select: { id: true, username: true },
     });
 
