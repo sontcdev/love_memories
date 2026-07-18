@@ -1,182 +1,74 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Star, Music } from "lucide-react";
+import Image from "next/image";
+import { Mic2, Moon, Music2, Sparkles, Star, Sun, Zap } from "lucide-react";
+import {
+    PinKeypad,
+    PinLockController,
+    type TemplateLockScreenProps,
+    useLockTheme,
+} from "@/components/auth/PinLockController";
 
-interface IdolLockScreenProps {
-    onUnlock: () => void;
-    correctPin: string;
-    idolName?: string;
-}
-
-export function IdolLockScreen({ onUnlock, correctPin, idolName }: IdolLockScreenProps) {
-    const [pin, setPin] = useState("");
-    const [error, setError] = useState(false);
-    const [stars, setStars] = useState<Array<{ id: number; x: number; y: number; size: number; delay: number }>>([]);
-
-    useEffect(() => {
-        const newStars = Array.from({ length: 50 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-            size: Math.random() * 3 + 1,
-            delay: Math.random() * 3,
-        }));
-        setStars(newStars);
-    }, []);
-
-    const handlePinChange = (value: string) => {
-        if (value.length <= 4) {
-            setPin(value);
-            setError(false);
-        }
-    };
-
-    const handleSubmit = () => {
-        if (pin === correctPin) {
-            onUnlock();
-        } else {
-            setError(true);
-            setTimeout(() => setPin(""), 500);
-        }
-    };
+export function IdolLockScreen({ slug, onSuccess, linkData }: TemplateLockScreenProps) {
+    const { isDark, toggleTheme } = useLockTheme(slug, true);
+    const profile = linkData?.profile_data as Record<string, string> | null;
+    const idolName = profile?.idol_name || "My Idol";
+    const idolAvatar = profile?.idol_avatar;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-black flex items-center justify-center p-4 relative overflow-hidden">
-            <style jsx>{`
-                @keyframes twinkle {
-                    0%, 100% { opacity: 0.3; transform: scale(1); }
-                    50% { opacity: 1; transform: scale(1.5); }
-                }
-                @keyframes glow {
-                    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
-                    50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8), 0 0 60px rgba(251, 191, 36, 0.4); }
-                }
-                @keyframes spotlight {
-                    0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(1); }
-                    50% { opacity: 0.6; transform: translateX(-50%) scale(1.2); }
-                }
-                @keyframes holographic {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-                @keyframes bounce-in {
-                    0% { transform: scale(0); opacity: 0; }
-                    50% { transform: scale(1.2); }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                @keyframes shimmer {
-                    0% { background-position: -200% center; }
-                    100% { background-position: 200% center; }
-                }
-                .animate-shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-                    background-size: 200% 100%;
-                    animation: shimmer 2s infinite;
-                }
-            `}</style>
+        <main className={`relative flex min-h-[100svh] items-center justify-center overflow-hidden px-3 py-6 transition-colors sm:px-6 ${isDark ? "bg-[#070611]" : "bg-[#e9f5ff]"}`}>
+            <div className={`pointer-events-none absolute inset-0 ${isDark ? "opacity-50" : "opacity-20"} [background-image:linear-gradient(rgba(34,211,238,0.22)_1px,transparent_1px),linear-gradient(90deg,rgba(217,70,239,0.22)_1px,transparent_1px)] [background-size:34px_34px] [mask-image:linear-gradient(to_bottom,transparent,black_30%,black)]`} />
+            <div className="pointer-events-none absolute left-1/2 top-0 h-[45vh] w-56 -translate-x-1/2 bg-gradient-to-b from-cyan-300/25 to-transparent blur-2xl [clip-path:polygon(35%_0,65%_0,100%_100%,0_100%)]" />
+            <div className="pointer-events-none absolute -left-28 top-1/3 h-64 w-64 rounded-full border-[35px] border-fuchsia-500/10 blur-sm" />
+            <div className="pointer-events-none absolute -right-28 bottom-1/4 h-64 w-64 rounded-full border-[35px] border-cyan-400/10 blur-sm" />
 
-            <div className="absolute inset-0">
-                {stars.map((star) => (
-                    <div
-                        key={star.id}
-                        className="absolute rounded-full bg-yellow-300"
-                        style={{
-                            left: `${star.x}%`,
-                            top: `${star.y}%`,
-                            width: `${star.size}px`,
-                            height: `${star.size}px`,
-                            animation: `twinkle 2s ease-in-out infinite`,
-                            animationDelay: `${star.delay}s`,
-                        }}
-                    />
-                ))}
-            </div>
+            <section className={`relative w-full max-w-[440px] overflow-hidden rounded-[1.75rem] border p-4 pt-5 shadow-2xl backdrop-blur-xl sm:p-8 ${isDark ? "border-cyan-400/35 bg-[#100d24]/90 text-white shadow-fuchsia-950/50" : "border-white/90 bg-white/75 text-slate-900 shadow-cyan-900/20"}`}>
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+                <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-fuchsia-500/15 blur-3xl" />
+                <button type="button" onClick={toggleTheme} className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur transition-all hover:scale-105 ${isDark ? "border-cyan-400/30 bg-white/5 text-cyan-200" : "border-cyan-200 bg-white/70 text-indigo-700"}`} aria-label={isDark ? "Bật giao diện sáng" : "Bật giao diện tối"}>
+                    {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
 
-            <div className="absolute top-0 left-1/2 w-96 h-96 bg-gradient-to-b from-yellow-400/20 to-transparent rounded-full blur-3xl" style={{animation: 'spotlight 4s ease-in-out infinite'}}></div>
-
-            <div className="bg-gradient-to-br from-purple-800/90 to-indigo-900/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md w-full relative z-10 border-2 border-yellow-400/50 overflow-hidden" style={{
-                animation: "glow 3s ease-in-out infinite"
-            }}>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400/5 to-transparent animate-shimmer" style={{backgroundSize: '200% 100%'}}></div>
-                
-                <div className="text-center mb-8 relative">
-                    <div className="relative inline-flex items-center justify-center w-28 h-28 mb-4">
-                        <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full animate-ping opacity-20"></div>
-                        <div className="absolute inset-2 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full animate-pulse opacity-30"></div>
-                        <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full w-full h-full flex items-center justify-center shadow-2xl border-4 border-yellow-300">
-                            <Star className="w-14 h-14 text-white fill-current" />
+                <header className="relative mb-5 text-center sm:mb-6">
+                    <div className="relative mx-auto mb-3 h-24 w-24 sm:h-28 sm:w-28">
+                        <div className="absolute inset-0 rotate-6 rounded-[2rem] bg-gradient-to-br from-cyan-400 via-violet-500 to-fuchsia-500 opacity-80 blur-[1px]" />
+                        <div className={`absolute inset-1 -rotate-3 overflow-hidden rounded-[1.7rem] border-2 ${isDark ? "border-white/60 bg-[#17132d]" : "border-white bg-indigo-100"}`}>
+                            {idolAvatar ? (
+                                <Image src={idolAvatar} alt={idolName} fill sizes="112px" className="object-cover" priority />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500 to-fuchsia-600">
+                                    <Mic2 className="h-11 w-11 text-white" />
+                                </div>
+                            )}
                         </div>
+                        <span className="absolute -bottom-1 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-yellow-400 text-indigo-950 shadow-lg">
+                            <Star className="h-4 w-4 fill-current" />
+                        </span>
                     </div>
-                    {idolName && (
-                        <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-300 via-orange-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-shimmer" style={{backgroundSize: '200% auto'}}>
-                            {idolName}
-                        </h1>
+                    <div className="mb-1 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-500">
+                        <Music2 className="h-3.5 w-3.5" /> Private backstage
+                    </div>
+                    <h1 className="bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 bg-clip-text text-3xl font-black uppercase tracking-tight text-transparent sm:text-4xl">{idolName}</h1>
+                    <p className={`mt-2 text-sm ${isDark ? "text-violet-200/75" : "text-indigo-700/70"}`}>Nhập fan code 6 số để bước vào fanzone</p>
+                </header>
+
+                <PinLockController slug={slug} onSuccess={onSuccess} errorMessage="Fan code không đúng, hãy thử lại">
+                    {(controls) => (
+                        <PinKeypad
+                            controls={controls}
+                            filledIcon={<Zap className="h-4 w-4 fill-current" />}
+                            emptyIcon={<Sparkles className="h-4 w-4 opacity-30" />}
+                            slotClass={isDark ? "border-violet-500/40 bg-black/20 text-cyan-300" : "border-violet-200 bg-white/60 text-violet-500"}
+                            activeSlotClass={isDark ? "border-cyan-300 bg-cyan-400/10 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.35)]" : "border-fuchsia-400 bg-fuchsia-50 text-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.2)]"}
+                            keyClass={isDark ? "rounded-xl border border-violet-500/35 bg-gradient-to-br from-violet-950/80 to-indigo-950/80 text-cyan-100 shadow-[0_0_14px_rgba(139,92,246,0.12)] hover:border-cyan-300/70 hover:text-white hover:shadow-cyan-400/20 active:scale-95" : "rounded-xl border border-indigo-200 bg-white/70 text-indigo-700 shadow-sm hover:border-fuchsia-300 hover:bg-white active:scale-95"}
+                            specialKeyClass={isDark ? "rounded-xl border border-fuchsia-500/30 bg-fuchsia-950/30 text-fuchsia-200 hover:border-fuchsia-400/70 active:scale-95" : "rounded-xl border border-fuchsia-200 bg-fuchsia-50/80 text-fuchsia-700 hover:bg-fuchsia-100 active:scale-95"}
+                            submitClass="bg-gradient-to-r from-cyan-500 via-violet-600 to-fuchsia-500 uppercase tracking-wider text-white shadow-[0_0_24px_rgba(139,92,246,0.38)] hover:saturate-150"
+                            submitLabel="Enter fanzone"
+                            errorClass={isDark ? "border-rose-500/40 bg-rose-950/50 text-rose-200" : "border-rose-200 bg-rose-50 text-rose-700"}
+                        />
                     )}
-                    <p className="text-purple-200 flex items-center justify-center gap-2">
-                        <Music className="w-4 h-4 animate-pulse" />
-                        Enter PIN to access the fanzone
-                    </p>
-                </div>
-
-                <div className="space-y-4 relative">
-                    <div className="flex justify-center gap-3">
-                        {[0, 1, 2, 3].map((index) => (
-                            <div
-                                key={index}
-                                className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
-                                    pin[index]
-                                        ? "bg-gradient-to-br from-yellow-400 to-orange-500 border-yellow-300 text-white shadow-lg scale-110"
-                                        : "border-purple-500/50 bg-purple-900/50"
-                                } ${error ? "animate-shake" : ""}`}
-                                style={pin[index] ? { animation: 'bounce-in 0.3s ease-out' } : {}}
-                            >
-                                {pin[index] ? "★" : ""}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 mt-6">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                            <button
-                                key={num}
-                                onClick={() => handlePinChange(pin + num)}
-                                className="aspect-square rounded-xl bg-gradient-to-br from-purple-700 to-indigo-800 hover:from-purple-600 hover:to-indigo-700 border-2 border-yellow-400/30 text-2xl font-bold text-yellow-300 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg hover:shadow-yellow-400/50 hover:border-yellow-400/60"
-                            >
-                                {num}
-                            </button>
-                        ))}
-                        <button
-                            onClick={() => handlePinChange(pin + "0")}
-                            className="aspect-square rounded-xl bg-gradient-to-br from-purple-700 to-indigo-800 hover:from-purple-600 hover:to-indigo-700 border-2 border-yellow-400/30 text-2xl font-bold text-yellow-300 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg hover:shadow-yellow-400/50 hover:border-yellow-400/60"
-                        >
-                            0
-                        </button>
-                        <button
-                            onClick={() => setPin(pin.slice(0, -1))}
-                            className="aspect-square rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-500/30 text-xl font-bold text-gray-300 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg hover:border-gray-400/60"
-                        >
-                            ←
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleSubmit}
-                        disabled={pin.length !== 4}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 hover:from-yellow-500 hover:via-orange-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold text-lg transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-yellow-400/30 active:scale-95 disabled:scale-100 shadow-lg disabled:shadow-none relative overflow-hidden group"
-                    >
-                        <span className="relative z-10">Enter Fanzone</span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    </button>
-
-                    {error && (
-                        <p className="text-center text-red-400 font-medium animate-pulse">
-                            Wrong PIN! Try again ⚡
-                        </p>
-                    )}
-                </div>
-            </div>
-        </div>
+                </PinLockController>
+            </section>
+        </main>
     );
 }

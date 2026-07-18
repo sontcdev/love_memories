@@ -1,19 +1,26 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { LockScreen } from "@/components/auth/LockScreen";
-import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
 import { MusicPlayerRef, WelcomeOverlay } from "@/components/music";
 import { LoveTemplate } from "@/components/templates/love/LoveTemplate";
+import { LoveLockScreen } from "@/components/templates/love/LoveLockScreen";
 import { Love2Template } from "@/components/templates/love2/Love2Template";
+import { Love2LockScreen } from "@/components/templates/love2/Love2LockScreen";
 import { IdolTemplate } from "@/components/templates/idol/IdolTemplate";
+import { IdolLockScreen } from "@/components/templates/idol/IdolLockScreen";
 import { GradPersonalTemplate } from "@/components/templates/grad-personal/GradPersonalTemplate";
+import { GradPersonalLockScreen } from "@/components/templates/grad-personal/GradPersonalLockScreen";
 import { GradClassTemplate } from "@/components/templates/grad-class/GradClassTemplate";
+import { GradClassLockScreen } from "@/components/templates/grad-class/GradClassLockScreen";
 import { GradGroupTemplate } from "@/components/templates/grad-group/GradGroupTemplate";
+import { GradGroupLockScreen } from "@/components/templates/grad-group/GradGroupLockScreen";
 import { WeddingTemplate } from "@/components/templates/wedding/WeddingTemplate";
+import { WeddingLockScreen } from "@/components/templates/wedding/WeddingLockScreen";
 import { TravelTemplate } from "@/components/templates/travel/TravelTemplate";
+import { TravelLockScreen } from "@/components/templates/travel/TravelLockScreen";
 import { FriendshipTemplate } from "@/components/templates/friendship/FriendshipTemplate";
+import { FriendshipLockScreen } from "@/components/templates/friendship/FriendshipLockScreen";
 import { getLinkData } from "@/app/actions/auth-actions";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 
@@ -74,6 +81,33 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
         letters: [],
     } as unknown as LinkWithRelations : null);
 
+    const renderLockScreen = (data: LinkWithRelations) => {
+        const props = { slug, onSuccess: handleUnlock, linkData: data };
+
+        switch (data.type) {
+            case "LOVE2":
+                return <Love2LockScreen {...props} />;
+            case "IDOL":
+                return <IdolLockScreen {...props} />;
+            case "GRAD_PERSONAL":
+                return <GradPersonalLockScreen {...props} />;
+            case "GRAD_CLASS":
+                return <GradClassLockScreen {...props} />;
+            case "GRAD_GROUP":
+                return <GradGroupLockScreen {...props} />;
+            case "WEDDING":
+                return <WeddingLockScreen {...props} />;
+            case "TRAVEL":
+                return <TravelLockScreen {...props} />;
+            case "FRIENDSHIP":
+                return <FriendshipLockScreen {...props} />;
+            case "EVERY":
+            case "LOVE":
+            default:
+                return <LoveLockScreen {...props} />;
+        }
+    };
+
     if (!authenticated) {
         if (!lockScreenData) {
             return (
@@ -88,11 +122,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
 
         return (
             <ThemeWrapper config={lockScreenData.config} type={lockScreenData.type}>
-                {lockScreenData.type === "IDOL" ? (
-                    <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
-                ) : (
-                    <LockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
-                )}
+                {renderLockScreen(lockScreenData)}
             </ThemeWrapper>
         );
     }

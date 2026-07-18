@@ -1,160 +1,65 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Heart } from "lucide-react";
+import { BookHeart, Heart, Sparkles } from "lucide-react";
+import {
+    PinKeypad,
+    PinLockController,
+    type TemplateLockScreenProps,
+} from "@/components/auth/PinLockController";
 
-interface LoveLockScreenProps {
-    onUnlock: () => void;
-    correctPin: string;
-    coupleNames?: string;
-}
-
-export function LoveLockScreen({ onUnlock, correctPin, coupleNames }: LoveLockScreenProps) {
-    const [pin, setPin] = useState("");
-    const [error, setError] = useState(false);
-    const [hearts, setHearts] = useState<Array<{ id: number; x: number; delay: number }>>([]);
-
-    useEffect(() => {
-        const newHearts = Array.from({ length: 20 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100,
-            delay: Math.random() * 5,
-        }));
-        setHearts(newHearts);
-    }, []);
-
-    const handlePinChange = (value: string) => {
-        if (value.length <= 4) {
-            setPin(value);
-            setError(false);
-        }
-    };
-
-    const handleSubmit = () => {
-        if (pin === correctPin) {
-            onUnlock();
-        } else {
-            setError(true);
-            setTimeout(() => setPin(""), 500);
-        }
-    };
+export function LoveLockScreen({ slug, onSuccess, linkData }: TemplateLockScreenProps) {
+    const profile = linkData?.profile_data as Record<string, string> | null;
+    const boyName = profile?.boy_name || "Him";
+    const girlName = profile?.girl_name || "Her";
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-pink-100 via-rose-100 to-red-100 flex items-center justify-center p-4 relative overflow-hidden">
-            <style jsx>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-                    10% { opacity: 1; }
-                    90% { opacity: 1; }
-                    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-                }
-                @keyframes pulse-ring {
-                    0% { transform: scale(0.8); opacity: 1; }
-                    100% { transform: scale(1.5); opacity: 0; }
-                }
-                @keyframes shimmer {
-                    0% { background-position: -200% center; }
-                    100% { background-position: 200% center; }
-                }
-                @keyframes bounce-in {
-                    0% { transform: scale(0); opacity: 0; }
-                    50% { transform: scale(1.2); }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                .animate-shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-                    background-size: 200% 100%;
-                    animation: shimmer 2s infinite;
-                }
-            `}</style>
+        <main className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#efe3d0] px-3 py-6 sm:px-6">
+            <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:repeating-linear-gradient(0deg,transparent,transparent_27px,rgba(116,74,55,0.08)_28px)]" />
+            <div className="pointer-events-none absolute -left-10 top-10 h-40 w-40 rounded-full bg-rose-300/30 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 bottom-12 h-48 w-48 rounded-full bg-amber-200/50 blur-3xl" />
 
-            {hearts.map((heart) => (
-                <div
-                    key={heart.id}
-                    className="absolute text-pink-300 pointer-events-none"
-                    style={{
-                        left: `${heart.x}%`,
-                        animation: `float 10s linear infinite`,
-                        animationDelay: `${heart.delay}s`,
-                    }}
-                >
-                    <Heart className="w-8 h-8 fill-current" />
+            <section className="relative w-full max-w-[440px] rounded-r-[2rem] rounded-l-lg border border-[#d3b99a] bg-[#fffaf0] p-4 pl-6 shadow-[0_24px_70px_rgba(77,45,35,0.25),inset_12px_0_20px_rgba(116,74,55,0.06)] sm:p-8 sm:pl-10">
+                <div className="absolute inset-y-3 left-2 w-px bg-rose-300/70 sm:left-3" />
+                <div className="absolute inset-y-0 left-[15px] flex flex-col justify-around py-8 sm:left-[21px]">
+                    {[0, 1, 2, 3, 4, 5].map((ring) => (
+                        <span key={ring} className="h-2.5 w-2.5 rounded-full border border-[#ad856b] bg-[#efe3d0] shadow-inner" />
+                    ))}
                 </div>
-            ))}
+                <div className="absolute -right-2 top-12 h-16 w-5 rounded-r-md border border-l-0 border-rose-300 bg-rose-200 shadow-sm" />
 
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-md w-full relative z-10 border-2 border-pink-200/50">
-                <div className="text-center mb-8">
-                    <div className="relative inline-flex items-center justify-center w-24 h-24 mb-4">
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full animate-ping opacity-20"></div>
-                        <div className="relative bg-gradient-to-br from-pink-400 to-rose-500 rounded-full w-full h-full flex items-center justify-center shadow-xl">
-                            <Heart className="w-12 h-12 text-white fill-current" />
-                        </div>
+                <header className="mb-5 text-center sm:mb-7">
+                    <div className="relative mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 shadow-[0_8px_24px_rgba(190,24,93,0.14)] sm:h-20 sm:w-20">
+                        <BookHeart className="h-8 w-8 sm:h-10 sm:w-10" strokeWidth={1.6} />
+                        <Sparkles className="absolute -right-2 top-0 h-5 w-5 text-amber-500" />
                     </div>
-                    {coupleNames && (
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 via-rose-600 to-pink-600 bg-clip-text text-transparent mb-2 animate-shimmer" style={{backgroundSize: '200% auto'}}>
-                            {coupleNames}
-                        </h1>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-[#9a6a58]">Our private chapter</p>
+                    <h1 className="font-serif text-2xl font-semibold leading-tight text-[#6f3040] sm:text-3xl">
+                        {boyName} <span className="font-normal text-rose-400">&amp;</span> {girlName}
+                    </h1>
+                    <div className="mx-auto my-3 flex items-center justify-center gap-2 text-rose-400">
+                        <span className="h-px w-12 bg-rose-200" />
+                        <Heart className="h-3.5 w-3.5 fill-current" />
+                        <span className="h-px w-12 bg-rose-200" />
+                    </div>
+                    <p className="text-sm italic text-[#886b60]">Nhập mã PIN để mở những trang ký ức của chúng mình</p>
+                </header>
+
+                <PinLockController slug={slug} onSuccess={onSuccess} errorMessage="Mã PIN chưa đúng, thử lại nhé">
+                    {(controls) => (
+                        <PinKeypad
+                            controls={controls}
+                            filledIcon={<Heart className="h-4 w-4 fill-current" />}
+                            slotClass="border-[#dfcbb8] bg-[#fffdf8] text-rose-400 shadow-inner"
+                            activeSlotClass="border-rose-400 bg-rose-50 text-rose-500 shadow-[0_5px_14px_rgba(244,63,94,0.18)]"
+                            keyClass="rounded-xl border border-[#dfc8b3] bg-[#fffdf8] font-serif text-[#744a43] shadow-[0_3px_0_#d8bea6] hover:-translate-y-0.5 hover:border-rose-300 hover:text-rose-600 active:translate-y-0 active:shadow-none disabled:transform-none"
+                            specialKeyClass="rounded-xl border border-[#dfc8b3] bg-[#f7eee2] text-[#8a6559] shadow-[0_3px_0_#d8bea6] hover:bg-rose-50 active:translate-y-0.5 active:shadow-none"
+                            submitClass="bg-gradient-to-r from-[#a93654] via-rose-500 to-[#a93654] text-white shadow-[0_10px_24px_rgba(190,24,93,0.28)] hover:brightness-105"
+                            submitLabel="Mở trang ký ức"
+                            errorClass="border-rose-200 bg-rose-50 text-rose-700"
+                        />
                     )}
-                    <p className="text-gray-600 text-sm">Enter PIN to unlock our memories</p>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="flex justify-center gap-3">
-                        {[0, 1, 2, 3].map((index) => (
-                            <div
-                                key={index}
-                                className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
-                                    pin[index]
-                                        ? "bg-gradient-to-br from-pink-400 to-rose-500 border-pink-500 text-white shadow-lg scale-110"
-                                        : "border-pink-200 bg-white"
-                                } ${error ? "animate-shake" : ""}`}
-                                style={pin[index] ? { animation: 'bounce-in 0.3s ease-out' } : {}}
-                            >
-                                {pin[index] ? "♥" : ""}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 mt-6">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                            <button
-                                key={num}
-                                onClick={() => handlePinChange(pin + num)}
-                                className="aspect-square rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 border-2 border-pink-200 text-2xl font-bold text-pink-600 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 shadow-md hover:border-pink-400"
-                            >
-                                {num}
-                            </button>
-                        ))}
-                        <button
-                            onClick={() => handlePinChange(pin + "0")}
-                            className="aspect-square rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 border-2 border-pink-200 text-2xl font-bold text-pink-600 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 shadow-md hover:border-pink-400"
-                        >
-                            0
-                        </button>
-                        <button
-                            onClick={() => setPin(pin.slice(0, -1))}
-                            className="aspect-square rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-2 border-gray-200 text-xl font-bold text-gray-600 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 shadow-md hover:border-gray-400"
-                        >
-                            ←
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleSubmit}
-                        disabled={pin.length !== 4}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 disabled:scale-100 shadow-lg disabled:shadow-none relative overflow-hidden group"
-                    >
-                        <span className="relative z-10">Unlock Memories</span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    </button>
-
-                    {error && (
-                        <p className="text-center text-red-500 font-medium animate-pulse">
-                            Incorrect PIN. Try again! 💔
-                        </p>
-                    )}
-                </div>
-            </div>
-        </div>
+                </PinLockController>
+            </section>
+        </main>
     );
 }

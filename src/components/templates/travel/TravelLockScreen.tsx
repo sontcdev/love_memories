@@ -1,178 +1,74 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plane, MapPin, Compass } from "lucide-react";
+import { MapPin, Plane, Route } from "lucide-react";
+import {
+    PinKeypad,
+    PinLockController,
+    type TemplateLockScreenProps,
+} from "@/components/auth/PinLockController";
 
-interface TravelLockScreenProps {
-    onUnlock: () => void;
-    tripName?: string;
-    destination?: string;
-}
-
-export function TravelLockScreen({ onUnlock, tripName = "Hành Trình", destination }: TravelLockScreenProps) {
-    const [pin, setPin] = useState("");
-    const [error, setError] = useState(false);
-    const [storedPin, setStoredPin] = useState<string | null>(null);
-
-    useEffect(() => {
-        const savedPin = localStorage.getItem(`travel_pin_${tripName}`);
-        if (savedPin) {
-            setStoredPin(savedPin);
-        }
-    }, [tripName]);
-
-    const handlePinChange = (value: string) => {
-        if (value.length <= 4) {
-            setPin(value);
-            setError(false);
-        }
-    };
-
-    const handleSubmit = () => {
-        if (storedPin) {
-            if (pin === storedPin) {
-                onUnlock();
-            } else {
-                setError(true);
-                setTimeout(() => setPin(""), 300);
-            }
-        } else {
-            if (pin.length === 4) {
-                localStorage.setItem(`travel_pin_${tripName}`, pin);
-                setStoredPin(pin);
-                onUnlock();
-            }
-        }
-    };
+export function TravelLockScreen({ slug, onSuccess, linkData }: TemplateLockScreenProps) {
+    const profile = linkData?.profile_data as Record<string, unknown> | null;
+    const tripName = typeof profile?.trip_name === "string" ? profile.trip_name : "Hành Trình";
+    const destination = typeof profile?.destination === "string" ? profile.destination : null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-sky-100 via-white to-emerald-100 flex items-center justify-center p-4 relative overflow-hidden">
-            <style jsx>{`
-                @keyframes fly {
-                    0% { transform: translateX(-100px) translateY(0) rotate(0deg); }
-                    50% { transform: translateX(50px) translateY(-20px) rotate(5deg); }
-                    100% { transform: translateX(200px) translateY(0) rotate(0deg); }
-                }
-                @keyframes bounce-in {
-                    0% { transform: scale(0); opacity: 0; }
-                    50% { transform: scale(1.2); }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                @keyframes shimmer {
-                    0% { background-position: -200% center; }
-                    100% { background-position: 200% center; }
-                }
-                @keyframes compass-rotate {
-                    0%, 100% { transform: rotate(-5deg); }
-                    50% { transform: rotate(5deg); }
-                }
-                .animate-shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-                    background-size: 200% 100%;
-                    animation: shimmer 2s infinite;
-                }
-            `}</style>
+        <main className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-gradient-to-br from-[#dff4ff] via-[#f3fbf8] to-[#ccebdd] px-3 py-6 text-slate-800 sm:px-6 sm:py-10">
+            <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(14,116,144,0.09)_1px,transparent_1px),linear-gradient(90deg,rgba(14,116,144,0.09)_1px,transparent_1px)] [background-size:28px_28px]" />
+            <div className="absolute -left-20 top-12 h-52 w-52 rounded-full border-[24px] border-sky-300/20" />
+            <div className="absolute -bottom-24 -right-20 h-72 w-72 rounded-full border-[32px] border-emerald-300/20" />
 
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 left-10 w-32 h-32 bg-sky-200/30 rounded-full blur-3xl" />
-                <div className="absolute bottom-20 right-10 w-40 h-40 bg-emerald-200/30 rounded-full blur-3xl" />
-                <div className="absolute top-1/4 left-1/4 text-sky-300 opacity-30" style={{animation: 'fly 8s ease-in-out infinite'}}>
-                    <Plane className="w-8 h-8" />
-                </div>
-                <div className="absolute top-1/3 right-1/3 text-emerald-300 opacity-30" style={{animation: 'fly 10s ease-in-out infinite', animationDelay: '2s'}}>
-                    <Plane className="w-6 h-6" />
-                </div>
-            </div>
-
-            <div className="relative w-full max-w-sm">
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border-2 border-sky-200 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{backgroundSize: '200% 100%'}}></div>
-                    
-                    <div className="text-center mb-8 relative">
-                        <div className="relative inline-flex items-center justify-center w-24 h-24 mb-4">
-                            <div className="absolute inset-0 bg-gradient-to-br from-sky-400 to-emerald-400 rounded-full animate-ping opacity-20"></div>
-                            <div className="relative bg-gradient-to-br from-sky-400 to-emerald-400 rounded-full w-full h-full flex items-center justify-center shadow-lg" style={{animation: 'compass-rotate 3s ease-in-out infinite'}}>
-                                <Plane className="w-12 h-12 text-white" />
-                            </div>
+            <section className="relative w-full max-w-md overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/90 shadow-[0_24px_70px_rgba(12,74,89,0.2)] backdrop-blur-md">
+                <header className="relative overflow-hidden bg-gradient-to-r from-sky-600 to-emerald-600 px-5 py-6 text-white sm:px-8 sm:py-8">
+                    <div className="absolute -right-6 -top-8 h-32 w-32 rounded-full border border-white/20" />
+                    <div className="absolute right-8 top-7 w-24 border-t-2 border-dashed border-white/45 sm:w-36" />
+                    <Plane className="absolute right-5 top-4 h-6 w-6 rotate-12 text-white/80" />
+                    <div className="relative flex items-start gap-3">
+                        <div className="rounded-xl bg-white/15 p-2.5 ring-1 ring-white/30">
+                            <Route className="h-6 w-6" />
                         </div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent mb-2 animate-shimmer" style={{backgroundSize: '200% auto'}}>
-                            {tripName}
-                        </h1>
-                        {destination && (
-                            <div className="flex items-center justify-center gap-1 text-sky-600 text-sm">
-                                <MapPin className="w-4 h-4 animate-pulse" />
-                                <span>{destination}</span>
-                            </div>
-                        )}
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-sky-50">Boarding pass</p>
+                            <h1 className="mt-1 truncate text-2xl font-extrabold tracking-tight sm:text-3xl">{tripName}</h1>
+                            {destination && (
+                                <p className="mt-2 flex items-center gap-1.5 text-sm text-white/90">
+                                    <MapPin className="h-4 w-4 shrink-0" />
+                                    <span className="truncate">Điểm đến: {destination}</span>
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </header>
+
+                <div className="relative border-b-2 border-dashed border-slate-200">
+                    <div className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-[#d9f1f6]" />
+                    <div className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-[#d7eee4]" />
+                </div>
+
+                <div className="px-4 pb-5 pt-6 sm:px-8 sm:pb-8 sm:pt-7">
+                    <div className="mb-5 flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 text-xs sm:px-4">
+                        <span className="font-semibold uppercase tracking-wider text-slate-500">Cổng</span>
+                        <span className="font-black text-sky-700">MEMORIES</span>
+                        <span className="font-semibold uppercase tracking-wider text-slate-500">PIN 6 số</span>
                     </div>
 
-                    <div className="space-y-4 relative">
-                        <div className="text-center">
-                            <p className="text-sm text-gray-500 mb-2">
-                                {storedPin ? "Nhập mã PIN để tiếp tục" : "Tạo mã PIN 4 số"}
-                            </p>
-                            <div className="flex justify-center gap-2">
-                                {[0, 1, 2, 3].map((i) => (
-                                    <div
-                                        key={i}
-                                        className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                                            i < pin.length
-                                                ? error
-                                                    ? "bg-red-400 scale-110"
-                                                    : "bg-gradient-to-br from-sky-400 to-emerald-400 scale-110"
-                                                : "bg-gray-200"
-                                        }`}
-                                        style={i < pin.length ? { animation: 'bounce-in 0.3s ease-out' } : {}}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, null, 0, "del"].map((num, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => {
-                                        if (num === "del") {
-                                            setPin(pin.slice(0, -1));
-                                        } else if (num !== null && pin.length < 4) {
-                                            handlePinChange(pin + num);
-                                        }
-                                    }}
-                                    disabled={num === null}
-                                    className={`h-14 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                                        num === null
-                                            ? "invisible"
-                                            : num === "del"
-                                            ? "bg-gray-100 hover:bg-gray-200 text-gray-600 hover:scale-110 hover:shadow-lg active:scale-95"
-                                            : "bg-gradient-to-br from-sky-50 to-emerald-50 hover:from-sky-100 hover:to-emerald-100 text-sky-800 shadow-sm hover:shadow-lg hover:scale-110 active:scale-95 hover:border-sky-300 border-2 border-transparent"
-                                    }`}
-                                >
-                                    {num === "del" ? "←" : num}
-                                </button>
-                            ))}
-                        </div>
-
-                        {error && (
-                            <p className="text-center text-sm text-red-500 animate-pulse">
-                                Mã PIN không đúng
-                            </p>
+                    <PinLockController slug={slug} onSuccess={onSuccess} errorMessage="Mã PIN không đúng, hành trình chưa thể bắt đầu">
+                        {(controls) => (
+                            <PinKeypad
+                                controls={controls}
+                                filledIcon={<MapPin className="h-4 w-4 fill-current" />}
+                                slotClass="border-sky-200 bg-sky-50 text-sky-600"
+                                activeSlotClass="border-emerald-500 bg-emerald-50 text-emerald-600 shadow-sm"
+                                keyClass="rounded-xl border border-sky-100 bg-gradient-to-br from-white to-sky-50 text-sky-900 shadow-sm hover:border-sky-300 hover:bg-sky-100 active:scale-95"
+                                specialKeyClass="rounded-xl border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-95"
+                                submitClass="bg-gradient-to-r from-sky-600 to-emerald-600 text-white shadow-[0_10px_24px_rgba(5,150,105,0.22)] hover:brightness-105"
+                                submitLabel="Bắt đầu hành trình"
+                                errorClass="border-rose-200 bg-rose-50 text-rose-600"
+                            />
                         )}
-
-                        <button
-                            onClick={handleSubmit}
-                            disabled={pin.length !== 4}
-                            className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-400 to-emerald-400 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:from-sky-500 hover:to-emerald-500 hover:scale-105 active:scale-95 relative overflow-hidden group"
-                        >
-                            <span className="relative z-10">
-                                <Compass className="w-5 h-5 inline mr-2" />
-                                {storedPin ? "Mở khóa" : "Bắt đầu"}
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                        </button>
-                    </div>
+                    </PinLockController>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     );
 }

@@ -1,182 +1,68 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Smile, Users, Star } from "lucide-react";
+import { MessageCircle, Smile, Users } from "lucide-react";
+import {
+    PinKeypad,
+    PinLockController,
+    type TemplateLockScreenProps,
+} from "@/components/auth/PinLockController";
 
-interface FriendshipLockScreenProps {
-    onUnlock: () => void;
-    groupName?: string;
-}
-
-export function FriendshipLockScreen({ onUnlock, groupName = "Nhóm bạn" }: FriendshipLockScreenProps) {
-    const [pin, setPin] = useState("");
-    const [error, setError] = useState(false);
-    const [storedPin, setStoredPin] = useState<string | null>(null);
-
-    useEffect(() => {
-        const savedPin = localStorage.getItem(`friendship_pin_${groupName}`);
-        if (savedPin) {
-            setStoredPin(savedPin);
-        }
-    }, [groupName]);
-
-    const handlePinChange = (value: string) => {
-        if (value.length <= 4) {
-            setPin(value);
-            setError(false);
-        }
-    };
-
-    const handleSubmit = () => {
-        if (storedPin) {
-            if (pin === storedPin) {
-                onUnlock();
-            } else {
-                setError(true);
-                setTimeout(() => setPin(""), 300);
-            }
-        } else {
-            if (pin.length === 4) {
-                localStorage.setItem(`friendship_pin_${groupName}`, pin);
-                setStoredPin(pin);
-                onUnlock();
-            }
-        }
-    };
+export function FriendshipLockScreen({ slug, onSuccess, linkData }: TemplateLockScreenProps) {
+    const profile = linkData?.profile_data as Record<string, unknown> | null;
+    const groupName = typeof profile?.group_name === "string" ? profile.group_name : "Nhóm bạn";
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-violet-100 via-white to-pink-100 flex items-center justify-center p-4 relative overflow-hidden">
-            <style jsx>{`
-                @keyframes bounce-in {
-                    0% { transform: scale(0); opacity: 0; }
-                    50% { transform: scale(1.2); }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                @keyframes shimmer {
-                    0% { background-position: -200% center; }
-                    100% { background-position: 200% center; }
-                }
-                @keyframes float-emoji {
-                    0%, 100% { transform: translateY(0px) rotate(0deg); }
-                    50% { transform: translateY(-15px) rotate(10deg); }
-                }
-                @keyframes confetti-fall {
-                    0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-                    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-                }
-                .animate-shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-                    background-size: 200% 100%;
-                    animation: shimmer 2s infinite;
-                }
-            `}</style>
-
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 left-10 w-32 h-32 bg-violet-200/30 rounded-full blur-3xl" />
-                <div className="absolute bottom-20 right-10 w-40 h-40 bg-pink-200/30 rounded-full blur-3xl" />
-                {Array.from({ length: 15 }).map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute text-2xl pointer-events-none"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animation: `float-emoji 3s ease-in-out infinite`,
-                            animationDelay: `${i * 0.2}s`,
-                        }}
-                    >
-                        {['🎉', '✨', '🌟', '💫', '🎊'][i % 5]}
-                    </div>
-                ))}
+        <main className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#f6f1ff] px-3 py-6 text-slate-800 sm:px-6 sm:py-10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(139,92,246,0.18),transparent_30%),radial-gradient(circle_at_85%_85%,rgba(236,72,153,0.18),transparent_32%)]" />
+            <div className="absolute left-3 top-8 max-w-[12rem] rounded-2xl rounded-bl-sm bg-white/70 px-4 py-3 text-xs text-violet-500 shadow-sm sm:left-[8%] sm:top-[16%]">
+                Ai có mật mã không?
+            </div>
+            <div className="absolute bottom-10 right-3 rounded-2xl rounded-br-sm bg-gradient-to-r from-violet-500/15 to-pink-500/15 px-4 py-3 text-xs text-pink-600 sm:bottom-[14%] sm:right-[8%]">
+                Có mặt đầy đủ nhé!
             </div>
 
-            <div className="relative w-full max-w-sm">
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border-2 border-violet-200 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{backgroundSize: '200% 100%'}}></div>
-                    
-                    <div className="text-center mb-8 relative">
-                        <div className="relative inline-flex items-center justify-center w-24 h-24 mb-4" style={{animation: 'float-emoji 2s ease-in-out infinite'}}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-violet-400 to-pink-400 rounded-full animate-ping opacity-20"></div>
-                            <div className="relative bg-gradient-to-br from-violet-400 to-pink-400 rounded-full w-full h-full flex items-center justify-center shadow-lg">
-                                <Users className="w-12 h-12 text-white" />
-                            </div>
+            <section className="relative w-full max-w-md overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/90 shadow-[0_24px_70px_rgba(91,33,128,0.2)] backdrop-blur-md">
+                <header className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-500 px-5 py-5 text-white sm:px-7 sm:py-6">
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 ring-2 ring-white/40 sm:h-14 sm:w-14">
+                            <Users className="h-6 w-6 sm:h-7 sm:w-7" />
+                            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-purple-600 bg-emerald-400" />
                         </div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 via-pink-600 to-violet-600 bg-clip-text text-transparent mb-2 animate-shimmer" style={{backgroundSize: '200% auto'}}>
-                            {groupName}
-                        </h1>
-                        <div className="flex items-center justify-center gap-1 text-violet-600 text-sm">
-                            <Star className="w-4 h-4 fill-violet-400 text-violet-400 animate-pulse" />
-                            <span>Tình bạn vĩnh cửu</span>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-xl font-extrabold sm:text-2xl">{groupName}</p>
+                            <p className="mt-0.5 text-xs text-white/80">Nhóm riêng tư · Kỷ niệm chung</p>
+                        </div>
+                        <MessageCircle className="h-6 w-6 shrink-0 text-white/80" />
+                    </div>
+                </header>
+
+                <div className="px-4 pb-5 pt-5 sm:px-8 sm:pb-8 sm:pt-6">
+                    <div className="mb-5 space-y-2.5">
+                        <div className="mr-10 w-fit rounded-2xl rounded-bl-sm bg-slate-100 px-3.5 py-2.5 text-sm text-slate-600">
+                            Nhập mật mã để vào nhóm nha
+                        </div>
+                        <div className="ml-auto flex w-fit items-center gap-2 rounded-2xl rounded-br-sm bg-gradient-to-r from-violet-500 to-pink-500 px-3.5 py-2.5 text-sm font-medium text-white shadow-sm">
+                            PIN gồm 6 số <Smile className="h-4 w-4" />
                         </div>
                     </div>
 
-                    <div className="space-y-4 relative">
-                        <div className="text-center">
-                            <p className="text-sm text-gray-500 mb-2">
-                                {storedPin ? "Nhập mã PIN để tiếp tục" : "Tạo mã PIN 4 số"}
-                            </p>
-                            <div className="flex justify-center gap-2">
-                                {[0, 1, 2, 3].map((i) => (
-                                    <div
-                                        key={i}
-                                        className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                                            i < pin.length
-                                                ? error
-                                                    ? "bg-red-400 scale-110"
-                                                    : "bg-gradient-to-br from-violet-400 to-pink-400 scale-110"
-                                                : "bg-gray-200"
-                                        }`}
-                                        style={i < pin.length ? { animation: 'bounce-in 0.3s ease-out' } : {}}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, null, 0, "del"].map((num, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => {
-                                        if (num === "del") {
-                                            setPin(pin.slice(0, -1));
-                                        } else if (num !== null && pin.length < 4) {
-                                            handlePinChange(pin + num);
-                                        }
-                                    }}
-                                    disabled={num === null}
-                                    className={`h-14 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                                        num === null
-                                            ? "invisible"
-                                            : num === "del"
-                                            ? "bg-gray-100 hover:bg-gray-200 text-gray-600 hover:scale-110 hover:shadow-lg active:scale-95"
-                                            : "bg-gradient-to-br from-violet-50 to-pink-50 hover:from-violet-100 hover:to-pink-100 text-violet-800 shadow-sm hover:shadow-lg hover:scale-110 active:scale-95 border-2 border-transparent hover:border-violet-300"
-                                    }`}
-                                >
-                                    {num === "del" ? "←" : num}
-                                </button>
-                            ))}
-                        </div>
-
-                        {error && (
-                            <p className="text-center text-sm text-red-500 animate-pulse">
-                                Mã PIN không đúng
-                            </p>
+                    <PinLockController slug={slug} onSuccess={onSuccess} errorMessage="Mật mã nhóm chưa đúng, thử lại nhé">
+                        {(controls) => (
+                            <PinKeypad
+                                controls={controls}
+                                filledIcon={<MessageCircle className="h-4 w-4 fill-current" />}
+                                slotClass="border-violet-200 bg-violet-50 text-violet-400"
+                                activeSlotClass="border-pink-400 bg-pink-50 text-pink-500 shadow-sm"
+                                keyClass="rounded-2xl border border-violet-100 bg-white text-violet-800 shadow-sm hover:border-pink-300 hover:bg-pink-50 active:scale-95"
+                                specialKeyClass="rounded-2xl border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-95"
+                                submitClass="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-500 text-white shadow-[0_10px_24px_rgba(147,51,234,0.25)] hover:brightness-105"
+                                submitLabel="Vào nhóm chat"
+                                errorClass="border-pink-200 bg-pink-50 text-pink-600"
+                            />
                         )}
-
-                        <button
-                            onClick={handleSubmit}
-                            disabled={pin.length !== 4}
-                            className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-400 to-pink-400 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-pink-500 hover:scale-105 active:scale-95 relative overflow-hidden group"
-                        >
-                            <span className="relative z-10">
-                                <Smile className="w-5 h-5 inline mr-2" />
-                                {storedPin ? "Mở khóa" : "Bắt đầu"}
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                        </button>
-                    </div>
+                    </PinLockController>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     );
 }

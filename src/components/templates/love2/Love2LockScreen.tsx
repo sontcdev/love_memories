@@ -1,169 +1,62 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Camera } from "lucide-react";
+import { Camera, Heart, Moon, Star, Sun } from "lucide-react";
+import {
+    PinKeypad,
+    PinLockController,
+    type TemplateLockScreenProps,
+    useLockTheme,
+} from "@/components/auth/PinLockController";
 
-interface Love2LockScreenProps {
-    onUnlock: () => void;
-    correctPin: string;
-    coupleNames?: string;
-}
-
-export function Love2LockScreen({ onUnlock, correctPin, coupleNames }: Love2LockScreenProps) {
-    const [pin, setPin] = useState("");
-    const [error, setError] = useState(false);
-    const [polaroids, setPolaroids] = useState<Array<{ id: number; x: number; y: number; rotate: number }>>([]);
-
-    useEffect(() => {
-        const newPolaroids = Array.from({ length: 12 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 80 + 10,
-            y: Math.random() * 80 + 10,
-            rotate: Math.random() * 30 - 15,
-        }));
-        setPolaroids(newPolaroids);
-    }, []);
-
-    const handlePinChange = (value: string) => {
-        if (value.length <= 4) {
-            setPin(value);
-            setError(false);
-        }
-    };
-
-    const handleSubmit = () => {
-        if (pin === correctPin) {
-            onUnlock();
-        } else {
-            setError(true);
-            setTimeout(() => setPin(""), 500);
-        }
-    };
+export function Love2LockScreen({ slug, onSuccess, linkData }: TemplateLockScreenProps) {
+    const { isDark, toggleTheme } = useLockTheme(slug);
+    const profile = linkData?.profile_data as Record<string, string> | null;
+    const boyName = profile?.boy_name || "Him";
+    const girlName = profile?.girl_name || "Her";
 
     return (
-        <div className="min-h-screen bg-amber-50 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q0YTM3NCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] flex items-center justify-center p-4 relative overflow-hidden">
-            <style jsx>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px) rotate(var(--rotate)); }
-                    50% { transform: translateY(-10px) rotate(var(--rotate)); }
-                }
-                @keyframes peel {
-                    0% { transform: rotate(0deg) scale(1); }
-                    50% { transform: rotate(5deg) scale(1.1); }
-                    100% { transform: rotate(0deg) scale(1); }
-                }
-                @keyframes bounce-in {
-                    0% { transform: scale(0); opacity: 0; }
-                    50% { transform: scale(1.2); }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                @keyframes shimmer {
-                    0% { background-position: -200% center; }
-                    100% { background-position: 200% center; }
-                }
-                .animate-shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-                    background-size: 200% 100%;
-                    animation: shimmer 2s infinite;
-                }
-            `}</style>
-
-            {polaroids.map((polaroid) => (
-                <div
-                    key={polaroid.id}
-                    className="absolute pointer-events-none opacity-20"
-                    style={{
-                        left: `${polaroid.x}%`,
-                        top: `${polaroid.y}%`,
-                        transform: `rotate(${polaroid.rotate}deg)`,
-                        animation: `float 3s ease-in-out infinite`,
-                        animationDelay: `${polaroid.id * 0.2}s`,
-                    }}
-                >
-                    <div className="w-16 h-20 bg-white shadow-lg p-1 relative">
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-3 bg-gradient-to-r from-rose-300 via-rose-400 to-rose-300 opacity-70 rounded-sm"></div>
-                        <div className="w-full h-12 bg-gradient-to-br from-amber-200 to-orange-300"></div>
-                    </div>
-                </div>
-            ))}
-
-            <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full relative z-10 border-8 border-white" style={{
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(0,0,0,0.1)"
-            }}>
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-gradient-to-r from-rose-300 via-rose-400 to-rose-300 opacity-80 rounded-sm shadow-md"></div>
-                
-                <div className="text-center mb-8">
-                    <div className="relative inline-flex items-center justify-center w-24 h-24 mb-4">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full animate-ping opacity-20"></div>
-                        <div className="relative bg-gradient-to-br from-amber-400 to-orange-500 rounded-full w-full h-full flex items-center justify-center shadow-xl border-4 border-white">
-                            <Camera className="w-12 h-12 text-white" />
-                        </div>
-                    </div>
-                    {coupleNames && (
-                        <h1 className="text-4xl font-bold text-amber-800 mb-2 font-serif animate-shimmer" style={{backgroundSize: '200% auto'}}>
-                            {coupleNames}
-                        </h1>
-                    )}
-                    <p className="text-amber-600 italic">Our memories, our story</p>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="flex justify-center gap-3">
-                        {[0, 1, 2, 3].map((index) => (
-                            <div
-                                key={index}
-                                className={`w-14 h-14 rounded-lg border-2 flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
-                                    pin[index]
-                                        ? "bg-gradient-to-br from-amber-400 to-orange-500 border-amber-600 text-white shadow-lg scale-110"
-                                        : "border-amber-200 bg-amber-50"
-                                } ${error ? "animate-shake" : ""}`}
-                                style={pin[index] ? { animation: 'bounce-in 0.3s ease-out' } : {}}
-                            >
-                                {pin[index] ? "★" : ""}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 mt-6">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                            <button
-                                key={num}
-                                onClick={() => handlePinChange(pin + num)}
-                                className="aspect-square rounded-lg bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 text-2xl font-bold text-amber-700 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 shadow-md font-serif hover:border-amber-400"
-                            >
-                                {num}
-                            </button>
-                        ))}
-                        <button
-                            onClick={() => handlePinChange(pin + "0")}
-                            className="aspect-square rounded-lg bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 text-2xl font-bold text-amber-700 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 shadow-md font-serif hover:border-amber-400"
-                        >
-                            0
-                        </button>
-                        <button
-                            onClick={() => setPin(pin.slice(0, -1))}
-                            className="aspect-square rounded-lg bg-gray-50 hover:bg-gray-100 border-2 border-gray-200 text-xl font-bold text-gray-600 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 shadow-md hover:border-gray-400"
-                        >
-                            ←
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleSubmit}
-                        disabled={pin.length !== 4}
-                        className="w-full py-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 disabled:scale-100 shadow-lg disabled:shadow-none font-serif relative overflow-hidden group"
-                    >
-                        <span className="relative z-10">Open Scrapbook</span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    </button>
-
-                    {error && (
-                        <p className="text-center text-red-500 font-medium animate-pulse italic">
-                            Oops! Wrong PIN 💔
-                        </p>
-                    )}
-                </div>
+        <main className={`relative flex min-h-[100svh] items-center justify-center overflow-hidden px-3 py-6 transition-colors sm:px-6 ${isDark ? "bg-[#171411]" : "bg-[#d7b989]"}`}>
+            <div className={`pointer-events-none absolute inset-0 opacity-30 ${isDark ? "[background-image:radial-gradient(#d8a96a_0.7px,transparent_0.7px)]" : "[background-image:radial-gradient(#6f4d2e_0.7px,transparent_0.7px)]"} [background-size:7px_7px]`} />
+            <div className={`pointer-events-none absolute -left-8 top-[12%] h-28 w-36 -rotate-6 border-[7px] pb-7 shadow-xl ${isDark ? "border-[#ddd3c3] bg-[#29231d]" : "border-white bg-[#8fb2a2]"}`}>
+                <Camera className={`m-auto mt-5 h-9 w-9 ${isDark ? "text-stone-400" : "text-white/70"}`} />
             </div>
-        </div>
+            <div className="pointer-events-none absolute -right-12 bottom-[9%] h-24 w-44 rotate-12 bg-rose-300/70 shadow-md [clip-path:polygon(3%_5%,100%_0,96%_93%,0_100%)]" />
+
+            <section className={`relative w-full max-w-[430px] rotate-[-0.35deg] rounded-sm border p-4 pt-8 shadow-[0_25px_70px_rgba(50,31,17,0.35)] transition-colors sm:p-8 sm:pt-10 ${isDark ? "border-stone-700 bg-[#28231e] text-stone-100" : "border-amber-100 bg-[#fffaf0] text-[#513c2b]"}`}>
+                <div className="absolute -top-3 left-1/2 h-7 w-28 -translate-x-1/2 -rotate-2 bg-amber-200/75 shadow-sm [clip-path:polygon(2%_8%,98%_0,100%_88%,0_100%)]" />
+                <button type="button" onClick={toggleTheme} className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border transition-transform hover:rotate-12 ${isDark ? "border-stone-600 bg-stone-800 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-700"}`} aria-label={isDark ? "Bật giao diện sáng" : "Bật giao diện tối"}>
+                    {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+
+                <header className="mb-5 text-center sm:mb-6">
+                    <div className={`relative mx-auto mb-3 flex h-16 w-16 rotate-3 items-center justify-center border-[5px] shadow-lg sm:h-20 sm:w-20 ${isDark ? "border-stone-200 bg-[#6f5540]" : "border-white bg-[#c98269]"}`}>
+                        <Camera className="h-8 w-8 text-white sm:h-9 sm:w-9" />
+                        <span className="absolute -bottom-4 -right-5 rotate-[-8deg] rounded-sm bg-amber-200 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-900 shadow">keep this</span>
+                    </div>
+                    <p className={`mb-1 font-mono text-[10px] uppercase tracking-[0.28em] ${isDark ? "text-amber-300" : "text-amber-700"}`}>A little scrapbook</p>
+                    <h1 className="font-serif text-2xl font-bold sm:text-3xl">{boyName} <span className="text-rose-500">+</span> {girlName}</h1>
+                    <p className={`mt-2 text-sm ${isDark ? "text-stone-400" : "text-[#80634a]"}`}>Nhập 6 số bí mật để lật mở album</p>
+                </header>
+
+                <PinLockController slug={slug} onSuccess={onSuccess} errorMessage="Mã bí mật chưa đúng rồi">
+                    {(controls) => (
+                        <PinKeypad
+                            controls={controls}
+                            filledIcon={<Heart className="h-4 w-4 fill-current" />}
+                            emptyIcon={<Star className="h-3.5 w-3.5 opacity-25" />}
+                            slotClass={isDark ? "border-stone-600 bg-stone-900/40 text-amber-300" : "border-amber-300 bg-amber-50 text-amber-700"}
+                            activeSlotClass={isDark ? "border-rose-400 bg-rose-950/40 text-rose-300 shadow-md" : "border-rose-400 bg-rose-50 text-rose-500 shadow-md"}
+                            keyClass={isDark ? "rounded-md border border-stone-600 bg-[#342d26] font-mono text-amber-200 shadow-[2px_3px_0_#171411] hover:border-amber-500 active:translate-y-0.5" : "rounded-md border border-amber-300 bg-[#fff8e8] font-mono text-amber-900 shadow-[2px_3px_0_#b8905d] hover:-rotate-1 hover:bg-white active:translate-y-0.5"}
+                            specialKeyClass={isDark ? "rounded-md border border-stone-600 bg-stone-800 font-mono text-stone-300 hover:text-white" : "rounded-md border border-[#c9a87b] bg-[#ead9bd] font-mono text-[#725337] hover:bg-[#dfc69f]"}
+                            submitClass="rounded-md bg-gradient-to-r from-[#b35f4c] to-[#d27b63] font-mono uppercase tracking-wider text-white shadow-[3px_5px_0_rgba(91,48,37,0.35)] hover:-translate-y-0.5"
+                            submitLabel="Mở scrapbook"
+                            errorClass={isDark ? "border-rose-800 bg-rose-950/60 text-rose-300" : "border-rose-200 bg-rose-50 text-rose-700"}
+                        />
+                    )}
+                </PinLockController>
+
+                <div className={`pointer-events-none absolute -bottom-2 left-8 h-5 w-20 rotate-2 ${isDark ? "bg-sky-900/70" : "bg-sky-200/75"}`} />
+            </section>
+        </main>
     );
 }
