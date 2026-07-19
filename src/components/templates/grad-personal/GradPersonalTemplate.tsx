@@ -7,6 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Award, Sun, Moon, GraduationCap } from "lucide-react";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -70,6 +72,8 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
     const [activeWindow, setActiveWindow] = useState<WindowId | null>("profile");
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const profileData = data.profile_data as GradPersonalProfileData | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
     useEffect(() => {
@@ -510,7 +514,11 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                     {/* Game Window */}
                     <WindowChrome id="game" title="Thử Thách" className="window-animate left-0 right-0 mx-auto max-w-2xl">
                         <div className="p-4">
-                            <GameSection quiz={profileData?.quiz} studentName={studentName} isDark={isDark} />
+                            {gameTemplateId === "A" ? (
+                                <GameSection quiz={profileData?.quiz} studentName={studentName} isDark={isDark} />
+                            ) : (
+                                <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} isDark={isDark} />
+                            )}
                         </div>
                     </WindowChrome>
 

@@ -7,6 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Gem, Clock, MapPin, ChevronDown, Heart } from "lucide-react";
 import { WeddingLetterBox } from "./WeddingLetterBox";
 import { WeddingGameSection } from "./WeddingGameSection";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -222,6 +224,8 @@ export function WeddingTemplate({ data, slug }: WeddingTemplateProps) {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [sealBroken, setSealBroken] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
 
     const brideName = profileData?.bride_name || "Cô dâu";
     const groomName = profileData?.groom_name || "Chú rể";
@@ -662,7 +666,11 @@ export function WeddingTemplate({ data, slug }: WeddingTemplateProps) {
                                                 <h2 className="font-serif italic text-3xl text-amber-900 mb-3">Thử Thách Cặp Đôi</h2>
                                                 <WeddingRings className="w-32 h-10 mx-auto" />
                                             </div>
-                                            <WeddingGameSection />
+                                            {gameTemplateId === "A" ? (
+                                                <WeddingGameSection />
+                                            ) : (
+                                                <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} />
+                                            )}
                                         </div>
                                         <div className="absolute bottom-0 left-0 right-0 h-3 text-amber-300 z-10">
                                             <LaceTrim className="w-full h-full" flip />

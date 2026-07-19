@@ -8,6 +8,8 @@ import { Heart, Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, S
 import { useSwipeable } from "react-swipeable";
 import { Love2LetterBox } from "./Love2LetterBox";
 import { Love2GameSection } from "./Love2GameSection";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -30,6 +32,8 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
     useEffect(() => {
@@ -533,7 +537,11 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                             )}
 
                             {activeItem === "game" && (
-                                <Love2GameSection photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))} isDark={isDark} />
+                                gameTemplateId === "A" ? (
+                                    <Love2GameSection photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))} isDark={isDark} />
+                                ) : (
+                                    <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} isDark={isDark} />
+                                )
                             )}
                         </div>
                     </div>

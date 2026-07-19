@@ -7,6 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Users, Calendar, Image as ImageIcon, ChevronLeft, ChevronRight, Settings, X, Sun, Moon, BookOpen } from "lucide-react";
 import { GradClassLetterBox } from "./GradClassLetterBox";
 import { GradClassGameSection } from "./GradClassGameSection";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -38,6 +40,8 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
     const [isFlipping, setIsFlipping] = useState(false);
     const [flipDirection, setFlipDirection] = useState<"left" | "right">("right");
     const profileData = data.profile_data as Record<string, unknown> | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
     useEffect(() => {
@@ -502,7 +506,11 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                 <div className="text-center space-y-2">
                                     <h2 className="text-2xl font-black text-slate-800">Trò Chơi Lớp</h2>
                                 </div>
-                                <GradClassGameSection isDark={isDark} />
+                                {gameTemplateId === "A" ? (
+                                    <GradClassGameSection isDark={isDark} />
+                                ) : (
+                                    <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} isDark={isDark} />
+                                )}
                             </div>
                         )}
 

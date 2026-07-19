@@ -209,6 +209,7 @@ export interface LinkConfigData {
     font_family?: string;
     music_url?: string;
     auto_play?: boolean;
+    game_template?: string;
 }
 
 export async function updateLinkProfile(
@@ -277,6 +278,7 @@ export async function updateLinkConfig(
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play ?? false,
+                game_template: config.game_template || "A",
             },
             update: {
                 background_color: config.background_color,
@@ -285,6 +287,7 @@ export async function updateLinkConfig(
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play,
+                game_template: config.game_template,
             },
         });
 

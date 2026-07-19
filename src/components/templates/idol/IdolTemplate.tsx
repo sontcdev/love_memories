@@ -7,6 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Star, Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic, Trophy, Disc, Sun, Moon, Zap } from "lucide-react";
 import { IdolLetterBox } from "./IdolLetterBox";
 import { IdolGameSection } from "./IdolGameSection";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 import { VideoPlayer } from "@/components/media";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -30,6 +32,8 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
     const [heartsCount, setHeartsCount] = useState(0);
     const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
     const stageRef = useRef<HTMLDivElement>(null);
@@ -749,7 +753,11 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                             <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-purple-400" : "text-purple-500"}`}>Act IV</span>
                             <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`}>Fandom Quiz</h2>
                         </div>
-                        <IdolGameSection isDark={isDark} />
+                        {gameTemplateId === "A" ? (
+                            <IdolGameSection isDark={isDark} />
+                        ) : (
+                            <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} isDark={isDark} />
+                        )}
                     </div>
                 )}
 

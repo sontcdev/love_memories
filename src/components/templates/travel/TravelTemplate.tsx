@@ -7,6 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Calendar, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, MapPin, Compass, Plane, Camera, Navigation, Mountain, TreePine, Waves, Sun } from "lucide-react";
 import { TravelLetterBox } from "./TravelLetterBox";
 import { TravelGameSection } from "./TravelGameSection";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -209,6 +211,8 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
     const [activeStop, setActiveStop] = useState<string | null>(null);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const profileData = data.profile_data as Record<string, string> | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
 
     const tripName = profileData?.trip_name || "Hành Trình";
     const destination = profileData?.destination;
@@ -427,7 +431,11 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
                         </div>
                         <p className="text-xs font-mono text-gray-400 mt-1">X marks the spot</p>
                     </div>
-                    <TravelGameSection />
+                    {gameTemplateId === "A" ? (
+                        <TravelGameSection />
+                    ) : (
+                        <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} />
+                    )}
                 </div>
             );
         }

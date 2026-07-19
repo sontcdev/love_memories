@@ -710,6 +710,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                 linkData.type === "IDOL" ? (
                                     <EditIdolConfigForm
                                         slug={slug}
+                                        linkType={linkData.type}
                                         initialConfig={linkData.config ? {
                                             background_color: linkData.config.background_color ?? undefined,
                                             accent_color: linkData.config.accent_color ?? undefined,
@@ -717,12 +718,14 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                             font_family: linkData.config.font_family ?? undefined,
                                             music_url: linkData.config.music_url ?? undefined,
                                             auto_play: linkData.config.auto_play,
+                                            game_template: linkData.config.game_template ?? undefined,
                                         } : null}
                                         isDark={isDark}
                                     />
                                 ) : (
                                     <EditConfigForm
                                         slug={slug}
+                                        linkType={linkData.type}
                                         initialConfig={linkData.config ? {
                                             background_color: linkData.config.background_color ?? undefined,
                                             accent_color: linkData.config.accent_color ?? undefined,
@@ -730,6 +733,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                             font_family: linkData.config.font_family ?? undefined,
                                             music_url: linkData.config.music_url ?? undefined,
                                             auto_play: linkData.config.auto_play,
+                                            game_template: linkData.config.game_template ?? undefined,
                                         } : null}
                                     />
                                 )

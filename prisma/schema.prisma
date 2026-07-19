@@ -111,6 +111,7 @@ model LinkConfig {
   font_family      String? @default("Inter")
   music_url        String?
   auto_play        Boolean @default(false)
+  game_template    String? @default("A") // Game variant: "A" | "B" | "C" (per template)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

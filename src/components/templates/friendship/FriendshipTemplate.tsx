@@ -7,6 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, X, Smile, Users, Star, Zap, Send, Phone, Video, Heart, MessageCircle } from "lucide-react";
 import { FriendshipLetterBox } from "./FriendshipLetterBox";
 import { FriendshipGameSection } from "./FriendshipGameSection";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -158,6 +160,8 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const profileData = data.profile_data as Record<string, string> | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
 
     const groupName = profileData?.group_name || "Nhóm bạn";
     const motto = profileData?.motto;
@@ -508,7 +512,11 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                 <Sticker type="star" className="absolute -right-6 -top-3 w-6 h-6 rotate-12 animate-sticker-bounce" />
                                 <p className="text-sm text-gray-500 mt-1">giải cùng nhau nào!</p>
                             </div>
-                            <FriendshipGameSection />
+                            {gameTemplateId === "A" ? (
+                                <FriendshipGameSection />
+                            ) : (
+                                <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} />
+                            )}
                         </div>
                     )}
                 </div>

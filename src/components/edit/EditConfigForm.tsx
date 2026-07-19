@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { LinkType } from "@prisma/client";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
 import { Save, Loader2, Palette, Type } from "lucide-react";
+import { GameTemplateSelector } from "./GameTemplateSelector";
+import { normalizeGameTemplate, type GameVariantId } from "@/components/templates/game-registry";
 
 // ============================================================================
 // SCHEMA
@@ -72,13 +75,17 @@ const ACCENT_COLORS = [
 
 interface EditConfigFormProps {
     slug: string;
+    linkType: LinkType;
     initialConfig: LinkConfigData | null;
     onSuccess?: () => void;
 }
 
-export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFormProps) {
+export function EditConfigForm({ slug, linkType, initialConfig, onSuccess }: EditConfigFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [gameTemplate, setGameTemplate] = useState<GameVariantId>(
+        normalizeGameTemplate(initialConfig?.game_template)
+    );
 
     const {
         register,
@@ -112,6 +119,7 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
             font_family: data.font_family || undefined,
             music_url: data.music_url || undefined,
             auto_play: data.auto_play,
+            game_template: gameTemplate,
         });
 
         if (result.success) {
@@ -255,6 +263,13 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                     </span>
                 </label>
             </div> */}
+
+            {/* Game Template Selector */}
+            <GameTemplateSelector
+                linkType={linkType}
+                value={gameTemplate}
+                onChange={setGameTemplate}
+            />
 
             {/* Message */}
             {message && (

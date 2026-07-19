@@ -7,6 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Sun, Moon, Users, MapPin, Navigation, Calendar, Flag } from "lucide-react";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
+import { GameStub } from "@/components/templates/GameStub";
+import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -66,6 +68,8 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
     const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const profileData = data.profile_data as unknown as GradGroupProfile | null;
+    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+    const gameVariant = getGameVariant(data.type, gameTemplateId);
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
     const isDark = overrideDark !== null ? overrideDark : false;
 
@@ -561,15 +565,19 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                             <MapPin className={`w-6 h-6 mx-auto ${isDark ? "text-white/60" : "text-white/80"}`} />
                             <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-white"}`}>Thử Thách</h2>
                         </div>
-                        <GameSection
-                            slug={slug}
-                            quiz={profileData?.quiz}
-                            quizBadges={profileData?.quiz_badges}
-                            members={members.map(m => ({ id: m.id, name: m.name }))}
-                            groupName={groupName}
-                            isDark={isDark}
-                            accentColor={theme.accentColor}
-                        />
+                        {gameTemplateId === "A" ? (
+                            <GameSection
+                                slug={slug}
+                                quiz={profileData?.quiz}
+                                quizBadges={profileData?.quiz_badges}
+                                members={members.map(m => ({ id: m.id, name: m.name }))}
+                                groupName={groupName}
+                                isDark={isDark}
+                                accentColor={theme.accentColor}
+                            />
+                        ) : (
+                            <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} isDark={isDark} />
+                        )}
                     </div>
                 )}
 
