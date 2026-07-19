@@ -259,10 +259,143 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                     background-size: 40px 40px;
                     background-image: linear-gradient(to right, rgba(168, 85, 247, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(168, 85, 247, 0.02) 1px, transparent 1px);
                 }
+                @keyframes holoShimmer {
+                    0% { background-position: 0% center; filter: hue-rotate(0deg); }
+                    100% { background-position: 200% center; filter: hue-rotate(360deg); }
+                }
+                .holo-text {
+                    background: linear-gradient(110deg,
+                        #ff006e 0%, #ff8500 10%, #ffd60a 20%, #06ffa5 35%,
+                        #00b4d8 50%, #7209b7 65%, #f72585 80%, #ff006e 100%);
+                    background-size: 200% auto;
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    animation: holoShimmer 4s linear infinite;
+                    filter: drop-shadow(0 0 8px rgba(255, 0, 110, 0.4)) drop-shadow(0 0 16px rgba(114, 9, 183, 0.2));
+                }
+                @keyframes marqueeChase {
+                    0% { box-shadow: 0 0 8px rgba(255,255,255,0.8), 8px 0 0 rgba(255,255,255,0.3); }
+                    100% { box-shadow: 0 0 8px rgba(255,255,255,0.8), -8px 0 0 rgba(255,255,255,0.3); }
+                }
+                .marquee-ring {
+                    position: absolute;
+                    inset: -10px;
+                    border-radius: 9999px;
+                    pointer-events: none;
+                }
+                .marquee-bulb {
+                    position: absolute;
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle at 30% 30%, #fef9c3, #fbbf24);
+                    box-shadow: 0 0 6px rgba(251, 191, 36, 0.9), 0 0 12px rgba(251, 191, 36, 0.5);
+                    animation: bulbBlink 1.5s ease-in-out infinite;
+                }
+                @keyframes bulbBlink {
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.4; transform: scale(0.8); }
+                }
+                @keyframes eqBar {
+                    0%, 100% { transform: scaleY(0.3); }
+                    50% { transform: scaleY(1); }
+                }
+                .eq-bar {
+                    width: 4px;
+                    background: linear-gradient(to top, #7209b7, #f72585, #ff006e);
+                    border-radius: 2px 2px 0 0;
+                    transform-origin: bottom;
+                    animation: eqBar 0.8s ease-in-out infinite;
+                }
+                @keyframes laserSweep {
+                    0% { opacity: 0; transform: rotate(-15deg) translateX(-100%); }
+                    50% { opacity: 0.6; }
+                    100% { opacity: 0; transform: rotate(-15deg) translateX(100%); }
+                }
+                .laser-beam {
+                    position: absolute;
+                    top: 0;
+                    width: 2px;
+                    height: 100vh;
+                    background: linear-gradient(to bottom, transparent, currentColor 30%, currentColor 70%, transparent);
+                    filter: blur(1px);
+                    transform-origin: top center;
+                    animation: laserSweep 6s ease-in-out infinite;
+                }
+                @keyframes starBurst {
+                    0% { transform: rotate(0deg) scale(1); opacity: 0.6; }
+                    100% { transform: rotate(360deg) scale(1); opacity: 0.6; }
+                }
+                .star-burst {
+                    position: absolute;
+                    inset: -30px;
+                    pointer-events: none;
+                    animation: starBurst 30s linear infinite;
+                }
+                @keyframes holoBorderShift {
+                    0% { background-position: 0% 50%; }
+                    100% { background-position: 200% 50%; }
+                }
+                .holo-border {
+                    position: relative;
+                }
+                .holo-border::before {
+                    content: '';
+                    position: absolute;
+                    inset: -2px;
+                    border-radius: inherit;
+                    padding: 2px;
+                    background: linear-gradient(110deg, #ff006e, #ff8500, #ffd60a, #06ffa5, #00b4d8, #7209b7, #f72585, #ff006e);
+                    background-size: 200% 100%;
+                    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                    -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+                    animation: holoBorderShift 4s linear infinite;
+                    pointer-events: none;
+                }
+                @keyframes stageFloor {
+                    0%, 100% { opacity: 0.4; }
+                    50% { opacity: 0.7; }
+                }
+                .stage-floor {
+                    background: radial-gradient(ellipse at center top, rgba(168, 85, 247, 0.3) 0%, transparent 60%);
+                    animation: stageFloor 4s ease-in-out infinite;
+                }
+                .ticket-stub {
+                    position: relative;
+                    background:
+                        radial-gradient(circle at left center, transparent 6px, currentColor 6px) left center / 12px 8px repeat-y,
+                        radial-gradient(circle at right center, transparent 6px, currentColor 6px) right center / 12px 8px repeat-y;
+                }
+                .ticket-perforation {
+                    border-left: 2px dashed currentColor;
+                    position: relative;
+                }
+                .ticket-perforation::before, .ticket-perforation::after {
+                    content: '';
+                    position: absolute;
+                    left: -5px;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: inherit;
+                }
+                .ticket-perforation::before { top: -4px; }
+                .ticket-perforation::after { bottom: -4px; }
             `}</style>
 
             {/* Stage Background */}
             <div className={`fixed inset-0 z-0 pointer-events-none ${isDark ? 'cyber-grid' : 'cyber-grid-light'}`} />
+
+            {/* Laser Light Beams */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="laser-beam text-pink-500" style={{ left: '15%', animationDelay: '0s' }} />
+                <div className="laser-beam text-purple-500" style={{ left: '45%', animationDelay: '1.5s' }} />
+                <div className="laser-beam text-cyan-400" style={{ left: '75%', animationDelay: '3s' }} />
+                <div className="laser-beam text-pink-400" style={{ left: '30%', animationDelay: '4.5s', animationDuration: '7s' }} />
+                <div className="laser-beam text-purple-400" style={{ left: '60%', animationDelay: '2s', animationDuration: '7s' }} />
+            </div>
 
             {/* Moving Spotlights */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -340,6 +473,20 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                         {/* Main Stage Spotlight on Idol */}
                         <div className="relative">
                             <div className={`absolute inset-0 rounded-full blur-3xl ${isDark ? "bg-purple-500/20" : "bg-purple-300/30"}`} style={{ animation: 'stage-glow 3s ease-in-out infinite', width: '200%', height: '200%', top: '-50%', left: '-50%' }} />
+                            {/* Star burst SVG behind avatar */}
+                            <svg className="star-burst opacity-40" viewBox="0 0 200 200" fill="none">
+                                <g stroke={isDark ? "#f72585" : "#a855f7"} strokeWidth="1" opacity="0.5">
+                                    {Array.from({ length: 24 }).map((_, i) => {
+                                        const angle = (i * 15) * Math.PI / 180;
+                                        const x1 = 100 + Math.cos(angle) * 40;
+                                        const y1 = 100 + Math.sin(angle) * 40;
+                                        const x2 = 100 + Math.cos(angle) * 95;
+                                        const y2 = 100 + Math.sin(angle) * 95;
+                                        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />;
+                                    })}
+                                </g>
+                                <circle cx="100" cy="100" r="50" stroke={isDark ? "#f72585" : "#a855f7"} strokeWidth="0.5" strokeDasharray="2 4" opacity="0.4" fill="none" />
+                            </svg>
                             <div className={`relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1 ${isDark ? "bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 shadow-[0_0_40px_rgba(168,85,247,0.5)]" : "bg-gradient-to-br from-purple-400 to-pink-400 border-4 border-white shadow-2xl"}`}>
                                 {idolAvatar ? (
                                     <Image src={idolAvatar} alt={idolName} width={160} height={160} className="w-full h-full rounded-full object-cover" />
@@ -347,6 +494,28 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                     <div className={`w-full h-full rounded-full flex items-center justify-center text-4xl font-bold ${isDark ? "bg-slate-950 text-purple-400" : "bg-white text-purple-400"}`}>{idolName.charAt(0)}</div>
                                 )}
                             </div>
+                            {/* Marquee bulb ring */}
+                            <div className="marquee-ring">
+                                {Array.from({ length: 16 }).map((_, i) => {
+                                    const angle = (i * 22.5) * Math.PI / 180;
+                                    const radius = 76;
+                                    const x = 50 + Math.cos(angle) * radius;
+                                    const y = 50 + Math.sin(angle) * radius;
+                                    return (
+                                        <span
+                                            key={i}
+                                            className="marquee-bulb"
+                                            style={{
+                                                left: `${x}%`,
+                                                top: `${y}%`,
+                                                animationDelay: `${i * 0.1}s`,
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                            {/* Stage floor reflection */}
+                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-32 h-4 rounded-full stage-floor blur-md" />
                             {/* Fan avatar overlap */}
                             <div className="absolute -bottom-2 -right-2">
                                 <div className={`w-12 h-12 rounded-full p-0.5 shadow-xl ${isDark ? "bg-gradient-to-br from-cyan-400 to-purple-500 shadow-[0_0_12px_rgba(6,182,212,0.6)]" : "bg-gradient-to-br from-cyan-300 to-purple-400 border-2 border-white"}`}>
@@ -364,9 +533,24 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                 <Star className="w-3.5 h-3.5 fill-current" />
                                 Fandom: {fanName}
                             </div>
-                            <h1 className={`text-4xl sm:text-5xl font-black ${isDark ? "text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]" : "text-gray-800"}`}>{idolName}</h1>
+                            <h1 className={`text-4xl sm:text-5xl font-black holo-text`}>{idolName}</h1>
                             <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-dancing-script), cursive" }}>{title}</h2>
                             {slogan && <p className={`italic text-sm max-w-md mx-auto ${isDark ? "text-purple-200/80" : "text-gray-500"}`}>&ldquo;{slogan}&rdquo;</p>}
+                        </div>
+
+                        {/* Decorative Equalizer Bars */}
+                        <div className="flex items-end justify-center gap-1 h-8" aria-hidden="true">
+                            {Array.from({ length: 15 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="eq-bar"
+                                    style={{
+                                        height: '100%',
+                                        animationDelay: `${i * 0.08}s`,
+                                        animationDuration: `${0.6 + (i % 3) * 0.2}s`,
+                                    }}
+                                />
+                            ))}
                         </div>
 
                         {/* Stats Row */}
@@ -389,10 +573,11 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
 
                         {/* Countdown */}
                         {countdown && nextAnniversary && (
-                            <div className={`w-full max-w-md p-4 rounded-2xl border ${isDark ? "bg-slate-900/80 border-cyan-500/25 backdrop-blur-md" : "bg-white/80 backdrop-blur-md border border-pink-100 shadow-md"}`}>
+                            <div className={`holo-border w-full max-w-md p-4 rounded-2xl border ${isDark ? "bg-slate-900/80 border-cyan-500/25 backdrop-blur-md" : "bg-white/80 backdrop-blur-md border border-pink-100 shadow-md"}`}>
                                 <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold tracking-wider uppercase mb-3">
                                     <Sparkles className={`w-3.5 h-3.5 animate-pulse ${isDark ? "text-cyan-400" : "text-purple-500"}`} />
                                     <span className={isDark ? "text-cyan-300" : "text-purple-600"}>Kỷ niệm Debut sắp tới</span>
+                                    <span className={`ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded ${isDark ? "bg-cyan-950/60 text-cyan-400 border border-cyan-500/30" : "bg-purple-100 text-purple-500"}`}>VIP</span>
                                 </div>
                                 <div className="flex gap-2 justify-center">
                                     {[
@@ -500,33 +685,53 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                                 <div className={`absolute left-2 w-9 h-9 rounded-full bg-gradient-to-br ${dotBg} border-2 shadow-md flex items-center justify-center z-10 ${glowClass}`}>
                                                     {icon}
                                                 </div>
-                                                <div className={`rounded-2xl p-5 shadow-md transition-all ${isDark ? (isAward ? "bg-gradient-to-br from-slate-900 to-amber-950/20 border border-amber-500/20 text-white" : isRelease ? "bg-gradient-to-br from-slate-900 to-cyan-950/20 border border-cyan-500/20 text-white" : "bg-slate-900/90 border border-purple-500/15 text-white") : "bg-white border border-gray-100 text-gray-800"}`}>
-                                                    <div className={`text-xs font-semibold mb-1 ${isDark ? "text-purple-300" : "text-purple-400"}`}>
-                                                        {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
+                                                <div className={`relative rounded-2xl shadow-md transition-all overflow-hidden ${isDark ? (isAward ? "bg-gradient-to-br from-slate-900 to-amber-950/20 border border-amber-500/20 text-white" : isRelease ? "bg-gradient-to-br from-slate-900 to-cyan-950/20 border border-cyan-500/20 text-white" : "bg-slate-900/90 border border-purple-500/15 text-white") : "bg-white border border-gray-100 text-gray-800"}`}>
+                                                    {/* Ticket header strip */}
+                                                    <div className={`flex items-center justify-between px-4 py-1.5 ${isDark ? "bg-purple-950/40" : "bg-purple-50"} border-b border-dashed ${isDark ? "border-purple-500/30" : "border-purple-200"}`}>
+                                                        <span className={`text-[9px] font-mono font-bold tracking-widest uppercase ${isDark ? "text-purple-300" : "text-purple-600"}`}>
+                                                            {isAward ? "AWARD" : isRelease ? "RELEASE" : "EVENT"}
+                                                        </span>
+                                                        <span className={`text-[9px] font-mono ${isDark ? "text-purple-400/70" : "text-purple-400"}`}>
+                                                            #{String(event.id).slice(-6).toUpperCase()}
+                                                        </span>
                                                     </div>
-                                                    <h3 className="text-lg font-bold mb-2">{event.title}</h3>
-                                                    {event.description && <p className={`text-sm leading-relaxed ${isDark ? "text-purple-200/80" : "text-gray-500"}`}>{event.description}</p>}
-                                                    {event.image_url && (
-                                                        <div className="mt-4">
-                                                            <div className={`w-48 h-48 rounded-xl overflow-hidden border ${isDark ? "bg-slate-950 border-purple-500/20" : "bg-gray-50 border-gray-100"}`}>
-                                                                <Image src={event.image_url} alt={event.title} width={192} height={192} className="w-full h-full object-contain" />
+                                                    <div className="p-5">
+                                                        <div className={`text-xs font-semibold mb-1 flex items-center gap-1.5 ${isDark ? "text-purple-300" : "text-purple-400"}`}>
+                                                            <Calendar className="w-3 h-3" />
+                                                            {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
+                                                        </div>
+                                                        <h3 className="text-lg font-bold mb-2">{event.title}</h3>
+                                                        {event.description && <p className={`text-sm leading-relaxed ${isDark ? "text-purple-200/80" : "text-gray-500"}`}>{event.description}</p>}
+                                                        {event.image_url && (
+                                                            <div className="mt-4">
+                                                                <div className={`w-48 h-48 rounded-xl overflow-hidden border ${isDark ? "bg-slate-950 border-purple-500/20" : "bg-gray-50 border-gray-100"}`}>
+                                                                    <Image src={event.image_url} alt={event.title} width={192} height={192} className="w-full h-full object-contain" />
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )}
-                                                    {event.video_url && (
-                                                        <div className="mt-4">
-                                                            <VideoPlayer url={event.video_url} className="rounded-xl overflow-hidden border border-white/5 shadow-md" />
-                                                        </div>
-                                                    )}
-                                                    {event.audio_url && (
-                                                        <div className={`mt-4 p-3.5 rounded-xl border ${isDark ? "bg-purple-950/30 border-purple-500/20 text-white" : "bg-purple-50 border-purple-100"}`}>
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Mic className={`w-4 h-4 ${isDark ? "text-pink-400" : "text-purple-500"}`} />
-                                                                <span className="text-sm font-semibold">Ghi âm sự kiện</span>
+                                                        )}
+                                                        {event.video_url && (
+                                                            <div className="mt-4">
+                                                                <VideoPlayer url={event.video_url} className="rounded-xl overflow-hidden border border-white/5 shadow-md" />
                                                             </div>
-                                                            <audio src={event.audio_url} controls className="w-full h-10" />
+                                                        )}
+                                                        {event.audio_url && (
+                                                            <div className={`mt-4 p-3.5 rounded-xl border ${isDark ? "bg-purple-950/30 border-purple-500/20 text-white" : "bg-purple-50 border-purple-100"}`}>
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <Mic className={`w-4 h-4 ${isDark ? "text-pink-400" : "text-purple-500"}`} />
+                                                                    <span className="text-sm font-semibold">Ghi âm sự kiện</span>
+                                                                </div>
+                                                                <audio src={event.audio_url} controls className="w-full h-10" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {/* Ticket perforation bottom */}
+                                                    <div className={`ticket-perforation px-4 py-2 flex items-center justify-between ${isDark ? "border-purple-500/30 bg-purple-950/30" : "border-purple-200 bg-purple-50/50"}`}>
+                                                        <span className={`text-[9px] font-mono ${isDark ? "text-purple-400/70" : "text-purple-400"}`}>ADMIT ONE</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <Star className={`w-2.5 h-2.5 ${isDark ? "text-pink-400" : "text-purple-400"} fill-current`} />
+                                                            <Star className={`w-2 h-2 ${isDark ? "text-purple-400" : "text-purple-300"} fill-current`} />
                                                         </div>
-                                                    )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
