@@ -138,12 +138,166 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                     100% { opacity: 1; transform: scale(1) translateY(0); }
                 }
                 .animate-modal-in { animation: modalIn 0.3s ease-out; }
+                @keyframes glitterTwinkle {
+                    0%, 100% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+                    50% { opacity: 0.9; transform: scale(1.1) rotate(45deg); }
+                }
+                .animate-glitter { animation: glitterTwinkle 2.5s ease-in-out infinite; }
+                @keyframes tapePeel {
+                    0%, 100% { transform: rotate(var(--tape-rot, -2deg)) translateY(0); }
+                    50% { transform: rotate(var(--tape-rot, -2deg)) translateY(-1px); }
+                }
+                .animate-tape-peel { animation: tapePeel 6s ease-in-out infinite; }
+                @keyframes stampInk {
+                    0% { opacity: 0; transform: scale(1.3) rotate(-15deg); }
+                    100% { opacity: 0.7; transform: scale(1) rotate(-8deg); }
+                }
+                .animate-stamp-ink { animation: stampInk 0.6s ease-out both; }
+                @keyframes doodleDraw {
+                    0% { stroke-dashoffset: 100; opacity: 0; }
+                    100% { stroke-dashoffset: 0; opacity: 0.6; }
+                }
+                .animate-doodle { stroke-dasharray: 100; animation: doodleDraw 1.2s ease-out 0.3s both; }
+
+                .kraft-texture {
+                    background-image:
+                        radial-gradient(circle at 1px 1px, rgba(120, 80, 40, 0.06) 1px, transparent 0),
+                        radial-gradient(circle at 3px 5px, rgba(140, 100, 60, 0.04) 1px, transparent 0),
+                        linear-gradient(135deg, rgba(180, 140, 90, 0.03) 0%, transparent 50%),
+                        linear-gradient(45deg, rgba(120, 80, 40, 0.02) 0%, transparent 50%);
+                    background-size: 12px 12px, 24px 24px, 100% 100%, 100% 100%;
+                }
+                .kraft-texture-dark {
+                    background-image:
+                        radial-gradient(circle at 1px 1px, rgba(200, 160, 110, 0.04) 1px, transparent 0),
+                        radial-gradient(circle at 3px 5px, rgba(180, 140, 90, 0.03) 1px, transparent 0);
+                    background-size: 12px 12px, 24px 24px;
+                }
+                .washi-tape {
+                    position: absolute;
+                    height: 22px;
+                    background: repeating-linear-gradient(
+                        90deg,
+                        var(--tape-color, #fcd34d) 0px,
+                        var(--tape-color, #fcd34d) 8px,
+                        rgba(255,255,255,0.25) 8px,
+                        rgba(255,255,255,0.25) 12px,
+                        var(--tape-color, #fcd34d) 12px,
+                        var(--tape-color, #fcd34d) 20px,
+                        rgba(0,0,0,0.08) 20px,
+                        rgba(0,0,0,0.08) 24px
+                    );
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+                    opacity: 0.92;
+                }
+                .washi-tape-rose { --tape-color: #fbcfe8; }
+                .washi-tape-amber { --tape-color: #fde68a; }
+                .washi-tape-mint { --tape-color: #bbf7d0; }
+                .washi-tape-sky { --tape-color: #bae6fd; }
+                .washi-tape-lilac { --tape-color: #ddd6fe; }
+
+                .torn-edge-bottom {
+                    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 8px), transparent 100%),
+                        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'><path d='M0,4 Q5,0 10,4 T20,4 T30,4 T40,4 T50,4 T60,4 T70,4 T80,4 T90,4 T100,4 L100,8 L0,8 Z' fill='black'/></svg>");
+                    -webkit-mask-size: 100% 100%, 24px 8px;
+                    -webkit-mask-position: 0 0, 0 100%;
+                    -webkit-mask-repeat: no-repeat, repeat-x;
+                }
+
+                .album-corner {
+                    position: absolute;
+                    width: 0;
+                    height: 0;
+                    border-style: solid;
+                    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
+                }
+                .album-corner-tl { top: -2px; left: -2px; border-width: 12px 12px 0 0; border-color: rgba(244, 114, 182, 0.6) transparent transparent transparent; }
+                .album-corner-tr { top: -2px; right: -2px; border-width: 12px 0 12px 0; border-color: transparent transparent transparent rgba(244, 114, 182, 0.6); }
+                .album-corner-bl { bottom: -2px; left: -2px; border-width: 0 12px 12px 0; border-color: transparent rgba(244, 114, 182, 0.6) transparent transparent; }
+                .album-corner-br { bottom: -2px; right: -2px; border-width: 0 0 12px 12px; border-color: transparent transparent rgba(244, 114, 182, 0.6) transparent; }
+
+                .postmark-stamp {
+                    border: 2px solid currentColor;
+                    border-radius: 9999px;
+                    padding: 2px 8px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 10px;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
+                    transform: rotate(-8deg);
+                    opacity: 0.7;
+                    position: relative;
+                }
+                .postmark-stamp::before, .postmark-stamp::after {
+                    content: '';
+                    position: absolute;
+                    inset: 2px;
+                    border: 1px dashed currentColor;
+                    border-radius: 9999px;
+                    opacity: 0.5;
+                }
+                .postmark-stamp::after { inset: 4px; border-style: dotted; opacity: 0.3; }
+
+                .string-divider {
+                    position: relative;
+                    height: 2px;
+                    background: repeating-linear-gradient(
+                        90deg,
+                        rgba(120, 80, 40, 0.4) 0px,
+                        rgba(120, 80, 40, 0.4) 3px,
+                        transparent 3px,
+                        transparent 6px
+                    );
+                }
+                .string-pin {
+                    position: absolute;
+                    top: 50%;
+                    width: 8px;
+                    height: 8px;
+                    background: radial-gradient(circle at 30% 30%, #fca5a5, #b91c1c);
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%);
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                }
+                .glitter-dot {
+                    position: absolute;
+                    width: 4px;
+                    height: 4px;
+                    background: radial-gradient(circle, #fef3c7 0%, #fbbf24 50%, transparent 70%);
+                    border-radius: 50%;
+                }
             `}</style>
 
             {/* Desk texture background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-br from-[#2a2520] via-[#1f1c18] to-[#252018]" : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"}`} />
+                <div className={`absolute inset-0 ${isDark ? "kraft-texture-dark opacity-30" : "kraft-texture opacity-60"} `} />
                 <div className={`absolute inset-0 opacity-[0.08] bg-[repeating-linear-gradient(90deg,transparent,transparent_40px,rgba(0,0,0,0.1)_40px,rgba(0,0,0,0.1)_41px)]`} />
+
+                {/* Hand-drawn doodle corners */}
+                <svg className={`absolute top-4 left-4 w-16 h-16 ${isDark ? "text-rose-400/40" : "text-rose-400/50"} animate-doodle`} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 28 Q 24 8, 40 28 T 56 36" />
+                    <path d="M28 24 l -4 -8 m 4 8 l -8 -2" />
+                    <circle cx="48" cy="20" r="2" fill="currentColor" />
+                </svg>
+                <svg className={`absolute top-4 right-4 w-14 h-14 ${isDark ? "text-amber-400/40" : "text-amber-500/50"} animate-doodle`} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: "0.4s" }}>
+                    <path d="M32 8 l 3 12 l 12 3 l -12 3 l -3 12 l -3 -12 l -12 -3 l 12 -3 z" />
+                </svg>
+                <svg className={`absolute bottom-4 left-4 w-16 h-16 ${isDark ? "text-purple-400/40" : "text-purple-500/50"} animate-doodle`} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: "0.6s" }}>
+                    <path d="M10 50 Q 24 30, 50 40 Q 30 44, 14 56" />
+                    <path d="M44 36 l 6 -2 m -6 2 l 2 -6" />
+                </svg>
+                <svg className={`absolute bottom-4 right-4 w-14 h-14 ${isDark ? "text-emerald-400/40" : "text-emerald-500/50"} animate-doodle`} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: "0.8s" }}>
+                    <path d="M32 52 C 12 52, 12 28, 32 28 C 52 28, 52 52, 32 52 Z" />
+                    <path d="M32 28 V 14 M 26 20 H 38" />
+                </svg>
+
+                {/* Scattered glitter dots */}
+                <div className="absolute top-1/4 left-1/3 glitter-dot animate-glitter" style={{ animationDelay: "0s" }} />
+                <div className="absolute top-1/3 right-1/4 w-3 h-3 glitter-dot animate-glitter" style={{ animationDelay: "0.8s", width: "3px", height: "3px" }} />
+                <div className="absolute bottom-1/3 left-1/4 glitter-dot animate-glitter" style={{ animationDelay: "1.2s" }} />
+                <div className="absolute bottom-1/4 right-1/3 glitter-dot animate-glitter" style={{ animationDelay: "0.4s" }} />
+                <div className="absolute top-1/2 left-1/2 w-2 h-2 glitter-dot animate-glitter" style={{ animationDelay: "1.6s", width: "2px", height: "2px" }} />
             </div>
 
             {/* Buttons */}
@@ -168,27 +322,33 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
             {!activeItem && (
                 <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-8">
                     {/* Center profile card - like a photo frame on desk */}
-                    <div className={`relative z-10 ${isDark ? "bg-[#282420] border-rose-900/30" : "bg-white border-amber-200"} border-4 rounded-xl p-6 sm:p-8 shadow-2xl max-w-sm w-full text-center`}>
-                        {/* Washi tape */}
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-yellow-100/70 border border-yellow-200/50 rotate-[-1deg] z-10 shadow-sm flex items-center justify-center text-[10px] text-gray-500/70 font-mono">
-                            OUR DESK
+                    <div className={`relative z-10 ${isDark ? "bg-[#282420] border-rose-900/30" : "bg-white border-amber-200"} border-4 rounded-xl p-6 sm:p-8 shadow-2xl max-w-sm w-full text-center torn-edge-bottom`}>
+                        {/* Triple washi tape header */}
+                        <div className="absolute -top-3 left-0 right-0 h-6 pointer-events-none">
+                            <div className="washi-tape washi-tape-rose animate-tape-peel" style={{ left: "10%", width: "35%", transform: "rotate(-3deg)", "--tape-rot": "-3deg" } as React.CSSProperties} />
+                            <div className="washi-tape washi-tape-mint animate-tape-peel" style={{ left: "30%", width: "40%", transform: "rotate(2deg)", "--tape-rot": "2deg", animationDelay: "0.7s" } as React.CSSProperties} />
+                            <div className="washi-tape washi-tape-amber animate-tape-peel" style={{ left: "55%", width: "32%", transform: "rotate(-1deg)", "--tape-rot": "-1deg", animationDelay: "1.4s" } as React.CSSProperties} />
                         </div>
 
                         <div className="flex items-center justify-center gap-4 mb-4">
-                            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden p-0.5 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[-3deg]`}>
+                            <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden p-0.5 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[-3deg]`}>
                                 {boyAvatar ? (
                                     <Image src={boyAvatar} alt={boyName} width={80} height={80} className="w-full h-full object-cover rounded-lg" />
                                 ) : (
                                     <div className="w-full h-full bg-rose-50 flex items-center justify-center text-xl font-bold text-rose-300">👦</div>
                                 )}
+                                <span className="album-corner album-corner-tl" />
+                                <span className="album-corner album-corner-br" />
                             </div>
                             <Heart className="w-6 h-6 text-rose-500 fill-rose-500 animate-heartbeat" />
-                            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden p-0.5 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[3deg]`}>
+                            <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden p-0.5 border-2 ${isDark ? "bg-zinc-950 border-rose-900/20" : "bg-rose-50 border-rose-100/40"} shadow-md rotate-[3deg]`}>
                                 {girlAvatar ? (
                                     <Image src={girlAvatar} alt={girlName} width={80} height={80} className="w-full h-full object-cover rounded-lg" />
                                 ) : (
                                     <div className="w-full h-full bg-rose-50 flex items-center justify-center text-xl font-bold text-rose-300">👧</div>
                                 )}
+                                <span className="album-corner album-corner-tr" />
+                                <span className="album-corner album-corner-bl" />
                             </div>
                         </div>
 
@@ -203,6 +363,12 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                                 <span className="text-xs">ngày</span>
                             </div>
                         )}
+
+                        {/* Doodle accent under card */}
+                        <svg className={`mx-auto mt-4 w-20 h-4 ${isDark ? "text-amber-400/40" : "text-amber-500/50"}`} viewBox="0 0 80 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                            <path d="M4 8 Q 20 2, 40 8 T 76 8" />
+                            <circle cx="76" cy="8" r="1.5" fill="currentColor" />
+                        </svg>
                     </div>
 
                     {/* Desk items scattered around */}
@@ -244,8 +410,13 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                 <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setActiveItem(null)} />
                     <div className={`relative w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-modal-in ${isDark ? "bg-[#282420] text-slate-100" : "bg-white text-gray-800"}`}>
+                        {/* Washi tape top strip on modal */}
+                        <div className="absolute -top-1 left-0 right-0 h-3 pointer-events-none z-10">
+                            <div className={`washi-tape ${activeItem === "gallery" ? "washi-tape-amber" : activeItem === "timeline" ? "washi-tape-rose" : activeItem === "letters" ? "washi-tape-lilac" : "washi-tape-mint"}`} style={{ left: 0, width: "100%", height: "12px", transform: "rotate(-0.5deg)" }} />
+                        </div>
+
                         {/* Modal header */}
-                        <div className={`flex items-center justify-between p-4 border-b ${isDark ? "border-rose-900/30" : "border-amber-100"}`}>
+                        <div className={`flex items-center justify-between p-4 border-b ${isDark ? "border-rose-900/30" : "border-amber-100"} relative`}>
                             <div className="flex items-center gap-2">
                                 {activeItem === "gallery" && <ImageIcon className="w-5 h-5 text-amber-500" />}
                                 {activeItem === "timeline" && <Calendar className="w-5 h-5 text-rose-400" />}
@@ -285,10 +456,16 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                                                         <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-12 h-4 bg-yellow-100/60 border border-yellow-200/40 shadow-sm" />
                                                         <div className="aspect-square relative overflow-hidden rounded-md">
                                                             <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover" />
+                                                            <span className="album-corner album-corner-tl" style={{ borderColor: `transparent transparent transparent ${isDark ? "rgba(244, 114, 182, 0.5)" : "rgba(244, 114, 182, 0.6)"}` }} />
+                                                            <span className="album-corner album-corner-br" style={{ borderColor: `transparent transparent ${isDark ? "rgba(244, 114, 182, 0.5)" : "rgba(244, 114, 182, 0.6)"} transparent` }} />
                                                         </div>
                                                         {item.caption && (
                                                             <p className={`text-center font-serif italic text-xs mt-2 truncate ${isDark ? "text-slate-300" : "text-slate-600"}`}>{item.caption}</p>
                                                         )}
+                                                        {/* Index doodle number */}
+                                                        <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${isDark ? "bg-rose-950/60 text-rose-300" : "bg-rose-100 text-rose-500"} border ${isDark ? "border-rose-800/40" : "border-rose-200"}`}>
+                                                            {index + 1}
+                                                        </span>
                                                     </div>
                                                 );
                                             })}
@@ -305,16 +482,28 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                                             <p>Chưa có sự kiện nào...</p>
                                         </div>
                                     ) : (
-                                        <div className="relative pl-6 border-l-2 border-dashed border-rose-300 space-y-6">
+                                        <div className="relative pl-8 space-y-8">
+                                            {/* String with pins vertical divider */}
+                                            <div className="absolute left-2 top-2 bottom-2 w-px">
+                                                <div className="string-divider h-full" />
+                                                <span className="string-pin" style={{ top: "0%" }} />
+                                                <span className="string-pin" style={{ top: "33%" }} />
+                                                <span className="string-pin" style={{ top: "66%" }} />
+                                                <span className="string-pin" style={{ top: "100%" }} />
+                                            </div>
                                             {data.timelines.map((event) => (
                                                 <div key={event.id} className="relative">
-                                                    <div className="absolute -left-[29px] top-1 w-5 h-5 rounded-full bg-rose-500 border-4 border-white flex items-center justify-center shadow-md" style={isDark ? { borderColor: "#282420" } : {}}>
+                                                    <div className="absolute -left-[26px] top-1 w-5 h-5 rounded-full bg-rose-500 border-4 border-white flex items-center justify-center shadow-md" style={isDark ? { borderColor: "#282420" } : {}}>
                                                         <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                                                     </div>
-                                                    <div className={`${isDark ? "bg-[#332e28]/50 border-rose-900/20" : "bg-rose-50/50 border-rose-100"} border rounded-xl p-4 shadow-sm`}>
-                                                        <div className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1.5">
-                                                            <Calendar className="w-3.5 h-3.5" />
-                                                            {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
+                                                    <div className={`${isDark ? "bg-[#332e28]/50 border-rose-900/20" : "bg-rose-50/50 border-rose-100"} border rounded-xl p-4 shadow-sm relative`}>
+                                                        <div className="flex items-start justify-between gap-3 mb-2">
+                                                            <div className="flex-1">
+                                                                <div className={`postmark-stamp inline-block ${isDark ? "text-rose-400" : "text-rose-500"} animate-stamp-ink`}>
+                                                                    {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" })}
+                                                                </div>
+                                                            </div>
+                                                            <Calendar className={`w-4 h-4 mt-1 ${isDark ? "text-rose-400/60" : "text-rose-400"}`} />
                                                         </div>
                                                         <h3 className="text-base font-serif font-bold mb-2">{event.title}</h3>
                                                         {event.description && (
@@ -323,8 +512,14 @@ export function Love2Template({ data, slug }: Love2TemplateProps) {
                                                         {event.image_url && (
                                                             <div className="relative aspect-video rounded-lg overflow-hidden shadow-md">
                                                                 <Image src={event.image_url} alt={event.title} fill className="object-cover" />
+                                                                <span className="album-corner album-corner-tr" style={{ borderColor: `transparent transparent transparent ${isDark ? "rgba(244, 114, 182, 0.5)" : "rgba(244, 114, 182, 0.6)"}` }} />
+                                                                <span className="album-corner album-corner-bl" style={{ borderColor: `transparent ${isDark ? "rgba(244, 114, 182, 0.5)" : "rgba(244, 114, 182, 0.6)"} transparent transparent` }} />
                                                             </div>
                                                         )}
+                                                        {/* Doodle underline */}
+                                                        <svg className={`w-full h-2 mt-2 ${isDark ? "text-rose-400/30" : "text-rose-300/50"}`} viewBox="0 0 200 4" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" preserveAspectRatio="none">
+                                                            <path d="M2 2 Q 30 0, 60 2 T 120 2 T 198 2" />
+                                                        </svg>
                                                     </div>
                                                 </div>
                                             ))}
