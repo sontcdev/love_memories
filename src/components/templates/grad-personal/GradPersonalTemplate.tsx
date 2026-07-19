@@ -221,7 +221,100 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                     0%, 100% { transform: translateY(0); }
                     50% { transform: translateY(-4px); }
                 }
+                @keyframes laurelSway {
+                    0%, 100% { transform: rotate(-2deg); }
+                    50% { transform: rotate(2deg); }
+                }
+                .laurel-left { animation: laurelSway 5s ease-in-out infinite; transform-origin: bottom center; }
+                .laurel-right { animation: laurelSway 5s ease-in-out infinite reverse; transform-origin: bottom center; }
+                @keyframes waxShimmer {
+                    0%, 100% { box-shadow: 0 2px 8px rgba(180, 83, 9, 0.4), inset 0 1px 2px rgba(255, 220, 150, 0.3); }
+                    50% { box-shadow: 0 2px 12px rgba(180, 83, 9, 0.6), inset 0 1px 3px rgba(255, 220, 150, 0.5); }
+                }
+                .wax-seal {
+                    animation: waxShimmer 3s ease-in-out infinite;
+                    background: radial-gradient(circle at 30% 30%, #f59e0b 0%, #b45309 60%, #78350f 100%);
+                    box-shadow: 0 2px 8px rgba(180, 83, 9, 0.5), inset 0 1px 2px rgba(255, 220, 150, 0.3);
+                }
+                @keyframes phoenixRise {
+                    0% { transform: translateY(20px) rotate(-5deg); opacity: 0; }
+                    50% { opacity: 0.4; }
+                    100% { transform: translateY(-10px) rotate(5deg); opacity: 0; }
+                }
+                .phoenix-accent { animation: phoenixRise 8s ease-in-out infinite; }
+                @keyframes ribbonFlow {
+                    0%, 100% { transform: skewX(-2deg); }
+                    50% { transform: skewX(2deg); }
+                }
+                .ribbon-banner { animation: ribbonFlow 6s ease-in-out infinite; }
+                @keyframes stampPress {
+                    0% { opacity: 0; transform: scale(1.3) rotate(-20deg); }
+                    60% { opacity: 0.8; transform: scale(0.95) rotate(-12deg); }
+                    100% { opacity: 0.7; transform: scale(1) rotate(-10deg); }
+                }
+                .grad-stamp { animation: stampPress 0.5s ease-out both; }
+                .diploma-border {
+                    position: relative;
+                }
+                .diploma-border::before {
+                    content: '';
+                    position: absolute;
+                    inset: 4px;
+                    border: 1px double currentColor;
+                    border-radius: inherit;
+                    opacity: 0.3;
+                    pointer-events: none;
+                }
+                .desk-wood-grain {
+                    background-image:
+                        repeating-linear-gradient(
+                            90deg,
+                            transparent 0px,
+                            transparent 60px,
+                            rgba(120, 53, 15, 0.03) 60px,
+                            rgba(120, 53, 15, 0.03) 62px
+                        ),
+                        repeating-linear-gradient(
+                            90deg,
+                            transparent 0px,
+                            transparent 120px,
+                            rgba(180, 83, 9, 0.04) 120px,
+                            rgba(180, 83, 9, 0.04) 121px
+                        );
+                }
+                .desk-wood-grain-dark {
+                    background-image:
+                        repeating-linear-gradient(
+                            90deg,
+                            transparent 0px,
+                            transparent 60px,
+                            rgba(251, 191, 36, 0.04) 60px,
+                            rgba(251, 191, 36, 0.04) 62px
+                        ),
+                        repeating-linear-gradient(
+                            90deg,
+                            transparent 0px,
+                            transparent 120px,
+                            rgba(217, 119, 6, 0.05) 120px,
+                            rgba(217, 119, 6, 0.05) 121px
+                        );
+                }
             `}</style>
+
+            {/* Desk wood grain + Phoenix accent */}
+            <div className={`absolute inset-0 pointer-events-none ${isDark ? "desk-wood-grain-dark" : "desk-wood-grain"}`} />
+            <svg className={`phoenix-accent absolute top-20 right-8 w-24 h-24 ${isDark ? "text-amber-500/20" : "text-amber-600/15"} pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M50 90 Q 30 70, 35 50 Q 40 30, 50 20 Q 60 30, 65 50 Q 70 70, 50 90 Z" />
+                <path d="M50 20 Q 45 10, 40 5 M 50 20 Q 55 10, 60 5" />
+                <path d="M35 50 Q 25 45, 15 50 Q 25 55, 35 60" />
+                <path d="M65 50 Q 75 45, 85 50 Q 75 55, 65 60" />
+                <circle cx="50" cy="35" r="2" fill="currentColor" />
+            </svg>
+            <svg className={`phoenix-accent absolute bottom-32 left-8 w-20 h-20 ${isDark ? "text-orange-500/15" : "text-orange-600/10"} pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: "3s" }}>
+                <path d="M50 90 Q 30 70, 35 50 Q 40 30, 50 20 Q 60 30, 65 50 Q 70 70, 50 90 Z" />
+                <path d="M35 50 Q 25 45, 15 50 Q 25 55, 35 60" />
+                <path d="M65 50 Q 75 45, 85 50 Q 75 55, 65 60" />
+            </svg>
 
             {/* Desktop Grid Pattern */}
             <div className={`absolute inset-0 pointer-events-none opacity-[0.03] bg-[repeating-linear-gradient(0deg,transparent,transparent_40px,currentColor_40px,currentColor_41px),repeating-linear-gradient(90deg,transparent,transparent_40px,currentColor_40px,currentColor_41px)] ${isDark ? "text-amber-200" : "text-amber-900"}`} />
@@ -270,21 +363,50 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                 <div className="relative max-w-4xl mx-auto min-h-[60vh]">
                     {/* Profile Window */}
                     <WindowChrome id="profile" title={`${studentName} - Profile`} className="window-animate left-0 right-0 mx-auto max-w-md">
-                        <div className="p-6 text-center space-y-4">
-                            <div className={`inline-block p-1 rounded-full ${isDark ? "bg-gradient-to-br from-amber-500 to-orange-600" : "bg-gradient-to-br from-amber-400 to-orange-500"}`}>
-                                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white">
-                                    {studentAvatar ? (
-                                        <Image src={studentAvatar} alt={studentName} width={96} height={96} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full bg-amber-100 flex items-center justify-center text-3xl">🎓</div>
-                                    )}
+                        <div className={`p-6 text-center space-y-4 diploma-border ${isDark ? "text-amber-200" : "text-amber-900"}`}>
+                            {/* Laurel wreath around avatar */}
+                            <div className="relative inline-block">
+                                {/* Left laurel */}
+                                <svg className="laurel-left absolute -left-6 top-1/2 -translate-y-1/2 w-8 h-16 pointer-events-none" viewBox="0 0 32 64" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <path d="M16 60 Q 4 50, 6 30 Q 8 14, 16 4" strokeLinecap="round" />
+                                    <ellipse cx="8" cy="20" rx="5" ry="3" transform="rotate(-30 8 20)" fill="currentColor" opacity="0.4" />
+                                    <ellipse cx="6" cy="30" rx="5" ry="3" transform="rotate(-40 6 30)" fill="currentColor" opacity="0.4" />
+                                    <ellipse cx="6" cy="40" rx="5" ry="3" transform="rotate(-50 6 40)" fill="currentColor" opacity="0.4" />
+                                    <ellipse cx="8" cy="50" rx="5" ry="3" transform="rotate(-60 8 50)" fill="currentColor" opacity="0.4" />
+                                </svg>
+                                {/* Right laurel (mirror) */}
+                                <svg className="laurel-right absolute -right-6 top-1/2 -translate-y-1/2 w-8 h-16 pointer-events-none" viewBox="0 0 32 64" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <path d="M16 60 Q 28 50, 26 30 Q 24 14, 16 4" strokeLinecap="round" />
+                                    <ellipse cx="24" cy="20" rx="5" ry="3" transform="rotate(30 24 20)" fill="currentColor" opacity="0.4" />
+                                    <ellipse cx="26" cy="30" rx="5" ry="3" transform="rotate(40 26 30)" fill="currentColor" opacity="0.4" />
+                                    <ellipse cx="26" cy="40" rx="5" ry="3" transform="rotate(50 26 40)" fill="currentColor" opacity="0.4" />
+                                    <ellipse cx="24" cy="50" rx="5" ry="3" transform="rotate(60 24 50)" fill="currentColor" opacity="0.4" />
+                                </svg>
+                                <div className={`inline-block p-1 rounded-full ${isDark ? "bg-gradient-to-br from-amber-500 to-orange-600" : "bg-gradient-to-br from-amber-400 to-orange-500"}`}>
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white">
+                                        {studentAvatar ? (
+                                            <Image src={studentAvatar} alt={studentName} width={96} height={96} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-amber-100 flex items-center justify-center text-3xl">🎓</div>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* Wax seal stamp */}
+                                <div className="wax-seal absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-white text-[8px] font-bold pointer-events-none">
+                                    <GraduationCap className="w-4 h-4" />
                                 </div>
                             </div>
-                            <div>
-                                <h2 className={`text-xl font-bold ${isDark ? "text-amber-100" : "text-amber-900"}`}>{studentName}</h2>
-                                <p className={`text-sm ${isDark ? "text-amber-300/70" : "text-amber-700"}`}>Lớp {className} • {schoolName}</p>
-                                <p className={`text-xs ${isDark ? "text-amber-400/60" : "text-amber-600"}`}>Niên khóa {graduationYear}</p>
+                            {/* Ribbon banner for name */}
+                            <div className={`relative inline-block ribbon-banner`}>
+                                <div className={`relative px-6 py-1.5 ${isDark ? "bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 text-amber-50" : "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-white"} shadow-md`}>
+                                    <h2 className="text-xl font-bold tracking-wide">{studentName}</h2>
+                                    {/* Ribbon tails */}
+                                    <div className={`absolute -left-2 top-0 bottom-0 w-2 ${isDark ? "bg-amber-900" : "bg-amber-600"}`} style={{ clipPath: "polygon(100% 0, 100% 100%, 0 50%)" }} />
+                                    <div className={`absolute -right-2 top-0 bottom-0 w-2 ${isDark ? "bg-amber-900" : "bg-amber-600"}`} style={{ clipPath: "polygon(0 0, 0 100%, 100% 50%)" }} />
+                                </div>
                             </div>
+                            <p className={`text-sm ${isDark ? "text-amber-300/70" : "text-amber-700"}`}>Lớp {className} • {schoolName}</p>
+                            <p className={`text-xs ${isDark ? "text-amber-400/60" : "text-amber-600"}`}>Niên khóa {graduationYear}</p>
                             <p className={`italic text-sm ${isDark ? "text-amber-200/80" : "text-amber-800"}`}>&ldquo;{slogan}&rdquo;</p>
                             {(dreamJob || dreamUniversity) && (
                                 <div className="flex flex-wrap justify-center gap-2 pt-2">
@@ -338,14 +460,17 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
                             ) : (
                                 <div className="space-y-4">
                                     {data.timelines.map((event) => (
-                                        <div key={event.id} className={`p-4 rounded-xl border ${isDark ? "bg-[#25201b]/50 border-amber-900/20" : "bg-amber-50 border-amber-200"}`}>
-                                            <div className={`text-xs font-semibold mb-1 ${isDark ? "text-amber-400" : "text-amber-600"}`}>
-                                                {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
+                                        <div key={event.id} className={`relative p-4 rounded-xl border ${isDark ? "bg-[#25201b]/50 border-amber-900/20" : "bg-amber-50 border-amber-200"}`}>
+                                            <div className="flex items-start justify-between gap-3 mb-1">
+                                                <div className={`grad-stamp inline-block px-2.5 py-1 rounded border-2 ${isDark ? "border-amber-500/60 text-amber-400 bg-amber-950/30" : "border-amber-600 text-amber-700 bg-amber-100/60"}`} style={{ fontFamily: "'Courier New', monospace" }}>
+                                                    <span className="text-[10px] font-bold tracking-widest uppercase">{new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" })}</span>
+                                                </div>
+                                                <Calendar className={`w-4 h-4 mt-1 ${isDark ? "text-amber-500/60" : "text-amber-500"}`} />
                                             </div>
                                             <h3 className={`font-bold mb-1 ${isDark ? "text-amber-100" : "text-amber-900"}`}>{event.title}</h3>
                                             {event.description && <p className={`text-sm ${isDark ? "text-amber-200/70" : "text-amber-700"}`}>{event.description}</p>}
                                             {event.image_url && (
-                                                <div className="mt-3 rounded-lg overflow-hidden max-w-xs">
+                                                <div className="mt-3 rounded-lg overflow-hidden max-w-xs border-2 border-double" style={{ borderColor: isDark ? "rgba(217, 119, 6, 0.3)" : "rgba(180, 83, 9, 0.3)" }}>
                                                     <Image src={event.image_url} alt={event.title} width={200} height={150} className="w-full h-auto" />
                                                 </div>
                                             )}
