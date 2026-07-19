@@ -172,10 +172,109 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                 .page-flip-right { animation: page-flip-right 0.4s ease-in forwards; transform-origin: left center; }
                 .page-flip-left { animation: page-flip-left 0.4s ease-in forwards; transform-origin: right center; }
                 .page-appear { animation: page-appear 0.3s ease-out forwards; }
+                @keyframes chalkDraw {
+                    0% { stroke-dashoffset: 200; opacity: 0; }
+                    100% { stroke-dashoffset: 0; opacity: 0.7; }
+                }
+                .chalk-doodle { stroke-dasharray: 200; animation: chalkDraw 1.5s ease-out 0.3s both; }
+                @keyframes pushpinWobble {
+                    0%, 100% { transform: rotate(var(--pin-rot, -5deg)); }
+                    50% { transform: rotate(calc(var(--pin-rot, -5deg) + 3deg)); }
+                }
+                .pushpin-wobble { animation: pushpinWobble 4s ease-in-out infinite; transform-origin: bottom center; }
+                .corkboard-texture {
+                    background-color: #d4a574;
+                    background-image:
+                        radial-gradient(circle at 2px 2px, rgba(80, 40, 10, 0.25) 1px, transparent 1.5px),
+                        radial-gradient(circle at 5px 7px, rgba(100, 50, 15, 0.18) 1px, transparent 1.5px),
+                        radial-gradient(circle at 9px 3px, rgba(120, 60, 20, 0.15) 1px, transparent 1.5px),
+                        radial-gradient(circle at 13px 11px, rgba(80, 40, 10, 0.2) 1px, transparent 1.5px),
+                        radial-gradient(circle at 7px 15px, rgba(100, 50, 15, 0.18) 1px, transparent 1.5px),
+                        linear-gradient(135deg, rgba(160, 100, 50, 0.08) 0%, transparent 50%),
+                        linear-gradient(45deg, rgba(120, 70, 30, 0.06) 0%, transparent 50%);
+                    background-size: 16px 16px, 18px 18px, 20px 20px, 22px 22px, 17px 17px, 100% 100%, 100% 100%;
+                }
+                .corkboard-texture-light {
+                    background-color: #e8c89c;
+                    background-image:
+                        radial-gradient(circle at 2px 2px, rgba(120, 60, 20, 0.18) 1px, transparent 1.5px),
+                        radial-gradient(circle at 5px 7px, rgba(140, 70, 25, 0.13) 1px, transparent 1.5px);
+                    background-size: 16px 16px, 18px 18px;
+                }
+                .pushpin {
+                    position: absolute;
+                    top: -6px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 14px;
+                    height: 14px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle at 30% 30%, #fef9c3, #ef4444 50%, #991b1b 100%);
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.4);
+                    z-index: 5;
+                }
+                .pushpin-blue { background: radial-gradient(circle at 30% 30%, #bfdbfe, #3b82f6 50%, #1e40af 100%); }
+                .pushpin-green { background: radial-gradient(circle at 30% 30%, #bbf7d0, #22c55e 50%, #15803d 100%); }
+                .pushpin-yellow { background: radial-gradient(circle at 30% 30%, #fef9c3, #eab308 50%, #a16207 100%); }
+                .sticky-note {
+                    background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+                    box-shadow: 2px 2px 6px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.5);
+                    position: relative;
+                }
+                .sticky-note::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    right: 0;
+                    width: 20px;
+                    height: 20px;
+                    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.08) 50%);
+                }
+                .chalkboard-strip {
+                    background: #1a2a1f;
+                    background-image:
+                        radial-gradient(circle at 10% 30%, rgba(255,255,255,0.04) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.03) 0%, transparent 40%);
+                    border: 4px solid #78350f;
+                    box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+                }
+                .roster-stamp {
+                    border: 3px solid currentColor;
+                    padding: 4px 12px;
+                    font-family: 'Courier New', monospace;
+                    font-weight: bold;
+                    letter-spacing: 0.15em;
+                    text-transform: uppercase;
+                    transform: rotate(-6deg);
+                    opacity: 0.75;
+                    position: relative;
+                    display: inline-block;
+                }
+                .roster-stamp::before {
+                    content: '';
+                    position: absolute;
+                    inset: 2px;
+                    border: 1px dashed currentColor;
+                    opacity: 0.5;
+                }
             `}</style>
 
             {/* Chalk dust texture */}
             <div className={`absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-[0.05] bg-[radial-gradient(${isDark ? "#ffffff" : "#000000"}_1px,transparent_1px)] bg-[size:16px_16px]`} />
+
+            {/* Chalk doodle accents in corners */}
+            <svg className={`chalk-doodle absolute top-16 left-4 w-20 h-12 ${isDark ? "text-white/30" : "text-slate-400/40"} pointer-events-none z-0`} viewBox="0 0 80 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M4 24 Q 20 4, 40 24 T 76 24" />
+                <path d="M40 24 l -4 -6 m 4 6 l -8 -2" />
+                <circle cx="68" cy="14" r="3" />
+            </svg>
+            <svg className={`chalk-doodle absolute top-20 right-4 w-16 h-16 ${isDark ? "text-yellow-300/30" : "text-amber-500/40"} pointer-events-none z-0`} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ animationDelay: "0.4s" }}>
+                <path d="M32 8 l 4 12 l 12 4 l -12 4 l -4 12 l -4 -12 l -12 -4 l 12 -4 z" />
+            </svg>
+            <svg className={`chalk-doodle absolute bottom-28 left-4 w-16 h-20 ${isDark ? "text-pink-300/30" : "text-rose-400/40"} pointer-events-none z-0`} viewBox="0 0 64 80" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ animationDelay: "0.7s" }}>
+                <path d="M32 72 C 12 72, 12 48, 32 48 C 52 48, 52 72, 32 72 Z" />
+                <path d="M32 48 V 32 M 26 38 H 38" />
+            </svg>
 
             {/* Top Bar */}
             <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-2">
@@ -235,20 +334,29 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
 
                         {/* COVER PAGE */}
                         {currentPage === "cover" && (
-                            <div className="text-center space-y-8 py-8">
-                                <div className={`inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${isDark ? "bg-emerald-100 text-emerald-800" : "bg-emerald-700 text-white"}`}>
-                                    Niên khóa {graduationYear}
+                            <div className="text-center space-y-6 py-6">
+                                {/* Chalkboard header */}
+                                <div className="chalkboard-strip rounded-lg px-4 py-3 mx-auto max-w-md">
+                                    <p className="text-xs font-mono text-yellow-200/80 tracking-widest uppercase mb-1">Class of</p>
+                                    <h1 className="text-3xl sm:text-4xl font-black text-white" style={{ fontFamily: "'Courier New', monospace", textShadow: "0 0 8px rgba(255,255,255,0.3)" }}>{graduationYear}</h1>
                                 </div>
-                                <div className="space-y-3">
-                                    <h1 className="text-4xl sm:text-5xl font-black text-slate-800">{className}</h1>
-                                    <p className="text-lg text-slate-600 font-medium">{schoolName}</p>
+
+                                <div className={`roster-stamp ${isDark ? "text-emerald-700" : "text-amber-700"}`}>
+                                    Graduated ✓
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h1 className="text-3xl sm:text-4xl font-black text-slate-800">{className}</h1>
+                                    <p className="text-base text-slate-600 font-medium">{schoolName}</p>
                                 </div>
                                 <div className={`w-24 h-1 mx-auto rounded-full ${isDark ? "bg-emerald-600" : "bg-amber-500"}`} />
-                                <p className="italic text-slate-500 max-w-md mx-auto text-lg font-serif">&ldquo;{slogan}&rdquo;</p>
+                                <p className="italic text-slate-500 max-w-md mx-auto text-base font-serif">&ldquo;{slogan}&rdquo;</p>
 
-                                {/* Teacher Card */}
-                                <div className="max-w-sm mx-auto mt-8">
-                                    <div className={`p-5 rounded-xl border-2 border-dashed ${isDark ? "border-emerald-200 bg-emerald-50/50" : "border-amber-300 bg-amber-50/50"}`}>
+                                {/* Teacher Card - sticky note style */}
+                                <div className="max-w-sm mx-auto mt-6 relative">
+                                    <div className="sticky-note rounded-sm p-5 rotate-[-1deg] text-left relative">
+                                        {/* Tape on top */}
+                                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-blue-200/60 border border-blue-300/40 shadow-sm" />
                                         <div className="flex items-center gap-4">
                                             <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0">
                                                 {teacherAvatar ? (
@@ -257,12 +365,12 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                                     <div className="w-full h-full bg-emerald-100 flex items-center justify-center text-xl">👩‍🏫</div>
                                                 )}
                                             </div>
-                                            <div className="text-left">
-                                                <p className="text-xs text-slate-500 font-medium">GVCN</p>
+                                            <div>
+                                                <p className="text-xs text-slate-600 font-medium">GVCN</p>
                                                 <p className="font-bold text-slate-800">{teacherName}</p>
                                             </div>
                                         </div>
-                                        <p className="mt-3 text-sm italic text-slate-600">&ldquo;{teacherMessage}&rdquo;</p>
+                                        <p className="mt-3 text-sm italic text-slate-700">&ldquo;{teacherMessage}&rdquo;</p>
                                     </div>
                                 </div>
 
@@ -284,26 +392,37 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                     <h2 className="text-2xl font-black text-slate-800">Thành Viên Lớp</h2>
                                     <p className="text-sm text-slate-500">{members.length} thành viên</p>
                                 </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    {members.map((member, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setSelectedMember(member)}
-                                            className="group text-center"
-                                        >
-                                            <div className={`relative mx-auto w-20 h-20 rounded-lg overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all group-hover:scale-105 ${idx % 2 === 0 ? "rotate-[-2deg]" : "rotate-[2deg]"} ${isDark ? "border-emerald-200 bg-white" : "border-amber-300 bg-white"}`}>
-                                                {member.avatar ? (
-                                                    <Image src={member.avatar} alt={member.name} fill className="object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-amber-100 flex items-center justify-center text-2xl font-bold text-slate-400">
-                                                        {member.name.charAt(0)}
+                                {/* Corkboard pinned members */}
+                                <div className={`relative rounded-xl p-4 ${isDark ? "corkboard-texture" : "corkboard-texture-light"} shadow-inner`}>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+                                        {members.map((member, idx) => {
+                                            const pinColors = ["", "pushpin-blue", "pushpin-green", "pushpin-yellow"];
+                                            const pinColor = pinColors[idx % 4];
+                                            const rot = idx % 2 === 0 ? -2 : 2;
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setSelectedMember(member)}
+                                                    className="group text-center relative pushpin-wobble"
+                                                    style={{ "--pin-rot": `${rot}deg` } as React.CSSProperties}
+                                                >
+                                                    {/* Pushpin */}
+                                                    <span className={`pushpin ${pinColor}`} />
+                                                    <div className={`relative mx-auto w-20 h-20 rounded-lg overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all group-hover:scale-105 ${isDark ? "border-emerald-200 bg-white" : "border-amber-300 bg-white"}`}>
+                                                        {member.avatar ? (
+                                                            <Image src={member.avatar} alt={member.name} fill className="object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-amber-100 flex items-center justify-center text-2xl font-bold text-slate-400">
+                                                                {member.name.charAt(0)}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                )}
-                                            </div>
-                                            <p className="mt-2 text-xs font-bold text-slate-700 truncate">{member.name}</p>
-                                            {member.role && <p className="text-[10px] text-slate-500">{member.role}</p>}
-                                        </button>
-                                    ))}
+                                                    <p className="mt-2 text-xs font-bold text-slate-800 truncate bg-white/80 px-1 rounded">{member.name}</p>
+                                                    {member.role && <p className="text-[10px] text-slate-700 bg-white/60 px-1 rounded">{member.role}</p>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -328,8 +447,9 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                                 <div
                                                     key={item.id}
                                                     onClick={() => openLightbox(index)}
-                                                    className={`${rotations[index % 4]} hover:rotate-0 transition-all duration-300 cursor-pointer group`}
+                                                    className={`${rotations[index % 4]} hover:rotate-0 transition-all duration-300 cursor-pointer group relative`}
                                                 >
+                                                    <span className={`pushpin ${["", "pushpin-blue", "pushpin-green"][index % 3]}`} />
                                                     <div className="bg-white p-2 pb-4 rounded-lg shadow-md hover:shadow-xl border border-slate-100">
                                                         <div className="relative aspect-square rounded overflow-hidden">
                                                             <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover" />
@@ -424,7 +544,9 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                         </div>
                         {selectedMember.quote && (
                             <div className="p-5">
-                                <p className="italic text-slate-600 text-center">&ldquo;{selectedMember.quote}&rdquo;</p>
+                                <div className="sticky-note rounded-sm p-4 rotate-[1deg]">
+                                    <p className="italic text-slate-700 text-center font-serif">&ldquo;{selectedMember.quote}&rdquo;</p>
+                                </div>
                             </div>
                         )}
                         <div className="p-4 flex justify-center">
