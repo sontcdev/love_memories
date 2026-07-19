@@ -215,7 +215,109 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                     100% { opacity: 1; transform: translateY(0); }
                 }
                 .fade-slide { animation: fade-slide 0.4s ease-out; }
+                @keyframes compassSpin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .compass-spin { animation: compassSpin 60s linear infinite; transform-origin: center; }
+                @keyframes roadDash {
+                    0% { stroke-dashoffset: 0; }
+                    100% { stroke-dashoffset: -40; }
+                }
+                .road-path-dash { stroke-dasharray: 10 10; animation: roadDash 2s linear infinite; }
+                @keyframes postmarkInk {
+                    0% { opacity: 0; transform: scale(1.4) rotate(-25deg); }
+                    100% { opacity: 0.75; transform: scale(1) rotate(-12deg); }
+                }
+                .travel-stamp { animation: postmarkInk 0.5s ease-out both; }
+                .highway-sign {
+                    position: relative;
+                    background: linear-gradient(180deg, var(--sign-bg, #1e40af) 0%, var(--sign-bg-2, #1e3a8a) 100%);
+                    border: 3px solid #fff;
+                    border-radius: 6px;
+                    padding: 8px 20px;
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+                    display: inline-block;
+                }
+                .highway-sign::before, .highway-sign::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -12px;
+                    width: 4px;
+                    height: 12px;
+                    background: #6b7280;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                }
+                .highway-sign::before { left: 20%; }
+                .highway-sign::after { right: 20%; }
+                .postcard-frame {
+                    background: white;
+                    padding: 8px 8px 24px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    position: relative;
+                }
+                .postcard-frame::after {
+                    content: '';
+                    position: absolute;
+                    right: 12px;
+                    top: 12px;
+                    width: 36px;
+                    height: 44px;
+                    background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(0,0,0,0.08) 4px 8px);
+                    border: 1px dashed rgba(0,0,0,0.2);
+                    opacity: 0;
+                }
+                .luggage-tag {
+                    position: relative;
+                    background: white;
+                    border-radius: 8px 8px 8px 24px;
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+                    border: 1px solid rgba(0,0,0,0.08);
+                }
+                .luggage-tag::before {
+                    content: '';
+                    position: absolute;
+                    top: 8px;
+                    left: -6px;
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background: var(--tag-hole-bg, #f3f4f6);
+                    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.15);
+                }
+                .luggage-tag-string {
+                    position: absolute;
+                    top: 4px;
+                    left: -16px;
+                    width: 20px;
+                    height: 16px;
+                    border: 1.5px solid rgba(120, 80, 40, 0.5);
+                    border-radius: 50%;
+                    border-left-color: transparent;
+                    border-bottom-color: transparent;
+                    transform: rotate(-30deg);
+                    pointer-events: none;
+                }
             `}</style>
+
+            {/* Winding road SVG background */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-[0.06]" preserveAspectRatio="none" viewBox="0 0 400 800">
+                <path className="road-path-dash" d="M50 0 Q 150 100, 100 250 T 300 500 T 150 800" stroke="currentColor" strokeWidth="2" fill="none" />
+                <path className="road-path-dash" d="M350 0 Q 250 150, 320 300 T 100 600 T 280 800" stroke="currentColor" strokeWidth="1.5" fill="none" style={{ animationDelay: "0.5s" }} />
+            </svg>
+
+            {/* Compass rose accent */}
+            <svg className={`compass-spin absolute top-20 right-8 w-20 h-20 ${isDark ? "text-white/10" : "text-white/20"} pointer-events-none z-0`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1">
+                <circle cx="50" cy="50" r="45" />
+                <circle cx="50" cy="50" r="35" strokeDasharray="2 4" opacity="0.5" />
+                <path d="M50 5 L 55 50 L 50 95 L 45 50 Z" fill="currentColor" opacity="0.3" />
+                <path d="M5 50 L 50 55 L 95 50 L 50 45 Z" fill="currentColor" opacity="0.2" />
+                <text x="50" y="14" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none">N</text>
+                <text x="50" y="92" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none">S</text>
+                <text x="10" y="54" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none">W</text>
+                <text x="90" y="54" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none">E</text>
+            </svg>
 
             {/* Top Bar */}
             <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-2">
@@ -283,28 +385,27 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                             <div className="absolute -bottom-2 -right-2 car-drive text-2xl">🚗</div>
                         </div>
 
-                        <div className="space-y-3">
-                            <h1 className={`text-3xl sm:text-4xl font-black ${isDark ? "text-white" : "text-white"}`}>{title}</h1>
-                            <p className={`text-lg ${isDark ? "text-white/70" : "text-white/80"}`}>{groupName}</p>
-                            <p className={`italic max-w-md mx-auto ${isDark ? "text-white/50" : "text-white/60"}`}>&ldquo;{slogan}&rdquo;</p>
+                        {/* Highway sign for title */}
+                        <div className="highway-sign" style={{ "--sign-bg": theme.accentColor, "--sign-bg-2": theme.accentColor } as React.CSSProperties}>
+                            <h1 className="text-2xl sm:text-3xl font-black tracking-wide">{title}</h1>
                         </div>
 
+                        <p className={`text-lg ${isDark ? "text-white/70" : "text-white/80"}`}>{groupName}</p>
+                        <p className={`italic max-w-md mx-auto ${isDark ? "text-white/50" : "text-white/60"}`}>&ldquo;{slogan}&rdquo;</p>
+
+                        {/* Mileage markers for stats */}
                         <div className="flex flex-wrap justify-center gap-3">
-                            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${theme.cardBg} backdrop-blur-md border border-white/10`}>
-                                <Users className={`w-4 h-4 ${theme.mutedText}`} />
-                                <span className={`text-sm font-bold ${theme.textColor}`}>{members.length}</span>
-                                <span className={`text-xs ${theme.mutedText}`}>thành viên</span>
-                            </div>
-                            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${theme.cardBg} backdrop-blur-md border border-white/10`}>
-                                <ImageIcon className={`w-4 h-4 ${theme.mutedText}`} />
-                                <span className={`text-sm font-bold ${theme.textColor}`}>{data.galleries.length}</span>
-                                <span className={`text-xs ${theme.mutedText}`}>ảnh</span>
-                            </div>
-                            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${theme.cardBg} backdrop-blur-md border border-white/10`}>
-                                <Calendar className={`w-4 h-4 ${theme.mutedText}`} />
-                                <span className={`text-sm font-bold ${theme.textColor}`}>{data.timelines.length}</span>
-                                <span className={`text-xs ${theme.mutedText}`}>kỷ niệm</span>
-                            </div>
+                            {[
+                                { icon: Users, value: members.length, label: "thành viên" },
+                                { icon: ImageIcon, value: data.galleries.length, label: "ảnh" },
+                                { icon: Calendar, value: data.timelines.length, label: "kỷ niệm" },
+                            ].map((stat, i) => (
+                                <div key={i} className={`flex items-center gap-2 px-4 py-2 rounded-xl ${theme.cardBg} backdrop-blur-md border border-white/10`}>
+                                    <stat.icon className={`w-4 h-4 ${theme.mutedText}`} />
+                                    <span className={`text-sm font-bold ${theme.textColor}`}>{stat.value}</span>
+                                    <span className={`text-xs ${theme.mutedText}`}>{stat.label}</span>
+                                </div>
+                            ))}
                         </div>
 
                         <button onClick={() => goToStop("crew")} className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white transition-all hover:scale-105 ${theme.stopColor} shadow-lg`}>
@@ -326,8 +427,10 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                 <button
                                     key={member.id || idx}
                                     onClick={() => setSelectedMember(member)}
-                                    className={`${theme.cardBg} backdrop-blur-md rounded-xl p-4 border border-white/10 text-center hover:scale-105 transition-all`}
+                                    className={`luggage-tag ${theme.cardBg} backdrop-blur-md p-4 pr-5 pl-6 border border-white/10 text-center hover:scale-105 transition-all ml-2`}
+                                    style={{ "--tag-hole-bg": isDark ? "#1a103c" : "#f3f4f6" } as React.CSSProperties}
                                 >
+                                    <span className="luggage-tag-string" />
                                     <div className="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-white/20 shadow-md">
                                         {member.avatar ? (
                                             <Image src={member.avatar} alt={member.name} width={64} height={64} className="w-full h-full object-cover" />
@@ -359,18 +462,21 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                {data.galleries.map((item, index) => (
-                                    <div
-                                        key={item.id}
-                                        onClick={() => openLightbox(index)}
-                                        className={`${theme.cardBg} backdrop-blur-md p-2 pb-4 rounded-xl border border-white/10 shadow-lg hover:scale-105 transition-all cursor-pointer`}
-                                    >
-                                        <div className="relative aspect-square rounded-lg overflow-hidden">
-                                            <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover" />
+                                {data.galleries.map((item, index) => {
+                                    const rotations = ["rotate-[-2deg]", "rotate-[1deg]", "rotate-[2deg]", "rotate-[-1deg]"];
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => openLightbox(index)}
+                                            className={`postcard-frame ${rotations[index % 4]} hover:rotate-0 transition-all duration-300 cursor-pointer`}
+                                        >
+                                            <div className="relative aspect-square rounded-lg overflow-hidden">
+                                                <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover" />
+                                            </div>
+                                            {item.caption && <p className={`text-center text-xs mt-2 truncate ${theme.mutedText} font-serif italic`}>{item.caption}</p>}
                                         </div>
-                                        {item.caption && <p className={`text-center text-xs mt-2 truncate ${theme.mutedText}`}>{item.caption}</p>}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -396,8 +502,11 @@ export function GradGroupTemplate({ data, slug }: GradGroupTemplateProps) {
                                         <div key={event.id} className="relative">
                                             <div className={`absolute -left-5 top-2 w-4 h-4 rounded-full ${theme.stopColor} border-2 border-white shadow-md`} />
                                             <div className={`${theme.cardBg} backdrop-blur-md rounded-xl p-4 border border-white/10`}>
-                                                <div className={`text-xs font-bold mb-1 ${theme.mutedText}`}>
-                                                    {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
+                                                <div className="flex items-start justify-between gap-3 mb-1">
+                                                    <div className={`travel-stamp inline-block px-2 py-1 rounded border-2 ${isDark ? "border-amber-500/60 text-amber-300 bg-amber-950/30" : "border-amber-600 text-amber-700 bg-amber-50/60"}`} style={{ fontFamily: "'Courier New', monospace" }}>
+                                                        <span className="text-[10px] font-bold tracking-widest uppercase">{new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" })}</span>
+                                                    </div>
+                                                    <MapPin className={`w-4 h-4 mt-1 ${theme.mutedText}`} />
                                                 </div>
                                                 <h3 className={`font-bold text-lg ${theme.textColor}`}>{event.title}</h3>
                                                 {event.description && <p className={`text-sm mt-1 ${theme.mutedText}`}>{event.description}</p>}
