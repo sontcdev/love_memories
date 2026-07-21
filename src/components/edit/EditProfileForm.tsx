@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
-import { updateLinkProfile, LoveProfileData, IdolProfileData, WeddingProfileData, TravelProfileData, FriendshipProfileData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Heart, Camera } from "lucide-react";
+import { updateLinkProfile, LoveProfileData, IdolProfileData, WeddingProfileData, TravelProfileData, FriendshipProfileData, EveryProfileData } from "@/app/actions/profile-actions";
+import { Save, Loader2, Heart, Camera, LayoutGrid } from "lucide-react";
 import { EditIdolProfileForm } from "./EditIdolProfileForm";
 import { EditGradProfileForm } from "./EditGradProfileForm";
 import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
@@ -29,6 +29,14 @@ const loveProfileSchema = z.object({
 
 type LoveFormData = z.infer<typeof loveProfileSchema>;
 
+const everyProfileSchema = z.object({
+    group_name: z.string().min(1, "Bắt buộc").max(50),
+    owner_name: z.string().max(50).optional(),
+    title: z.string().max(100).optional(),
+    short_note: z.string().max(200).optional(),
+});
+
+type EveryFormData = z.infer<typeof everyProfileSchema>;
 
 
 // ============================================================================
@@ -53,6 +61,20 @@ export function EditProfileForm({ slug, linkType, initialData, isDark = false, o
             <LoveProfileForm
                 slug={slug}
                 initialData={initialData as LoveProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                message={message}
+                setMessage={setMessage}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "EVERY") {
+        return (
+            <EveryProfileForm
+                slug={slug}
+                initialData={initialData as EveryProfileData}
                 isSubmitting={isSubmitting}
                 setIsSubmitting={setIsSubmitting}
                 message={message}
@@ -509,6 +531,111 @@ function LoveProfileForm({
                         Lưu thay đổi
                     </>
                 )}
+            </button>
+        </form>
+    );
+}
+
+function EveryProfileForm({
+    slug,
+    initialData,
+    isSubmitting,
+    setIsSubmitting,
+    message,
+    setMessage,
+    onSuccess,
+}: FormProps<EveryProfileData>) {
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<EveryFormData>({
+        resolver: zodResolver(everyProfileSchema),
+        defaultValues: {
+            group_name: initialData?.group_name || "",
+            owner_name: initialData?.owner_name || "",
+            title: initialData?.title || "",
+            short_note: initialData?.short_note || "",
+        },
+    });
+
+    const onSubmit = async (data: EveryFormData) => {
+        setIsSubmitting(true);
+        setMessage(null);
+
+        const result = await updateLinkProfile(slug, data);
+
+        if (result.success) {
+            setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
+            onSuccess?.();
+        } else {
+            setMessage({ type: "error", text: result.error || "Không thể cập nhật" });
+        }
+
+        setIsSubmitting(false);
+    };
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="mb-4 flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5 text-teal-500" />
+                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ kỷ niệm chung</h3>
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Tên nhóm / sự kiện <span className="text-red-500">*</span>
+                </label>
+                <input
+                    {...register("group_name")}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Our Memories"
+                />
+                {errors.group_name && <p className="mt-1 text-sm text-red-500">{errors.group_name.message}</p>}
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Người tạo / đại diện</label>
+                <input
+                    {...register("owner_name")}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Tên người tạo trang"
+                />
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Tiêu đề trang</label>
+                <input
+                    {...register("title")}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Không gian kỷ niệm"
+                />
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Mô tả ngắn</label>
+                <textarea
+                    {...register("short_note")}
+                    rows={3}
+                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Trang này lưu lại điều gì?"
+                />
+                {errors.short_note && <p className="mt-1 text-sm text-red-500">{errors.short_note.message}</p>}
+            </div>
+
+            {message && (
+                <div className={`rounded-lg border p-3 text-sm ${message.type === "success" ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+                    {message.text}
+                </div>
+            )}
+
+            <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-500 py-3 font-semibold text-white shadow-md transition-all hover:bg-teal-600 disabled:opacity-50"
+            >
+                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
             </button>
         </form>
     );

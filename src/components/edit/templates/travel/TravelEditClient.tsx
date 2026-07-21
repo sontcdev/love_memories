@@ -13,7 +13,7 @@ import {
     type TemplateEditProps,
 } from "@/components/edit/templates/shared";
 
-const tabs = tabsOf(["timeline", "gallery", "profile", "settings"]);
+const tabs = tabsOf(["timeline", "features", "gallery", "profile", "settings"]);
 
 export function TravelEditClient({ slug, linkData }: TemplateEditProps) {
     const state = useTemplateEditState({ slug, linkData, tabs });

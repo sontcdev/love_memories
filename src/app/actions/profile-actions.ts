@@ -200,7 +200,14 @@ export interface FriendshipProfileData {
     };
 }
 
-export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData | WeddingProfileData | TravelProfileData | FriendshipProfileData;
+export interface EveryProfileData {
+    group_name?: string;
+    owner_name?: string;
+    title?: string;
+    short_note?: string;
+}
+
+export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData | WeddingProfileData | TravelProfileData | FriendshipProfileData | EveryProfileData;
 
 export interface LinkConfigData {
     background_color?: string;

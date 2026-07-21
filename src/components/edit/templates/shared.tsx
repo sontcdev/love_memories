@@ -12,6 +12,7 @@ import {
     Moon,
     QrCode,
     Settings,
+    Sparkles,
     Sun,
     User,
     type LucideIcon,
@@ -23,6 +24,7 @@ import { EditProfileForm } from "@/components/edit/EditProfileForm";
 import { GalleryManager } from "@/components/edit/GalleryManager";
 import { TimelineManager } from "@/components/edit/TimelineManager";
 import { EditTemplateLoading } from "@/app/[slug]/edit/edit-template-loading";
+import { TemplateFeaturePanel } from "@/components/edit/templates/TemplateFeaturePanel";
 
 export type LinkWithRelations = PrismaLink & {
     config: LinkConfig | null;
@@ -36,7 +38,7 @@ export interface TemplateEditProps {
     linkData: LinkWithRelations;
 }
 
-export type EditTabId = "profile" | "gallery" | "timeline" | "settings";
+export type EditTabId = "profile" | "features" | "gallery" | "timeline" | "settings";
 
 export interface EditTab {
     id: EditTabId;
@@ -53,6 +55,13 @@ export const EDIT_TABS: Record<EditTabId, EditTab> = {
         shortLabel: "Hồ sơ",
         description: "Cập nhật thông tin hồ sơ",
         icon: User,
+    },
+    features: {
+        id: "features",
+        label: "Tính năng riêng",
+        shortLabel: "Tính năng",
+        description: "Cấu hình điểm nhấn theo template",
+        icon: Sparkles,
     },
     gallery: {
         id: "gallery",
@@ -267,6 +276,10 @@ export function EditFormContent({
 
     if (activeTab === "timeline") {
         return <TimelineManager slug={slug} initialTimeline={linkData.timelines} isDark={isDark} />;
+    }
+
+    if (activeTab === "features") {
+        return <TemplateFeaturePanel slug={slug} linkData={linkData} isDark={isDark} />;
     }
 
     if (activeTab === "settings") {
