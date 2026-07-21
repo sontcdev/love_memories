@@ -23,6 +23,7 @@ import { FriendshipTemplate } from "@/components/templates/friendship/Friendship
 import { FriendshipLockScreen } from "@/components/templates/friendship/FriendshipLockScreen";
 import { getLinkData } from "@/app/actions/auth-actions";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -52,19 +53,24 @@ interface SlugPageClientProps {
 export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkData, publicData }: SlugPageClientProps) {
     const [authenticated, setAuthenticated] = useState(isAuthenticated);
     const [linkData, setLinkData] = useState<LinkWithRelations | null>(initialLinkData);
+    const [isUnlocking, setIsUnlocking] = useState(false);
     const musicPlayerRef = useRef<MusicPlayerRef>(null);
 
     const handleUnlock = useCallback(async () => {
+        setIsUnlocking(true);
         try {
             const result = await getLinkData(slug);
             if (result.success && result.data) {
                 setLinkData(result.data as LinkWithRelations);
                 setAuthenticated(true);
+                return;
             } else {
                 window.location.reload();
             }
         } catch {
             window.location.reload();
+        } finally {
+            setIsUnlocking(false);
         }
     }, [slug]);
 
@@ -122,7 +128,10 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
 
         return (
             <ThemeWrapper config={lockScreenData.config} type={lockScreenData.type}>
-                {renderLockScreen(lockScreenData)}
+                <>
+                    {renderLockScreen(lockScreenData)}
+                    {isUnlocking && <UnlockLoadingOverlay />}
+                </>
             </ThemeWrapper>
         );
     }
@@ -219,5 +228,21 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 )} */}
             </>
         </ThemeWrapper>
+    );
+}
+
+function UnlockLoadingOverlay() {
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm">
+            <div className="flex w-full max-w-xs flex-col items-center gap-4 rounded-3xl border border-white/20 bg-white/95 p-7 text-center shadow-2xl">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-pink-50">
+                    <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
+                </div>
+                <div>
+                    <p className="text-base font-bold text-gray-900">Đang mở khóa trang...</p>
+                    <p className="mt-1 text-sm text-gray-500">Đang tải kỷ niệm và chuẩn bị giao diện.</p>
+                </div>
+            </div>
+        </div>
     );
 }

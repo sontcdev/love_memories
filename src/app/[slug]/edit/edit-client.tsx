@@ -58,6 +58,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
     const isWedding = linkData.type === "WEDDING";
     const isTravel = linkData.type === "TRAVEL";
     const isFriendship = linkData.type === "FRIENDSHIP";
+    const isEvery = linkData.type === "EVERY";
 
     let gradTheme = "emerald";
     if (linkData.type === "GRAD_CLASS") {
@@ -177,6 +178,13 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
     let headerTextClass = isDark ? "text-white" : "text-gray-800";
     let headerBackLinkClass = isDark ? "hover:bg-slate-800 text-purple-400" : "hover:bg-gray-100 text-gray-600";
     let headerViewLinkClass = isDark ? "text-purple-300 hover:text-white" : "text-gray-600 hover:text-gray-800";
+    let navClass = "grid grid-cols-2 md:flex md:flex-col gap-2";
+    let editTitle = "Chỉnh sửa trang";
+    let editSubtitle = "Cập nhật nội dung và giao diện";
+    let contentKicker = "Bảng điều khiển";
+    let contentIntroClass = `mb-6 rounded-2xl border p-4 ${
+        isDark ? "border-white/10 bg-white/5 text-white" : "border-gray-100 bg-white/70 text-gray-800"
+    }`;
 
     if (isGrad) {
         if (gradTheme === "emerald") {
@@ -265,6 +273,35 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
             headerBackLinkClass = "hover:bg-black/10 text-current";
             headerViewLinkClass = "text-current opacity-80 hover:opacity-100";
         }
+        editTitle = linkData.type === "GRAD_PERSONAL"
+            ? "Bàn tốt nghiệp cá nhân"
+            : linkData.type === "GRAD_CLASS"
+                ? "Bảng kỷ yếu lớp"
+                : "Trạm thanh xuân nhóm";
+        editSubtitle = linkData.type === "GRAD_GROUP"
+            ? "Quản lý thành viên, mục tiêu và hành trình nhóm"
+            : "Chỉnh hồ sơ, ảnh và dòng thời gian tốt nghiệp";
+        contentKicker = gradTheme === "chalkboard"
+            ? "Phấn bảng"
+            : gradTheme === "station"
+                ? "Nhà ga ký ức"
+                : gradTheme === "scrapbook"
+                    ? "Trang lưu bút"
+                    : "Sổ tay tốt nghiệp";
+        navClass = "grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-3";
+        contentIntroClass = isDark
+            ? "mb-6 rounded-sm border border-white/10 bg-black/20 p-4 shadow-inner text-current"
+            : "mb-6 rounded-sm border border-black/10 bg-white/40 p-4 shadow-inner text-current";
+    }
+
+    if (isIdol) {
+        editTitle = "Backstage fanzone";
+        editSubtitle = "Chỉnh sân khấu, hồ sơ idol và khoảnh khắc fan";
+        contentKicker = "Stage manager";
+        navClass = "grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-3";
+        contentIntroClass = isDark
+            ? "mb-6 rounded-2xl border border-fuchsia-400/20 bg-slate-950/45 p-4 text-purple-100 shadow-[0_0_24px_rgba(168,85,247,0.12)]"
+            : "mb-6 rounded-2xl border border-purple-100 bg-white/85 p-4 text-purple-900 shadow-[0_14px_34px_rgba(168,85,247,0.10)]";
     }
 
     if (isLove) {
@@ -276,6 +313,11 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         headerTextClass = "text-rose-800";
         headerBackLinkClass = "hover:bg-rose-50 text-rose-600";
         headerViewLinkClass = "text-rose-600 hover:text-rose-800";
+        editTitle = "Cuốn sổ tình yêu";
+        editSubtitle = "Chỉnh câu chuyện, ảnh và lá thư của hai người";
+        contentKicker = "Love editor";
+        navClass = "grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-2";
+        contentIntroClass = "mb-6 rounded-[2rem] border border-rose-100 bg-gradient-to-r from-white to-rose-50/80 p-4 text-rose-900 shadow-sm";
     }
 
     if (isLove2) {
@@ -287,6 +329,11 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         headerTextClass = "text-amber-800";
         headerBackLinkClass = "hover:bg-amber-50 text-amber-600";
         headerViewLinkClass = "text-amber-600 hover:text-amber-800";
+        editTitle = "Bàn scrapbook";
+        editSubtitle = "Sắp ảnh polaroid, ghi chú và dòng ký ức";
+        contentKicker = "Craft desk";
+        navClass = "grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-3";
+        contentIntroClass = "mb-6 rotate-[-0.5deg] rounded-xl border-2 border-dashed border-amber-300 bg-[#fff7d6] p-4 text-amber-950 shadow-[6px_8px_0_rgba(217,119,6,0.10)]";
     }
 
     if (isWedding) {
@@ -298,6 +345,11 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         headerTextClass = "text-amber-800";
         headerBackLinkClass = "hover:bg-amber-50 text-amber-600";
         headerViewLinkClass = "text-amber-600 hover:text-amber-800";
+        editTitle = "Thiệp cưới";
+        editSubtitle = "Chỉnh lời mời, album và dấu mốc của ngày cưới";
+        contentKicker = "Invitation suite";
+        navClass = "grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-2";
+        contentIntroClass = "mb-6 rounded-sm border border-amber-200 bg-white/85 p-4 text-amber-950 shadow-[0_12px_28px_rgba(180,83,9,0.08)]";
     }
 
     if (isTravel) {
@@ -309,6 +361,11 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         headerTextClass = "text-sky-800";
         headerBackLinkClass = "hover:bg-sky-50 text-sky-600";
         headerViewLinkClass = "text-sky-600 hover:text-sky-800";
+        editTitle = "Bản đồ hành trình";
+        editSubtitle = "Chỉnh điểm đến, ảnh và những chặng đáng nhớ";
+        contentKicker = "Travel log";
+        navClass = "grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-3";
+        contentIntroClass = "mb-6 rounded-2xl border border-sky-100 bg-gradient-to-r from-white/90 to-emerald-50/80 p-4 text-sky-950 shadow-sm";
     }
 
     if (isFriendship) {
@@ -320,6 +377,26 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         headerTextClass = "text-violet-800";
         headerBackLinkClass = "hover:bg-violet-50 text-violet-600";
         headerViewLinkClass = "text-violet-600 hover:text-violet-800";
+        editTitle = "Phòng chat bạn thân";
+        editSubtitle = "Chỉnh nhóm, ảnh vui và các mốc kỷ niệm";
+        contentKicker = "Friend hub";
+        navClass = "grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-2";
+        contentIntroClass = "mb-6 rounded-3xl rounded-br-md border border-violet-100 bg-white/85 p-4 text-violet-950 shadow-sm";
+    }
+
+    if (isEvery) {
+        wrapperClass = "min-h-screen relative overflow-x-hidden bg-gradient-to-br from-teal-50 via-white to-indigo-50 py-6";
+        containerClass = "rounded-3xl border-2 border-teal-100 shadow-[0_20px_50px_rgba(20,184,166,0.12)] overflow-hidden bg-white/95 backdrop-blur-sm text-slate-900 max-w-6xl mx-auto";
+        sidebarClass = "w-full md:w-72 shrink-0 p-4 md:p-6 flex flex-col gap-6 md:border-r-2 border-teal-100 bg-gradient-to-b from-teal-50 to-indigo-50 text-teal-900 relative";
+        mainClass = "flex-1 p-4 sm:p-6 md:p-8 bg-white/80 text-slate-900 relative";
+        headerClass = "sticky top-0 z-10 md:z-20 border-b-2 border-teal-100 bg-white/90 backdrop-blur-md text-teal-900";
+        headerTextClass = "text-teal-900";
+        headerBackLinkClass = "hover:bg-teal-50 text-teal-700";
+        headerViewLinkClass = "text-teal-700 hover:text-teal-900";
+        editTitle = "Không gian kỷ niệm";
+        editSubtitle = "Chỉnh nội dung chung cho mọi câu chuyện";
+        contentKicker = "Memory room";
+        contentIntroClass = "mb-6 rounded-2xl border border-teal-100 bg-gradient-to-r from-white to-teal-50/80 p-4 text-teal-950 shadow-sm";
     }
 
     if (isInitializing) {
@@ -443,7 +520,8 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
                         <div>
-                            <h1 className={`text-xl font-bold ${headerTextClass}`}>Chỉnh sửa trang</h1>
+                            <h1 className={`text-xl font-bold ${headerTextClass}`}>{editTitle}</h1>
+                            <p className={`hidden text-xs sm:block ${headerTextClass} opacity-70`}>{editSubtitle}</p>
                         </div>
                     </div>
                     
@@ -492,7 +570,12 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                         )}
                         {/* Left Column (Sidebar Panel) */}
                         <aside className={sidebarClass}>
-                            <nav className="grid grid-cols-2 md:flex md:flex-col gap-2">
+                            <div className="hidden md:block">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.24em] opacity-60">{contentKicker}</p>
+                                <p className="mt-1 text-sm leading-relaxed opacity-80">{editSubtitle}</p>
+                            </div>
+
+                            <nav className={navClass}>
                                 {TABS.map((tab) => {
                                     const isActive = activeTab === tab.id;
                                     let tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
@@ -590,6 +673,14 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                         }`;
                                     }
 
+                                    if (isEvery) {
+                                        tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
+                                            isActive
+                                                ? "bg-gradient-to-r from-teal-500 to-indigo-500 text-white shadow-md"
+                                                : "text-teal-700 hover:bg-teal-50"
+                                        }`;
+                                    }
+
                                     return (
                                         <button
                                             key={tab.id}
@@ -631,7 +722,9 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                                         ? "bg-sky-50/50 border-sky-100"
                                                         : isFriendship
                                                             ? "bg-violet-50/50 border-violet-100"
-                                                            : "bg-white border-gray-100 shadow-sm"
+                                                            : isEvery
+                                                                ? "bg-teal-50/50 border-teal-100"
+                                                                : "bg-white border-gray-100 shadow-sm"
                             }`}>
                                 <div className="flex items-center gap-2 border-b pb-2" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
                                     <QrCode className={`w-4 h-4 ${
@@ -642,6 +735,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                             : isWedding ? "text-amber-600"
                                             : isTravel ? "text-sky-500"
                                             : isFriendship ? "text-violet-500"
+                                            : isEvery ? "text-teal-500"
                                             : "text-gray-600"
                                     }`} />
                                     <span className="text-[10px] font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
@@ -681,6 +775,17 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
 
                         {/* Right Column (Forms Content Panel) */}
                         <main className={mainClass}>
+                            <section className={contentIntroClass}>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] opacity-60">{contentKicker}</p>
+                                <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                                    <div>
+                                        <h2 className="text-lg font-bold">{TABS.find((tab) => tab.id === activeTab)?.label}</h2>
+                                        <p className="text-sm opacity-75">{TABS.find((tab) => tab.id === activeTab)?.description}</p>
+                                    </div>
+                                    <span className="text-xs font-medium opacity-60">/{slug}</span>
+                                </div>
+                            </section>
+
                             {activeTab === "profile" && (
                                 <EditProfileForm
                                     slug={slug}
@@ -762,7 +867,9 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                             ? "bg-sky-50/50 border-sky-100 text-sky-800 shadow-md"
                                             : isFriendship
                                                 ? "bg-violet-50/50 border-violet-100 text-violet-800 shadow-md"
-                                                : "bg-white border-gray-100 shadow-lg text-gray-800"
+                                                : isEvery
+                                                    ? "bg-teal-50/50 border-teal-100 text-teal-900 shadow-md"
+                                                    : "bg-white border-gray-100 shadow-lg text-gray-800"
                 }`}>
                     <div className="flex items-center gap-2 border-b pb-2 mb-3" style={isDark ? { borderColor: 'rgba(255,255,255,0.05)' } : { borderColor: 'rgba(0,0,0,0.05)' }}>
                         <QrCode className={`w-4 h-4 ${
@@ -773,6 +880,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                 : isWedding ? "text-amber-600"
                                 : isTravel ? "text-sky-500"
                                 : isFriendship ? "text-violet-500"
+                                : isEvery ? "text-teal-500"
                                 : "text-gray-600"
                         }`} />
                         <span className="text-xs font-bold uppercase tracking-wider opacity-85">Trạng thái trang</span>
@@ -927,5 +1035,3 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
         </div>
     );
 }
-
-

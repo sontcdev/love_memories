@@ -16,7 +16,7 @@ export type LockScreenLinkData = Link & {
 
 export interface TemplateLockScreenProps {
     slug: string;
-    onSuccess: () => void;
+    onSuccess: () => void | Promise<void>;
     linkData: LockScreenLinkData | null;
 }
 
@@ -32,7 +32,7 @@ export interface PinLockControls {
 
 interface PinLockControllerProps {
     slug: string;
-    onSuccess: () => void;
+    onSuccess: () => void | Promise<void>;
     errorMessage?: string;
     children: (controls: PinLockControls) => ReactNode;
 }
@@ -60,6 +60,8 @@ export function PinLockController({ slug, onSuccess, errorMessage = "Mã PIN kh�
     }, []);
 
     const submit = useCallback(async (pinValue?: string) => {
+        if (isLoading) return;
+
         const fullPin = pinValue || pin.join("");
         if (fullPin.length !== 6) {
             setError("Vui lòng nhập đủ 6 chữ số");
@@ -72,7 +74,7 @@ export function PinLockController({ slug, onSuccess, errorMessage = "Mã PIN kh�
         try {
             const result = await verifyLinkPassword(slug, fullPin);
             if (result.success) {
-                onSuccess();
+                await onSuccess();
                 return;
             }
 
@@ -83,7 +85,7 @@ export function PinLockController({ slug, onSuccess, errorMessage = "Mã PIN kh�
         } finally {
             setIsLoading(false);
         }
-    }, [errorMessage, onSuccess, pin, slug]);
+    }, [errorMessage, isLoading, onSuccess, pin, slug]);
 
     const enterDigit = useCallback((digit: string) => {
         if (!/^\d$/.test(digit) || isLoading) return;
@@ -95,6 +97,8 @@ export function PinLockController({ slug, onSuccess, errorMessage = "Mã PIN kh�
             const next = [...current];
             next[emptyIndex] = digit;
             if (emptyIndex === 5) {
+                setIsLoading(true);
+                setError(null);
                 window.setTimeout(() => submit(next.join("")), 50);
             }
             return next;
@@ -178,12 +182,19 @@ export function PinKeypad({
                 {pin.map((digit, index) => (
                     <div
                         key={index}
-                        className={`flex h-11 w-9 items-center justify-center rounded-xl border-2 transition-all sm:h-14 sm:w-12 sm:rounded-2xl ${digit ? activeSlotClass : slotClass}`}
+                        className={`flex h-11 w-9 items-center justify-center rounded-xl border-2 transition-all sm:h-14 sm:w-12 sm:rounded-2xl ${isLoading ? "animate-pulse" : ""} ${digit ? activeSlotClass : slotClass}`}
                     >
                         {digit ? filledIcon : emptyIcon}
                     </div>
                 ))}
             </div>
+
+            {isLoading && (
+                <div className="mb-4 flex items-center justify-center gap-2 text-sm font-medium opacity-80" role="status" aria-live="polite">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang kiểm tra mã PIN...
+                </div>
+            )}
 
             <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
