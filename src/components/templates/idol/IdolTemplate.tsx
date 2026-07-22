@@ -7,8 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Star, Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic, Trophy, Disc, Sun, Moon, Zap } from "lucide-react";
 import { IdolLetterBox } from "./IdolLetterBox";
 import { IdolGameSection } from "./IdolGameSection";
-import { GameStub } from "@/components/templates/GameStub";
-import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
+import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
+import { normalizeGameTemplate } from "@/components/templates/game-registry";
 import { VideoPlayer } from "@/components/media";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -33,7 +33,6 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
-    const gameVariant = getGameVariant(data.type, gameTemplateId);
     const [heartsCount, setHeartsCount] = useState(0);
     const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
     const stageRef = useRef<HTMLDivElement>(null);
@@ -756,7 +755,14 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                         {gameTemplateId === "A" ? (
                             <IdolGameSection isDark={isDark} />
                         ) : (
-                            <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} isDark={isDark} />
+                            <TemplateVariantGame
+                                linkType={data.type}
+                                variantId={gameTemplateId}
+                                profileData={data.profile_data as Record<string, unknown> | null}
+                                photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))}
+                                timelines={data.timelines.map(t => ({ id: t.id, title: t.title, description: t.description }))}
+                                isDark={isDark}
+                            />
                         )}
                     </div>
                 )}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { drawCard, DrawnCard } from "@/app/actions/game-actions";
 import { Heart, Flame, Star, RotateCcw, Loader2, RefreshCw, Compass, MapPin } from "lucide-react";
 
 interface TravelGameSectionProps {
@@ -9,6 +8,36 @@ interface TravelGameSectionProps {
 }
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
+interface DrawnCard {
+    id: string;
+    content: string;
+    level: Difficulty;
+}
+
+const travelDeck: Record<Difficulty, string[]> = {
+    EASY: [
+        "Chọn một điểm check-in gần nhất và chụp lại ảnh nhóm.",
+        "Mỗi người nói một món ăn muốn thử ở điểm đến này.",
+        "Đặt một caption 7 từ cho chuyến đi.",
+    ],
+    MEDIUM: [
+        "Chọn trưởng đoàn trong 10 phút tới và để người đó quyết định điểm dừng tiếp theo.",
+        "Kể lại một tình huống lạc đường hoặc đổi lịch đáng nhớ.",
+        "Tìm một vật nhỏ đại diện cho chuyến đi và chụp cùng nó.",
+    ],
+    HARD: [
+        "Cả nhóm tạo một itinerary mini 3 chặng cho ngày mai.",
+        "Mỗi người chọn một ảnh và kể câu chuyện phía sau trong 30 giây.",
+        "Tạo thử thách check-in: ảnh phải có bản đồ, nụ cười và một màu nổi bật.",
+    ],
+};
+
+function drawTravelCard(level: Difficulty, excludeIds: string[] = []): DrawnCard {
+    const availableCards = travelDeck[level].map((content, index) => ({ id: `${level}-${index}`, content, level })).filter((card) => !excludeIds.includes(card.id));
+    const cards = availableCards.length > 0 ? availableCards : travelDeck[level].map((content, index) => ({ id: `${level}-${index}`, content, level }));
+    return cards[Math.floor(Math.random() * cards.length)];
+}
 
 export function TravelGameSection({ isDark = false }: TravelGameSectionProps) {
     const [isDrawing, setIsDrawing] = useState(false);
@@ -41,26 +70,10 @@ export function TravelGameSection({ isDark = false }: TravelGameSectionProps) {
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
-        const excludeParam = excludeIds && excludeIds.length > 0 ? excludeIds.join(",") : undefined;
-        const result = await drawCard(difficulty, excludeParam);
-
-        if (result.success && result.card) {
-            setDrawnCard(result.card);
-            setShownCardIds(prev => [...prev, result.card!.id]);
-            setTimeout(() => setIsFlipped(true), 500);
-        } else if (result.error === "All cards shown") {
-            setShownCardIds([]);
-            const retryResult = await drawCard(difficulty);
-            if (retryResult.success && retryResult.card) {
-                setDrawnCard(retryResult.card);
-                setShownCardIds([retryResult.card.id]);
-                setTimeout(() => setIsFlipped(true), 500);
-            } else {
-                setError(retryResult.error || "Failed to draw card");
-            }
-        } else {
-            setError(result.error || "Failed to draw card");
-        }
+        const card = drawTravelCard(difficulty, excludeIds);
+        setDrawnCard(card);
+        setShownCardIds((prev) => [...prev.filter((id) => id !== card.id), card.id]);
+        setTimeout(() => setIsFlipped(true), 500);
 
         setIsDrawing(false);
     };

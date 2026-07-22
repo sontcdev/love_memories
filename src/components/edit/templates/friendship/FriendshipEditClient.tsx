@@ -5,7 +5,6 @@ import {
     EditBackLink,
     EditFormContent,
     LoadingGate,
-    PageQrCard,
     TemplateTabButton,
     ViewPageLink,
     tabsOf,
@@ -57,7 +56,6 @@ export function FriendshipEditClient({ slug, linkData }: TemplateEditProps) {
                                 ))}
                             </nav>
 
-                            <PageQrCard copied={state.copied} fullUrl={state.fullUrl} isDark={false} onCopy={state.handleCopyLink} accentClass="text-pink-500" className="mt-6 hidden flex-col gap-4 rounded-3xl rounded-br-sm border border-violet-100 bg-white/80 p-4 md:flex" />
                         </aside>
 
                         <main className="p-4 sm:p-6 md:p-8">

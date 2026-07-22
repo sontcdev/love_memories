@@ -5,7 +5,6 @@ import {
     EditBackLink,
     EditFormContent,
     LoadingGate,
-    PageQrCard,
     TemplateTabButton,
     ThemeModeButton,
     ViewPageLink,
@@ -62,7 +61,6 @@ export function GradClassEditClient({ slug, linkData }: TemplateEditProps) {
                                 ))}
                             </nav>
 
-                            <PageQrCard copied={state.copied} fullUrl={state.fullUrl} isDark onCopy={state.handleCopyLink} accentClass="text-lime-200" className="mt-6 hidden flex-col gap-4 rounded-sm border-2 border-dashed border-lime-100/25 bg-black/20 p-4 md:flex" />
                         </aside>
 
                         <main className="bg-[#131f1a] bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:16px_16px] p-4 sm:p-6 md:p-8">

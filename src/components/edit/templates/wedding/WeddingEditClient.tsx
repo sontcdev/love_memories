@@ -5,7 +5,6 @@ import {
     EditBackLink,
     EditFormContent,
     LoadingGate,
-    PageQrCard,
     TemplateTabButton,
     ViewPageLink,
     tabsOf,
@@ -57,7 +56,6 @@ export function WeddingEditClient({ slug, linkData }: TemplateEditProps) {
                                 ))}
                             </nav>
 
-                            <PageQrCard copied={state.copied} fullUrl={state.fullUrl} isDark={false} onCopy={state.handleCopyLink} accentClass="text-amber-600" className="mt-6 hidden flex-col gap-4 border border-amber-200 bg-white/80 p-4 md:flex" />
                         </aside>
 
                         <main className="p-4 sm:p-6 md:p-8">

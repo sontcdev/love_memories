@@ -5,7 +5,6 @@ import {
     EditBackLink,
     EditFormContent,
     LoadingGate,
-    PageQrCard,
     TemplateTabButton,
     ViewPageLink,
     tabsOf,
@@ -57,7 +56,6 @@ export function TravelEditClient({ slug, linkData }: TemplateEditProps) {
                                 ))}
                             </nav>
 
-                            <PageQrCard copied={state.copied} fullUrl={state.fullUrl} isDark={false} onCopy={state.handleCopyLink} accentClass="text-sky-500" className="mt-6 hidden flex-col gap-4 rounded-2xl border border-sky-100 bg-white/80 p-4 md:flex" />
                         </aside>
 
                         <main className="bg-[linear-gradient(to_right,rgba(14,165,233,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(14,165,233,0.04)_1px,transparent_1px)] bg-[size:48px_48px] p-4 sm:p-6 md:p-8">

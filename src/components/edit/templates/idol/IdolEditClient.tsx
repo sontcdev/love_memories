@@ -5,7 +5,6 @@ import {
     EditBackLink,
     EditFormContent,
     LoadingGate,
-    PageQrCard,
     TemplateTabButton,
     ThemeModeButton,
     ViewPageLink,
@@ -66,14 +65,6 @@ export function IdolEditClient({ slug, linkData }: TemplateEditProps) {
                                 ))}
                             </nav>
 
-                            <PageQrCard
-                                copied={state.copied}
-                                fullUrl={state.fullUrl}
-                                isDark={state.isDark}
-                                onCopy={state.handleCopyLink}
-                                accentClass={state.isDark ? "text-cyan-300" : "text-purple-600"}
-                                className={`mt-6 hidden flex-col gap-4 rounded-2xl border p-4 md:flex ${state.isDark ? "border-fuchsia-500/20 bg-black/25" : "border-purple-100 bg-white/80"}`}
-                            />
                         </aside>
 
                         <main className="p-4 sm:p-6 md:p-8">

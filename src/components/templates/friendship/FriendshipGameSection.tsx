@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { drawCard, DrawnCard } from "@/app/actions/game-actions";
 import { Heart, Flame, Star, RotateCcw, Loader2, RefreshCw, Smile, Zap } from "lucide-react";
 
 interface FriendshipGameSectionProps {
@@ -9,6 +8,36 @@ interface FriendshipGameSectionProps {
 }
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
+interface DrawnCard {
+    id: string;
+    content: string;
+    level: Difficulty;
+}
+
+const friendshipDeck: Record<Difficulty, string[]> = {
+    EASY: [
+        "Mỗi người kể một kỷ niệm khiến cả nhóm cười nhiều nhất.",
+        "Chọn một người và nói một điểm đáng quý của người đó.",
+        "Đặt caption mới cho ảnh nhóm gần nhất.",
+    ],
+    MEDIUM: [
+        "Bình chọn ai là người hay tạo drama vui nhất nhóm.",
+        "Kể nguồn gốc một biệt danh nội bộ mà chỉ nhóm hiểu.",
+        "Mỗi người gửi một lời nhắn ẩn danh, cả nhóm đoán người viết.",
+    ],
+    HARD: [
+        "Tái hiện một inside joke của nhóm trong 30 giây.",
+        "Cả nhóm cùng viết một lời hứa giữ liên lạc sau này.",
+        "Chọn một người làm MC và phỏng vấn nhanh từng thành viên.",
+    ],
+};
+
+function drawFriendshipCard(level: Difficulty, excludeIds: string[] = []): DrawnCard {
+    const availableCards = friendshipDeck[level].map((content, index) => ({ id: `${level}-${index}`, content, level })).filter((card) => !excludeIds.includes(card.id));
+    const cards = availableCards.length > 0 ? availableCards : friendshipDeck[level].map((content, index) => ({ id: `${level}-${index}`, content, level }));
+    return cards[Math.floor(Math.random() * cards.length)];
+}
 
 export function FriendshipGameSection({ isDark = false }: FriendshipGameSectionProps) {
     const [isDrawing, setIsDrawing] = useState(false);
@@ -41,26 +70,10 @@ export function FriendshipGameSection({ isDark = false }: FriendshipGameSectionP
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
-        const excludeParam = excludeIds && excludeIds.length > 0 ? excludeIds.join(",") : undefined;
-        const result = await drawCard(difficulty, excludeParam);
-
-        if (result.success && result.card) {
-            setDrawnCard(result.card);
-            setShownCardIds(prev => [...prev, result.card!.id]);
-            setTimeout(() => setIsFlipped(true), 500);
-        } else if (result.error === "All cards shown") {
-            setShownCardIds([]);
-            const retryResult = await drawCard(difficulty);
-            if (retryResult.success && retryResult.card) {
-                setDrawnCard(retryResult.card);
-                setShownCardIds([retryResult.card.id]);
-                setTimeout(() => setIsFlipped(true), 500);
-            } else {
-                setError(retryResult.error || "Failed to draw card");
-            }
-        } else {
-            setError(result.error || "Failed to draw card");
-        }
+        const card = drawFriendshipCard(difficulty, excludeIds);
+        setDrawnCard(card);
+        setShownCardIds((prev) => [...prev.filter((id) => id !== card.id), card.id]);
+        setTimeout(() => setIsFlipped(true), 500);
 
         setIsDrawing(false);
     };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { verifyAccess } from "@/lib/auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -65,12 +65,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const cookieStore = await cookies();
-        const accessToken = cookieStore.get(`access_token_${slug}`)?.value;
-
-        if (!accessToken) {
+        const access = await verifyAccess(slug);
+        if (!access.success) {
             return NextResponse.json(
-                { success: false, error: "Chưa xác thực" },
+                { success: false, error: access.error || "Chưa xác thực" },
                 { status: 401 }
             );
         }

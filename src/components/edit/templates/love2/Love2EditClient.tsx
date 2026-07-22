@@ -5,7 +5,6 @@ import {
     EditBackLink,
     EditFormContent,
     LoadingGate,
-    PageQrCard,
     TemplateTabButton,
     ViewPageLink,
     tabsOf,
@@ -61,14 +60,6 @@ export function Love2EditClient({ slug, linkData }: TemplateEditProps) {
                                 ))}
                             </nav>
 
-                            <PageQrCard
-                                copied={state.copied}
-                                fullUrl={state.fullUrl}
-                                isDark={false}
-                                onCopy={state.handleCopyLink}
-                                accentClass="text-amber-600"
-                                className="mt-6 hidden flex-col gap-4 rounded-xl border-2 border-dashed border-amber-300 bg-[#fff7d6] p-4 md:flex"
-                            />
                         </aside>
 
                         <main className="rounded-xl border-2 border-amber-100 bg-white p-4 shadow-inner sm:p-6 md:p-8">
@@ -88,14 +79,6 @@ export function Love2EditClient({ slug, linkData }: TemplateEditProps) {
                     </div>
                 </div>
 
-                <PageQrCard
-                    copied={state.copied}
-                    fullUrl={state.fullUrl}
-                    isDark={false}
-                    onCopy={state.handleCopyLink}
-                    accentClass="text-amber-600"
-                    className="mx-auto mt-6 flex max-w-6xl flex-col gap-4 rounded-xl border-2 border-dashed border-amber-300 bg-[#fff7d6] p-4 text-amber-900 md:hidden"
-                />
             </div>
         </LoadingGate>
     );

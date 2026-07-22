@@ -17,33 +17,33 @@ interface Question {
 const defaultQuestions: Question[] = [
     {
         id: 1,
-        question: "What makes our idol special?",
-        options: ["Amazing talent", "Kind heart", "Hardworking", "All of the above"],
+        question: "Một fanpage idol nên thể hiện điều gì rõ nhất?",
+        options: ["Visual sân khấu", "Tình cảm fandom", "Dấu mốc sự nghiệp", "Tất cả các ý trên"],
         correctAnswer: 3,
     },
     {
         id: 2,
-        question: "What's the best way to support our idol?",
-        options: ["Stream their music", "Attend concerts", "Spread love", "All of the above"],
+        question: "Cách support idol văn minh nhất là gì?",
+        options: ["Stream nhạc", "Lan tỏa năng lượng tích cực", "Tôn trọng idol và fan khác", "Tất cả các ý trên"],
         correctAnswer: 3,
     },
     {
         id: 3,
-        question: "What do fans call themselves?",
-        options: ["Supporters", "Family", "Fandom", "Team"],
-        correctAnswer: 2,
+        question: "Timeline idol nên ưu tiên mốc nào?",
+        options: ["Debut/comeback", "Award", "Concert", "Tất cả các ý trên"],
+        correctAnswer: 3,
     },
     {
         id: 4,
-        question: "What's most important in fandom?",
-        options: ["Respect", "Love", "Support", "All of the above"],
-        correctAnswer: 3,
+        question: "Một fanchant tốt nên như thế nào?",
+        options: ["Ngắn, dễ nhớ, đúng vibe idol", "Thật dài", "Khó đọc", "Không liên quan"],
+        correctAnswer: 0,
     },
     {
         id: 5,
-        question: "When did we start loving our idol?",
-        options: ["Yesterday", "Last year", "Since debut", "Forever"],
-        correctAnswer: 3,
+        question: "Ảnh nào nên đặt nổi bật trong template Idol?",
+        options: ["Ảnh sân khấu/visual rõ nhất", "Ảnh mờ", "Ảnh không liên quan", "Ảnh lỗi"],
+        correctAnswer: 0,
     },
 ];
 
@@ -69,7 +69,7 @@ export function IdolGameSection({ isDark = true }: IdolGameSectionProps) {
 
     const handleAnswerSelect = (answerIndex: number) => {
         if (showResult) return;
-        
+
         setSelectedAnswer(answerIndex);
         setShowResult(true);
 
@@ -100,16 +100,16 @@ export function IdolGameSection({ isDark = true }: IdolGameSectionProps) {
                         </div>
                     </div>
                     <h2 className={`text-2xl font-bold mb-2 ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
-                        Idol Fan Quiz
+                        Fan Quiz
                     </h2>
                     <p className={`mb-6 ${isDark ? "text-purple-300" : "text-gray-600"}`}>
-                        Test your fandom knowledge!
+                        Kiểm tra độ hiểu fandom và câu chuyện idol.
                     </p>
                     <button
                         onClick={initializeGame}
                         className="px-8 py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-lg shadow-lg hover:shadow-2xl hover:shadow-yellow-400/50 transition-all hover:scale-105 relative overflow-hidden group"
                     >
-                        <span className="relative z-10">Start Quiz</span>
+                        <span className="relative z-10">Bắt đầu</span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                     </button>
                 </div>
@@ -150,29 +150,29 @@ export function IdolGameSection({ isDark = true }: IdolGameSectionProps) {
                         <Trophy className={`relative w-20 h-20 mx-auto mb-4 ${isPerfect ? "text-yellow-400 animate-bounce" : "text-orange-400"}`} />
                     </div>
                     <h3 className={`text-3xl font-bold mb-2 ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
-                        {isPerfect ? "PERFECT SCORE!" : "Quiz Complete!"}
+                        {isPerfect ? "FAN CỨNG TUYỆT ĐỐI!" : "Hoàn thành quiz!"}
                     </h3>
                     <p className={`text-xl mb-4 ${isDark ? "text-purple-200" : "text-gray-600"}`}>
-                        You scored {score} out of {questions.length}
+                        Bạn đạt {score}/{questions.length} câu đúng
                     </p>
                     <div className={`text-4xl font-bold mb-6 ${isPerfect ? "text-yellow-400" : "text-orange-400"}`}>
                         {percentage}%
                     </div>
                     <p className={`mb-6 ${isDark ? "text-purple-300" : "text-gray-600"}`}>
-                        {isPerfect 
-                            ? "You're the ultimate fan! ⭐" 
-                            : percentage >= 80 
-                            ? "Amazing! You're a true fan! 🌟"
+                        {isPerfect
+                            ? "Bạn đúng là fan cứng. ⭐"
+                            : percentage >= 80
+                            ? "Rất ổn, fandom này có tâm. 🌟"
                             : percentage >= 60
-                            ? "Good job! Keep supporting! 💪"
-                            : "Keep learning about our idol! 💖"}
+                            ? "Ổn rồi, tiếp tục support văn minh. 💪"
+                            : "Cần xem lại fanpage và timeline idol thêm. 💖"}
                     </p>
                     <button
                         onClick={initializeGame}
                         className="flex items-center gap-2 px-6 py-3 mx-auto rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg hover:shadow-2xl hover:shadow-yellow-400/50 transition-all hover:scale-105 relative overflow-hidden group"
                     >
                         <RotateCcw className="w-5 h-5 relative z-10" />
-                        <span className="relative z-10">Play Again</span>
+                        <span className="relative z-10">Chơi lại</span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                     </button>
                 </div>
@@ -194,15 +194,15 @@ export function IdolGameSection({ isDark = true }: IdolGameSectionProps) {
                     </div>
                     <div>
                         <h2 className={`text-xl font-bold ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
-                            Idol Fan Quiz
+                            Fan Quiz
                         </h2>
                         <span className={`text-sm ${isDark ? "text-purple-300" : "text-gray-400"}`}>
-                            Question {currentQuestion + 1} of {questions.length}
+                            Câu {currentQuestion + 1}/{questions.length}
                         </span>
                     </div>
                 </div>
                 <div className={`px-4 py-2 rounded-full ${isDark ? "bg-purple-800 text-yellow-300" : "bg-yellow-100 text-orange-600"} font-bold`}>
-                    Score: {score}
+                    Điểm: {score}
                 </div>
             </div>
 

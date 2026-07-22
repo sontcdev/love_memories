@@ -7,8 +7,8 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Users, Calendar, Image as ImageIcon, ChevronLeft, ChevronRight, Settings, X, Sun, Moon, BookOpen } from "lucide-react";
 import { GradClassLetterBox } from "./GradClassLetterBox";
 import { GradClassGameSection } from "./GradClassGameSection";
-import { GameStub } from "@/components/templates/GameStub";
-import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
+import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
+import { normalizeGameTemplate } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -41,7 +41,6 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
     const [flipDirection, setFlipDirection] = useState<"left" | "right">("right");
     const profileData = data.profile_data as Record<string, unknown> | null;
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
-    const gameVariant = getGameVariant(data.type, gameTemplateId);
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
     useEffect(() => {
@@ -509,7 +508,14 @@ export function GradClassTemplate({ data, slug }: GradClassTemplateProps) {
                                 {gameTemplateId === "A" ? (
                                     <GradClassGameSection isDark={isDark} />
                                 ) : (
-                                    <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} isDark={isDark} />
+                                    <TemplateVariantGame
+                                        linkType={data.type}
+                                        variantId={gameTemplateId}
+                                        profileData={data.profile_data as Record<string, unknown> | null}
+                                        photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))}
+                                        timelines={data.timelines.map(t => ({ id: t.id, title: t.title, description: t.description }))}
+                                        isDark={isDark}
+                                    />
                                 )}
                             </div>
                         )}

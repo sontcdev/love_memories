@@ -8,8 +8,8 @@ import { Heart, Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, S
 import { useSwipeable } from "react-swipeable";
 import { LoveLetterBox } from "./LoveLetterBox";
 import { LoveGameSection } from "./LoveGameSection";
-import { GameStub } from "@/components/templates/GameStub";
-import { normalizeGameTemplate, getGameVariant } from "@/components/templates/game-registry";
+import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
+import { normalizeGameTemplate } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -41,7 +41,6 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as Record<string, string> | null;
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
-    const gameVariant = getGameVariant(data.type, gameTemplateId);
 
     const boyName = profileData?.boy_name || "Him";
     const girlName = profileData?.girl_name || "Her";
@@ -477,10 +476,16 @@ export function LoveTemplate({ data, slug }: LoveTemplateProps) {
                                     <div className="h-px w-10 bg-gradient-to-l from-transparent to-rose-300" />
                                 </div>
                                 <p className="text-center text-sm text-gray-400 mb-6">Cùng nhau giải đố</p>
-                                {gameTemplateId === "A" ? (
+                                {gameTemplateId === "A" && data.type !== "EVERY" ? (
                                     <LoveGameSection photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))} />
                                 ) : (
-                                    <GameStub variantId={gameTemplateId} label={gameVariant.label} description={gameVariant.description} />
+                                    <TemplateVariantGame
+                                        linkType={data.type}
+                                        variantId={gameTemplateId}
+                                        profileData={data.profile_data as Record<string, unknown> | null}
+                                        photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))}
+                                        timelines={data.timelines.map(t => ({ id: t.id, title: t.title, description: t.description }))}
+                                    />
                                 )}
                             </div>
                         )}

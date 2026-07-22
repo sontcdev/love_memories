@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { drawCard, DrawnCard } from "@/app/actions/game-actions";
 import { Heart, Flame, Star, RotateCcw, Loader2, RefreshCw, Gem } from "lucide-react";
 
 interface WeddingGameSectionProps {
@@ -9,6 +8,36 @@ interface WeddingGameSectionProps {
 }
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
+interface DrawnCard {
+    id: string;
+    content: string;
+    level: Difficulty;
+}
+
+const weddingDeck: Record<Difficulty, string[]> = {
+    EASY: [
+        "Cô dâu và chú rể cùng kể lại ấn tượng đầu tiên về nhau.",
+        "Chọn một khách mời và gửi một lời cảm ơn ngay tại bàn tiệc.",
+        "Nói một điều nhỏ mà bạn trân trọng ở người kia.",
+    ],
+    MEDIUM: [
+        "Cả hai cùng trả lời: ai là người dễ xúc động hơn trong ngày cưới?",
+        "Kể lại khoảnh khắc biết rằng mình muốn đi cùng người này thật lâu.",
+        "Chọn một bài hát đại diện cho chuyện tình yêu của hai người.",
+    ],
+    HARD: [
+        "Mỗi người nói một lời hứa cụ thể sẽ làm trong 100 ngày đầu sau cưới.",
+        "Tái hiện lại màn cầu hôn hoặc khoảnh khắc tỏ tình trong 30 giây.",
+        "Cùng viết một câu vows ngắn và đọc trước mọi người.",
+    ],
+};
+
+function drawWeddingCard(level: Difficulty, excludeIds: string[] = []): DrawnCard {
+    const availableCards = weddingDeck[level].map((content, index) => ({ id: `${level}-${index}`, content, level })).filter((card) => !excludeIds.includes(card.id));
+    const cards = availableCards.length > 0 ? availableCards : weddingDeck[level].map((content, index) => ({ id: `${level}-${index}`, content, level }));
+    return cards[Math.floor(Math.random() * cards.length)];
+}
 
 export function WeddingGameSection({ isDark = false }: WeddingGameSectionProps) {
     const [isDrawing, setIsDrawing] = useState(false);
@@ -41,26 +70,10 @@ export function WeddingGameSection({ isDark = false }: WeddingGameSectionProps) 
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
-        const excludeParam = excludeIds && excludeIds.length > 0 ? excludeIds.join(",") : undefined;
-        const result = await drawCard(difficulty, excludeParam);
-
-        if (result.success && result.card) {
-            setDrawnCard(result.card);
-            setShownCardIds(prev => [...prev, result.card!.id]);
-            setTimeout(() => setIsFlipped(true), 500);
-        } else if (result.error === "All cards shown") {
-            setShownCardIds([]);
-            const retryResult = await drawCard(difficulty);
-            if (retryResult.success && retryResult.card) {
-                setDrawnCard(retryResult.card);
-                setShownCardIds([retryResult.card.id]);
-                setTimeout(() => setIsFlipped(true), 500);
-            } else {
-                setError(retryResult.error || "Failed to draw card");
-            }
-        } else {
-            setError(result.error || "Failed to draw card");
-        }
+        const card = drawWeddingCard(difficulty, excludeIds);
+        setDrawnCard(card);
+        setShownCardIds((prev) => [...prev.filter((id) => id !== card.id), card.id]);
+        setTimeout(() => setIsFlipped(true), 500);
 
         setIsDrawing(false);
     };

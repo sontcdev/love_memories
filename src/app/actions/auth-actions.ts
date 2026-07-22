@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { generateSessionToken } from "@/lib/utils";
+import { createLinkAccessToken, isValidLinkAccessToken } from "@/lib/auth";
 
 export async function verifyLinkPassword(slug: string, pin: string) {
     if (!slug || !pin) {
@@ -40,8 +40,8 @@ export async function verifyLinkPassword(slug: string, pin: string) {
             return { success: false, error: "Mã PIN không đúng" };
         }
 
-        const sessionToken = generateSessionToken();
-        const accessToken = generateSessionToken();
+        const sessionToken = createLinkAccessToken(slug, link.id);
+        const accessToken = sessionToken;
 
         const cookieStore = await cookies();
         cookieStore.set(`session_${slug}`, sessionToken, {
@@ -78,7 +78,7 @@ export async function checkLinkAccess(slug: string): Promise<boolean> {
         select: { id: true, is_active: true },
     });
 
-    return link?.is_active === true;
+    return !!link && isValidLinkAccessToken(sessionToken, slug, link.id) && link.is_active === true;
 }
 
 const getCachedLinkData = cache(async (slug: string) => {
@@ -147,7 +147,7 @@ export async function getLinkData(slug: string) {
             select: { id: true, is_active: true },
         });
 
-        if (!link || !link.is_active) {
+        if (!link || !isValidLinkAccessToken(sessionToken, slug, link.id) || !link.is_active) {
             return { success: false, error: "Chưa xác thực" };
         }
 

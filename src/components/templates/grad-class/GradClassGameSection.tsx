@@ -17,33 +17,33 @@ interface Question {
 const defaultQuestions: Question[] = [
     {
         id: 1,
-        question: "What's the best part of school?",
-        options: ["Classes", "Friends", "Teachers", "All of the above"],
+        question: "Điều làm nên tinh thần của một lớp học là gì?",
+        options: ["Đoàn kết", "Kỷ niệm chung", "Thầy cô và bạn bè", "Tất cả các ý trên"],
         correctAnswer: 3,
     },
     {
         id: 2,
-        question: "What will you miss most?",
-        options: ["Learning", "Memories", "Friends", "Everything"],
+        question: "Kỷ yếu lớp nên ưu tiên nội dung nào?",
+        options: ["Ảnh tập thể", "Timeline sự kiện", "Lời nhắn", "Tất cả các ý trên"],
         correctAnswer: 3,
     },
     {
         id: 3,
-        question: "What's the key to success?",
-        options: ["Hard work", "Never give up", "Stay focused", "All of the above"],
-        correctAnswer: 3,
+        question: "Một lời nhắn giáo viên hay nên như thế nào?",
+        options: ["Chân thành và cổ vũ", "Quá dài và chung chung", "Không liên quan", "Chỉ có emoji"],
+        correctAnswer: 0,
     },
     {
         id: 4,
-        question: "What makes a great class?",
-        options: ["Unity", "Support", "Fun", "All of the above"],
+        question: "Mốc timeline nào hợp với template lớp?",
+        options: ["Ngày khai giảng", "Hội trại", "Lễ tốt nghiệp", "Tất cả các ý trên"],
         correctAnswer: 3,
     },
     {
         id: 5,
-        question: "What's graduation day?",
-        options: ["Sad", "Happy", "Bittersweet", "All emotions"],
-        correctAnswer: 3,
+        question: "Danh hiệu vui trong lớp nên có tinh thần gì?",
+        options: ["Vui nhưng tôn trọng", "Châm chọc quá đà", "Gây khó chịu", "Không cần đồng ý"],
+        correctAnswer: 0,
     },
 ];
 
@@ -69,7 +69,7 @@ export function GradClassGameSection({ isDark = false }: GradClassGameSectionPro
 
     const handleAnswerSelect = (answerIndex: number) => {
         if (showResult) return;
-        
+
         setSelectedAnswer(answerIndex);
         setShowResult(true);
 
@@ -100,16 +100,16 @@ export function GradClassGameSection({ isDark = false }: GradClassGameSectionPro
                         </div>
                     </div>
                     <h2 className={`text-2xl font-bold mb-2 font-mono ${isDark ? "text-slate-100" : "text-gray-800"}`}>
-                        Class Trivia
+                        Quiz Lớp Học
                     </h2>
                     <p className={`mb-6 font-mono ${isDark ? "text-slate-400" : "text-gray-600"}`}>
-                        Test your class knowledge!
+                        Kiểm tra độ hiểu lớp và kỷ yếu.
                     </p>
                     <button
                         onClick={initializeGame}
                         className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg hover:shadow-2xl hover:shadow-amber-500/50 transition-all hover:scale-105 font-mono relative overflow-hidden group"
                     >
-                        <span className="relative z-10">Start Quiz</span>
+                        <span className="relative z-10">Bắt đầu</span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                     </button>
                 </div>
@@ -150,29 +150,29 @@ export function GradClassGameSection({ isDark = false }: GradClassGameSectionPro
                         <Trophy className={`relative w-20 h-20 mx-auto mb-4 ${isPerfect ? "text-yellow-500 animate-bounce" : "text-amber-500"}`} />
                     </div>
                     <h3 className={`text-3xl font-bold mb-2 font-mono ${isDark ? "text-amber-300" : "text-gray-800"}`}>
-                        {isPerfect ? "PERFECT SCORE!" : "Quiz Complete!"}
+                        {isPerfect ? "KÝ ỨC LỚP TRỌN VẸN!" : "Hoàn thành quiz!"}
                     </h3>
                     <p className={`text-xl mb-4 font-mono ${isDark ? "text-slate-300" : "text-gray-600"}`}>
-                        You scored {score} out of {questions.length}
+                        Bạn đạt {score}/{questions.length} câu đúng
                     </p>
                     <div className={`text-4xl font-bold mb-6 font-mono ${isPerfect ? "text-yellow-500" : "text-amber-500"}`}>
                         {percentage}%
                     </div>
                     <p className={`mb-6 font-mono ${isDark ? "text-slate-400" : "text-gray-600"}`}>
-                        {isPerfect 
-                            ? "You're a class legend! 🎓" 
-                            : percentage >= 80 
-                            ? "Amazing! You know your class well! 🌟"
+                        {isPerfect
+                            ? "Bạn là người giữ ký ức lớp rất tốt! 🎓"
+                            : percentage >= 80
+                            ? "Rất tốt! Bạn hiểu tinh thần lớp mình. 🌟"
                             : percentage >= 60
-                            ? "Good job! Keep the memories alive! 💪"
-                            : "Remember the good times! 💖"}
+                            ? "Ổn rồi! Tiếp tục giữ những kỷ niệm đẹp. 💪"
+                            : "Cùng xem lại kỷ yếu để nhớ thêm khoảnh khắc nhé. 💖"}
                     </p>
                     <button
                         onClick={initializeGame}
                         className="flex items-center gap-2 px-6 py-3 mx-auto rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg hover:shadow-2xl hover:shadow-amber-500/50 transition-all hover:scale-105 font-mono relative overflow-hidden group"
                     >
                         <RotateCcw className="w-5 h-5 relative z-10" />
-                        <span className="relative z-10">Play Again</span>
+                        <span className="relative z-10">Chơi lại</span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                     </button>
                 </div>
@@ -194,15 +194,15 @@ export function GradClassGameSection({ isDark = false }: GradClassGameSectionPro
                     </div>
                     <div>
                         <h2 className={`text-xl font-bold font-mono ${isDark ? "text-slate-100" : "text-gray-800"}`}>
-                            Class Trivia
+                            Quiz Lớp Học
                         </h2>
                         <span className={`text-sm ${isDark ? "text-slate-400" : "text-gray-400"} font-mono`}>
-                            Question {currentQuestion + 1} of {questions.length}
+                            Câu {currentQuestion + 1}/{questions.length}
                         </span>
                     </div>
                 </div>
                 <div className={`px-4 py-2 rounded-full ${isDark ? "bg-slate-700 text-amber-300" : "bg-amber-100 text-orange-600"} font-bold font-mono`}>
-                    Score: {score}
+                    Điểm: {score}
                 </div>
             </div>
 

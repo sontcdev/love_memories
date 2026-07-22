@@ -19,40 +19,39 @@ export default async function SlugPage({ params }: PageProps) {
 
     if (isAuthenticated) {
         const linkResult = await getLinkData(slug);
-        if (!linkResult.success || !linkResult.data) {
-            notFound();
-        }
-        if (!linkResult.data.is_active) {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div className="text-center px-4">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Trang không khả dụng</h1>
-                        <p className="text-gray-500">Trang kỷ niệm này hiện không khả dụng.</p>
+        if (linkResult.success && linkResult.data) {
+            if (!linkResult.data.is_active) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                        <div className="text-center px-4">
+                            <h1 className="text-2xl font-bold text-gray-800 mb-2">Trang không khả dụng</h1>
+                            <p className="text-gray-500">Trang kỷ niệm này hiện không khả dụng.</p>
+                        </div>
                     </div>
-                </div>
+                );
+            }
+            const bgColor = sanitizeHexColor(linkResult.data.config?.background_color || '#ffffff');
+            const accentColor = sanitizeHexColor(linkResult.data.config?.accent_color || '#ec4899');
+            const textColor = sanitizeHexColor(linkResult.data.config?.text_color || '#1f2937');
+            return (
+                <>
+                    <script
+                        dangerouslySetInnerHTML={{
+                            __html: `
+                                document.documentElement.style.setProperty('--theme-bg', '${bgColor}');
+                                document.documentElement.style.setProperty('--theme-accent', '${accentColor}');
+                                document.documentElement.style.setProperty('--theme-text', '${textColor}');
+                            `,
+                        }}
+                    />
+                    <SlugPageClient
+                        slug={slug}
+                        isAuthenticated={true}
+                        linkData={linkResult.data}
+                    />
+                </>
             );
         }
-        const bgColor = sanitizeHexColor(linkResult.data.config?.background_color || '#ffffff');
-        const accentColor = sanitizeHexColor(linkResult.data.config?.accent_color || '#ec4899');
-        const textColor = sanitizeHexColor(linkResult.data.config?.text_color || '#1f2937');
-        return (
-            <>
-                <script
-                    dangerouslySetInnerHTML={{
-                        __html: `
-                            document.documentElement.style.setProperty('--theme-bg', '${bgColor}');
-                            document.documentElement.style.setProperty('--theme-accent', '${accentColor}');
-                            document.documentElement.style.setProperty('--theme-text', '${textColor}');
-                        `,
-                    }}
-                />
-                <SlugPageClient
-                    slug={slug}
-                    isAuthenticated={true}
-                    linkData={linkResult.data}
-                />
-            </>
-        );
     }
 
     const publicResult = await getLinkPublicData(slug);
