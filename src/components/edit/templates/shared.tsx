@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
 import Link from "next/link";
-import type { Gallery, Letter, Link as PrismaLink, LinkConfig, LinkType, Timeline } from "@prisma/client";
+import type { Gallery, Letter, LetterReply, Link as PrismaLink, LinkConfig, LinkType, Timeline } from "@prisma/client";
 import {
     ArrowLeft,
     Calendar,
     Image as ImageIcon,
+    Mail,
     Moon,
     Settings,
     Sparkles,
@@ -21,12 +22,13 @@ import { GalleryManager } from "@/components/edit/GalleryManager";
 import { TimelineManager } from "@/components/edit/TimelineManager";
 import { EditTemplateLoading } from "@/app/[slug]/edit/edit-template-loading";
 import { TemplateFeaturePanel } from "@/components/edit/templates/TemplateFeaturePanel";
+import { LetterBox } from "@/components/shared/LetterBox";
 
 export type LinkWithRelations = PrismaLink & {
     config: LinkConfig | null;
     galleries: Gallery[];
     timelines: Timeline[];
-    letters: Letter[];
+    letters: (Letter & { replies: LetterReply[] })[];
 };
 
 export interface TemplateEditProps {
@@ -34,7 +36,7 @@ export interface TemplateEditProps {
     linkData: LinkWithRelations;
 }
 
-export type EditTabId = "profile" | "features" | "gallery" | "timeline" | "settings";
+export type EditTabId = "profile" | "features" | "gallery" | "timeline" | "letters" | "settings";
 
 export interface EditTab {
     id: EditTabId;
@@ -54,9 +56,9 @@ export const EDIT_TABS: Record<EditTabId, EditTab> = {
     },
     features: {
         id: "features",
-        label: "Tính năng riêng",
-        shortLabel: "Tính năng",
-        description: "Cấu hình điểm nhấn theo template",
+        label: "Hướng dẫn & tiến độ",
+        shortLabel: "Tiến độ",
+        description: "Gợi ý biên tập theo template",
         icon: Sparkles,
     },
     gallery: {
@@ -72,6 +74,13 @@ export const EDIT_TABS: Record<EditTabId, EditTab> = {
         shortLabel: "Timeline",
         description: "Chỉnh sửa câu chuyện",
         icon: Calendar,
+    },
+    letters: {
+        id: "letters",
+        label: "Lưu bút",
+        shortLabel: "Lưu bút",
+        description: "Viết, mở khóa và quản lý những lời nhắn riêng",
+        icon: Mail,
     },
     settings: {
         id: "settings",
@@ -233,8 +242,12 @@ export function EditFormContent({
         return <TimelineManager slug={slug} initialTimeline={linkData.timelines} isDark={isDark} />;
     }
 
+    if (activeTab === "letters") {
+        return <LetterBox slug={slug} initialLetters={linkData.letters} isDark={isDark} />;
+    }
+
     if (activeTab === "features") {
-        return <TemplateFeaturePanel slug={slug} linkData={linkData} isDark={isDark} />;
+        return <TemplateFeaturePanel linkData={linkData} isDark={isDark} />;
     }
 
     if (activeTab === "settings") {

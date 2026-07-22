@@ -13,7 +13,7 @@ import {
     type TemplateEditProps,
 } from "@/components/edit/templates/shared";
 
-const tabs = tabsOf(["profile", "features", "gallery", "timeline", "settings"]);
+const tabs = tabsOf(["profile", "features", "gallery", "timeline", "letters", "settings"]);
 
 export function IdolEditClient({ slug, linkData }: TemplateEditProps) {
     const state = useTemplateEditState({ slug, linkData, tabs, supportsThemeMode: true });

@@ -13,7 +13,7 @@ import {
     type TemplateEditProps,
 } from "@/components/edit/templates/shared";
 
-const tabs = tabsOf(["profile", "features", "timeline", "gallery", "settings"]);
+const tabs = tabsOf(["profile", "features", "timeline", "gallery", "letters", "settings"]);
 
 export function GradPersonalEditClient({ slug, linkData }: TemplateEditProps) {
     const state = useTemplateEditState({ slug, linkData, tabs, supportsThemeMode: true });

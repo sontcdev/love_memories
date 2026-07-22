@@ -136,6 +136,7 @@ export interface WeddingProfileData {
 
 export interface TravelProfileData {
     trip_name?: string;
+    destination?: string;
     start_date?: string;
     end_date?: string;
     owner_name?: string;

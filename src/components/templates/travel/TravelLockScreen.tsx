@@ -10,7 +10,11 @@ import {
 export function TravelLockScreen({ slug, onSuccess, linkData }: TemplateLockScreenProps) {
     const profile = linkData?.profile_data as Record<string, unknown> | null;
     const tripName = typeof profile?.trip_name === "string" ? profile.trip_name : "Hành Trình";
-    const destination = typeof profile?.destination === "string" ? profile.destination : null;
+    const destination = typeof profile?.destination === "string"
+        ? profile.destination
+        : typeof profile?.destinations === "string"
+            ? profile.destinations
+            : null;
 
     return (
         <main className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-gradient-to-br from-[#dff4ff] via-[#f3fbf8] to-[#ccebdd] px-3 py-6 text-slate-800 sm:px-6 sm:py-10">

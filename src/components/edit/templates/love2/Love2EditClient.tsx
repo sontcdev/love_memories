@@ -12,7 +12,7 @@ import {
     type TemplateEditProps,
 } from "@/components/edit/templates/shared";
 
-const tabs = tabsOf(["gallery", "features", "profile", "timeline", "settings"]);
+const tabs = tabsOf(["gallery", "profile", "timeline", "letters", "features", "settings"]);
 
 export function Love2EditClient({ slug, linkData }: TemplateEditProps) {
     const state = useTemplateEditState({ slug, linkData, tabs });

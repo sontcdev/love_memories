@@ -12,6 +12,9 @@ const weddingProfileSchema = z.object({
     wedding_date: z.string().optional(),
     venue: z.string().max(100).optional(),
     title: z.string().max(100).optional(),
+    ceremony_time: z.string().max(30).optional(),
+    reception_time: z.string().max(30).optional(),
+    love_story: z.string().max(500).optional(),
 });
 
 type WeddingFormData = z.infer<typeof weddingProfileSchema>;
@@ -47,6 +50,9 @@ export function EditWeddingProfileForm({
             wedding_date: initialData?.wedding_date || "",
             venue: initialData?.venue || "",
             title: initialData?.title || "",
+            ceremony_time: initialData?.ceremony_time || "",
+            reception_time: initialData?.reception_time || "",
+            love_story: initialData?.love_story || "",
         },
     });
 
@@ -127,6 +133,25 @@ export function EditWeddingProfileForm({
                 />
             </div>
 
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Giờ làm lễ</label>
+                    <input
+                        {...register("ceremony_time")}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
+                        placeholder="09:00"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Giờ tiệc</label>
+                    <input
+                        {...register("reception_time")}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
+                        placeholder="18:00"
+                    />
+                </div>
+            </div>
+
             {/* Title */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -137,6 +162,18 @@ export function EditWeddingProfileForm({
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
                     placeholder="Ngày trọng đại"
                 />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Câu chuyện tình yêu</label>
+                <textarea
+                    {...register("love_story")}
+                    rows={5}
+                    maxLength={500}
+                    className="w-full resize-none px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all"
+                    placeholder="Hai người đã gặp nhau như thế nào?"
+                />
+                {errors.love_story && <p className="mt-1 text-sm text-red-500">{errors.love_story.message}</p>}
             </div>
 
             {/* Message */}

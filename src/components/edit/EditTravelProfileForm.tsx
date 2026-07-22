@@ -8,7 +8,7 @@ import { Save, Loader2, Plane } from "lucide-react";
 
 const travelProfileSchema = z.object({
     trip_name: z.string().min(1, "Bắt buộc").max(50),
-    destinations: z.string().max(100).optional(),
+    destination: z.string().max(100).optional(),
     start_date: z.string().optional(),
     end_date: z.string().optional(),
     travelers: z.string().max(100).optional(),
@@ -43,7 +43,7 @@ export function EditTravelProfileForm({
         resolver: zodResolver(travelProfileSchema),
         defaultValues: {
             trip_name: initialData?.trip_name || "",
-            destinations: initialData?.destinations || "",
+            destination: initialData?.destination || initialData?.destinations || "",
             start_date: initialData?.start_date || "",
             end_date: initialData?.end_date || "",
             travelers: initialData?.travelers || "",
@@ -94,7 +94,7 @@ export function EditTravelProfileForm({
                     Điểm đến
                 </label>
                 <input
-                    {...register("destinations")}
+                    {...register("destination")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-300 focus:border-sky-400 outline-none transition-all"
                     placeholder="Đà Lạt, Phú Quốc, Nhật Bản..."
                 />

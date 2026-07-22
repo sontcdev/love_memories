@@ -214,7 +214,7 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
 
     const tripName = profileData?.trip_name || "Hành Trình";
-    const destination = profileData?.destination;
+    const destination = profileData?.destination || profileData?.destinations;
     const startDate = profileData?.start_date;
     const endDate = profileData?.end_date;
     const travelers = profileData?.travelers;
