@@ -160,3 +160,11 @@ No tests. After changes:
 - Admin panel: `src/app/admin/links/links-table.tsx`
 - Schema: `prisma/schema.prisma`
 - Spec: `LOVE_TEMPLATE_REPORT.md` (Vietnamese), `docx/` folder
+
+## AI Behavior & Coding Rules
+
+- **Role:** You act as an expert Next.js 14 (App Router) and Prisma 6 developer.
+- **Component Isolation:** Explicitly separate Server Components and Client Components using `"use client"` at the very top only when necessary.
+- **Data Access:** Always utilize Prisma Client for querying the Supabase PostgreSQL database. Never write raw SQL unless explicitly asked.
+- **Styling Convention:** Combine Tailwind classes using `clsx` and `tailwind-merge` via your standard `cn()` utility.
+- **Output Style:** Provide concise, direct code solutions. **Do not write long theoretical explanations.** Focus purely on the implementation.
