@@ -1,34 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { Link, LinkType } from "@prisma/client";
+import { deleteLink, toggleLinkStatus } from "@/app/actions/admin-actions";
 import {
-    createLink,
-    deleteLink,
-    toggleLinkStatus,
-    resetLinkPin,
-} from "@/app/actions/admin-actions";
+    duplicateLink,
+    exportLink,
+    toggleFavorite,
+} from "@/app/actions/link-management-actions";
 import { QRCodeDialog } from "@/components/admin/QRCodeDialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { BulkActionBar } from "@/components/admin/links/BulkActionBar";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+    bulkDeleteConfirmMessage,
+    summarizeBulk,
+    type BulkAction,
+} from "@/components/admin/links/bulk-actions";
+import { copyText } from "@/components/admin/links/clipboard";
+import { CreateLinkDialog } from "@/components/admin/links/CreateLinkDialog";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+    CredentialsDialog,
+    type NewLinkCredentials,
+} from "@/components/admin/links/CredentialsDialog";
+import { downloadJson, exportFileName } from "@/components/admin/links/export-download";
+import { ImportLinkDialog } from "@/components/admin/links/ImportLinkDialog";
+import { LinkFilterBar } from "@/components/admin/links/LinkFilterBar";
+import {
+    DEFAULT_LINK_FILTERS,
+    filterAndSortLinks,
+    isFilterActive,
+    type LinkFilterState,
+} from "@/components/admin/links/link-filters";
+import {
+    LinkRow,
+    type RowAction,
+} from "@/components/admin/links/LinkRow";
+import {
+    ResetPinDialog,
+    type ResetPinTarget,
+} from "@/components/admin/links/ResetPinDialog";
+import {
+    TagEditorDialog,
+    type TagEditorTarget,
+} from "@/components/admin/links/TagEditorDialog";
+import { useAdminShortcuts } from "@/components/admin/links/use-admin-shortcuts";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
     Table,
     TableBody,
@@ -37,598 +54,533 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import {
-    Plus,
-    Trash2,
-    ExternalLink,
-    Copy,
-    Check,
-    Loader2,
-    Power,
-    Heart,
-    Star,
-    Users,
-    QrCode,
-    KeyRound,
-    Shuffle,
-    GraduationCap,
-    Gem,
-    MapPin,
-    Smile,
-} from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import type { LinkWithUser } from "@/types";
+import { Upload, LinkIcon, SearchX } from "lucide-react";
 
-type LinkWithUser = Link & {
-    user: {
-        id: string;
-        username: string;
-    };
-};
+/** Số cột của bảng — dùng cho `colSpan` của dòng trạng thái rỗng. */
+const COLUMN_COUNT = 9;
+
+type ConfirmState =
+    | { kind: "delete-one"; link: LinkWithUser }
+    | { kind: "delete-bulk"; ids: string[] };
 
 interface LinksTableProps {
     initialLinks: LinkWithUser[];
 }
 
+/**
+ * Bảng quản lý liên kết.
+ *
+ * Chỉ còn giữ phần điều phối: state của danh sách, lựa chọn, bộ lọc và các lời
+ * gọi server action. Toàn bộ phần hiển thị đã tách sang `components/admin/links/`
+ * để tệp này không phình lại như bản 751 dòng trước đó.
+ *
+ * Phân trang vẫn thuộc server (`page.tsx` đọc `?page=`); mọi thứ ở đây chỉ tác
+ * động lên **các dòng của trang hiện tại**.
+ */
 export function LinksTable({ initialLinks }: LinksTableProps) {
-    // const router = useRouter();
+    const router = useRouter();
+    const toast = useToast();
+
     const [links, setLinks] = useState<LinkWithUser[]>(initialLinks);
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [isCreating, setIsCreating] = useState(false);
-    const [createError, setCreateError] = useState<string | null>(null);
-    const [createdCredentials, setCreatedCredentials] = useState<{
-        username: string;
-        password: string;
-        slug: string;
-    } | null>(null);
+    const [filters, setFilters] = useState<LinkFilterState>(DEFAULT_LINK_FILTERS);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [rowBusy, setRowBusy] = useState<Record<string, RowAction>>({});
     const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
-    const [togglingId, setTogglingId] = useState<string | null>(null);
+
     const [qrDialog, setQrDialog] = useState<{ slug: string; username: string } | null>(null);
-    const [resettingPinId, setResettingPinId] = useState<string | null>(null);
-    const [resetPinResult, setResetPinResult] = useState<{ username: string; newPin: string } | null>(null);
-    const [resetPinDialog, setResetPinDialog] = useState<{ linkId: string; username: string } | null>(null);
-    const [resetPinInput, setResetPinInput] = useState("");
-    const [resetPinError, setResetPinError] = useState<string | null>(null);
-    const [isReloading, setIsReloading] = useState(false);
+    const [resetPinTarget, setResetPinTarget] = useState<ResetPinTarget | null>(null);
+    const [tagTarget, setTagTarget] = useState<TagEditorTarget | null>(null);
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [newCredentials, setNewCredentials] = useState<NewLinkCredentials | null>(null);
+    const [credentialsKind, setCredentialsKind] = useState<"duplicate" | "import">("duplicate");
+    const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
 
-    const getTypeIcon = (type: LinkType) => {
-        switch (type) {
-            case "LOVE":
-                return <Heart className="w-4 h-4 text-pink-400" />;
-            case "LOVE2":
-                return <Heart className="w-4 h-4 text-rose-400" />;
-            case "IDOL":
-                return <Star className="w-4 h-4 text-yellow-400" />;
-            case "EVERY":
-                return <Users className="w-4 h-4 text-blue-400" />;
-            case "GRAD_PERSONAL":
-                return <GraduationCap className="w-4 h-4 text-emerald-400" />;
-            case "GRAD_CLASS":
-                return <Users className="w-4 h-4 text-cyan-400" />;
-            case "GRAD_GROUP":
-                return <Users className="w-4 h-4 text-orange-400" />;
-            case "WEDDING":
-                return <Gem className="w-4 h-4 text-amber-400" />;
-            case "TRAVEL":
-                return <MapPin className="w-4 h-4 text-teal-400" />;
-            case "FRIENDSHIP":
-                return <Smile className="w-4 h-4 text-purple-400" />;
+    const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
+    const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+
+    const searchRef = useRef<HTMLInputElement>(null);
+    const selectAllRef = useRef<HTMLInputElement>(null);
+
+    // Server action nào cũng gọi `revalidatePath("/admin/links")`, nên sau
+    // `router.refresh()` prop mới sẽ tới đây. State phải nhận lại dữ liệu đó,
+    // nếu không bảng sẽ đứng yên ở ảnh chụp lần đầu.
+    useEffect(() => {
+        setLinks(initialLinks);
+    }, [initialLinks]);
+
+    const visibleLinks = useMemo(() => filterAndSortLinks(links, filters), [links, filters]);
+    const visibleIds = useMemo(() => visibleLinks.map((link) => link.id), [visibleLinks]);
+
+    // Không cho phép "chọn rồi lọc đi" — thao tác hàng loạt chỉ được chạm vào
+    // những dòng admin đang thực sự nhìn thấy.
+    useEffect(() => {
+        setSelectedIds((previous) => {
+            if (previous.size === 0) return previous;
+            const allowed = new Set(visibleIds);
+            const next = new Set(Array.from(previous).filter((id) => allowed.has(id)));
+            return next.size === previous.size ? previous : next;
+        });
+    }, [visibleIds]);
+
+    const selectedCount = selectedIds.size;
+    const allVisibleSelected = visibleIds.length > 0 && selectedCount === visibleIds.length;
+
+    useEffect(() => {
+        if (selectAllRef.current) {
+            selectAllRef.current.indeterminate = selectedCount > 0 && !allVisibleSelected;
         }
-    };
+    }, [selectedCount, allVisibleSelected]);
 
-    const getTypeBadgeColor = (type: LinkType) => {
-        switch (type) {
-            case "LOVE":
-                return "bg-pink-500/10 text-pink-400 border-pink-500/30";
-            case "LOVE2":
-                return "bg-rose-500/10 text-rose-400 border-rose-500/30";
-            case "IDOL":
-                return "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
-            case "EVERY":
-                return "bg-blue-500/10 text-blue-400 border-blue-500/30";
-            case "GRAD_PERSONAL":
-                return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-            case "GRAD_CLASS":
-                return "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
-            case "GRAD_GROUP":
-                return "bg-orange-500/10 text-orange-400 border-orange-500/30";
-            case "WEDDING":
-                return "bg-amber-500/10 text-amber-400 border-amber-500/30";
-            case "TRAVEL":
-                return "bg-teal-500/10 text-teal-400 border-teal-500/30";
-            case "FRIENDSHIP":
-                return "bg-purple-500/10 text-purple-400 border-purple-500/30";
-        }
-    };
+    const isDialogOpen =
+        qrDialog !== null ||
+        resetPinTarget !== null ||
+        tagTarget !== null ||
+        isImportOpen ||
+        newCredentials !== null ||
+        confirmState !== null;
 
-    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setIsCreating(true);
-        setCreateError(null);
+    const focusSearch = useCallback(() => {
+        searchRef.current?.focus();
+        searchRef.current?.select();
+    }, []);
 
-        const formData = new FormData(e.currentTarget);
-        const result = await createLink(formData);
+    const clearSelectionAndFilters = useCallback(() => {
+        setSelectedIds(new Set());
+        setFilters(DEFAULT_LINK_FILTERS);
+        searchRef.current?.blur();
+    }, []);
 
-        if (result.success && result.data) {
-            setCreatedCredentials({
-                username: result.data.username,
-                password: result.data.password,
-                slug: result.data.slug,
-            });
+    useAdminShortcuts({
+        enabled: !isDialogOpen && bulkAction === null,
+        searchRef,
+        onFocusSearch: focusSearch,
+        onEscape: clearSelectionAndFilters,
+    });
+
+    function setRowAction(linkId: string, action: RowAction | null) {
+        setRowBusy((previous) => {
+            const next = { ...previous };
+            if (action === null) delete next[linkId];
+            else next[linkId] = action;
+            return next;
+        });
+    }
+
+    function patchLink(linkId: string, patch: Partial<LinkWithUser>) {
+        setLinks((previous) =>
+            previous.map((link) => (link.id === linkId ? { ...link, ...patch } : link))
+        );
+    }
+
+    /* ---------------------------------------------------------------- lựa chọn */
+
+    function handleToggleSelect(linkId: string, selected: boolean) {
+        setSelectedIds((previous) => {
+            const next = new Set(previous);
+            if (selected) next.add(linkId);
+            else next.delete(linkId);
+            return next;
+        });
+    }
+
+    function handleToggleSelectAll(selected: boolean) {
+        setSelectedIds(selected ? new Set(visibleIds) : new Set());
+    }
+
+    /* ------------------------------------------------------- thao tác từng dòng */
+
+    async function handleCopyLink(link: LinkWithUser) {
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        const ok = await copyText(`${origin}/${link.slug}`);
+
+        if (ok) {
+            setCopiedSlug(link.slug);
+            setTimeout(() => setCopiedSlug(null), 2000);
         } else {
-            setCreateError(result.error || "Không thể tạo liên kết");
+            toast.error("Không thể sao chép", "Vui lòng sao chép thủ công.");
         }
-
-        setIsCreating(false);
-    };
-
-    async function handleDelete(linkId: string) {
-        if (!confirm("Bạn có chắc muốn xóa liên kết này? Hành động này không thể hoàn tác.")) {
-            return;
-        }
-
-        setDeletingId(linkId);
-        const result = await deleteLink(linkId);
-
-        if (result.success) {
-            setLinks(links.filter((link) => link.id !== linkId));
-        } else {
-            alert(result.error || "Không thể xóa liên kết");
-        }
-
-        setDeletingId(null);
     }
 
     async function handleToggleStatus(linkId: string) {
-        setTogglingId(linkId);
+        setRowAction(linkId, "status");
         const result = await toggleLinkStatus(linkId);
 
         if (result.success && result.data) {
-            setLinks(
-                links.map((link) =>
-                    link.id === linkId ? { ...link, is_active: result.data.is_active } : link
-                )
+            patchLink(linkId, { is_active: result.data.is_active });
+        } else {
+            // Trước đây lỗi này bị bỏ qua hoàn toàn: dòng giữ nguyên trạng thái cũ
+            // mà không có dấu hiệu nào cho thấy thao tác đã thất bại.
+            toast.error("Không thể đổi trạng thái liên kết", "Vui lòng thử lại.");
+        }
+
+        setRowAction(linkId, null);
+    }
+
+    async function handleToggleFavorite(link: LinkWithUser) {
+        setRowAction(link.id, "favorite");
+        const result = await toggleFavorite(link.id);
+
+        if (result.success && result.data) {
+            patchLink(link.id, { is_favorite: result.data.is_favorite });
+        } else {
+            toast.error("Không thể cập nhật yêu thích", result.error || "Vui lòng thử lại.");
+        }
+
+        setRowAction(link.id, null);
+    }
+
+    async function handleDuplicate(link: LinkWithUser) {
+        setRowAction(link.id, "duplicate");
+        const result = await duplicateLink(link.id);
+
+        if (result.success && result.data) {
+            setCredentialsKind("duplicate");
+            setNewCredentials(result.data);
+        } else {
+            toast.error("Không thể nhân bản liên kết", result.error || "Vui lòng thử lại.");
+        }
+
+        setRowAction(link.id, null);
+    }
+
+    async function handleExport(link: LinkWithUser) {
+        setRowAction(link.id, "export");
+        const result = await exportLink(link.id);
+
+        if (result.success && result.data) {
+            downloadJson(exportFileName(link.slug), result.data);
+            toast.success("Đã xuất JSON", exportFileName(link.slug));
+        } else {
+            toast.error("Không thể xuất dữ liệu", result.error || "Vui lòng thử lại.");
+        }
+
+        setRowAction(link.id, null);
+    }
+
+    async function handleDeleteConfirmed(link: LinkWithUser) {
+        setRowAction(link.id, "delete");
+        const result = await deleteLink(link.id);
+
+        if (result.success) {
+            setLinks((previous) => previous.filter((item) => item.id !== link.id));
+            setSelectedIds((previous) => {
+                const next = new Set(previous);
+                next.delete(link.id);
+                return next;
+            });
+            toast.success("Đã xóa liên kết", `/${link.slug}`);
+            setConfirmState(null);
+        } else {
+            toast.error("Không thể xóa liên kết", result.error || undefined);
+        }
+
+        setRowAction(link.id, null);
+    }
+
+    /* ------------------------------------------------------- thao tác hàng loạt */
+
+    /**
+     * Chạy tuần tự, mỗi liên kết một lời gọi server.
+     *
+     * Cố ý không dùng `Promise.all`: 20 transaction song song vào Supabase dễ
+     * cạn pool, và tiến độ "3/5" chỉ có nghĩa khi các bước diễn ra lần lượt.
+     */
+    async function runBulkStatus(action: Exclude<BulkAction, "delete">, ids: string[]) {
+        const target = action === "activate";
+
+        setBulkAction(action);
+        setBulkProgress({ done: 0, total: ids.length });
+        toast.info(
+            `Đang ${target ? "bật" : "tạm dừng"} ${ids.length} liên kết…`,
+            "Xử lý lần lượt, vui lòng không đóng trang."
+        );
+
+        let ok = 0;
+        let failed = 0;
+        let skipped = 0;
+        const patches: { id: string; is_active: boolean }[] = [];
+
+        for (let index = 0; index < ids.length; index += 1) {
+            const id = ids[index];
+            const current = links.find((link) => link.id === id);
+
+            // `toggleLinkStatus()` đảo trạng thái chứ không nhận giá trị đích, nên
+            // những dòng đã đúng trạng thái phải được bỏ qua — gọi thêm sẽ lật ngược.
+            if (current && current.is_active === target) {
+                skipped += 1;
+                setBulkProgress({ done: index + 1, total: ids.length });
+                continue;
+            }
+
+            const result = await toggleLinkStatus(id);
+
+            if (result.success && result.data && result.data.is_active === target) {
+                ok += 1;
+                patches.push({ id, is_active: result.data.is_active });
+            } else {
+                // Kể cả khi server trả về success: nếu trạng thái sau cùng không
+                // phải trạng thái đích (do ai đó vừa đổi ở tab khác) thì vẫn tính
+                // là thất bại, và lấy giá trị thật của server để hiển thị.
+                failed += 1;
+                if (result.success && result.data) {
+                    patches.push({ id, is_active: result.data.is_active });
+                }
+            }
+
+            setBulkProgress({ done: index + 1, total: ids.length });
+        }
+
+        if (patches.length > 0) {
+            setLinks((previous) =>
+                previous.map((link) => {
+                    const patch = patches.find((item) => item.id === link.id);
+                    return patch ? { ...link, is_active: patch.is_active } : link;
+                })
             );
         }
 
-        setTogglingId(null);
+        const summary = summarizeBulk(action, { total: ids.length, ok, failed, skipped });
+        toast.show(summary);
+
+        setBulkAction(null);
+        setBulkProgress(null);
+        if (failed === 0) setSelectedIds(new Set());
     }
 
-    async function copyToClipboard(text: string, slug: string) {
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-            try {
-                await navigator.clipboard.writeText(text);
-                setCopiedSlug(slug);
-                setTimeout(() => setCopiedSlug(null), 2000);
-                return;
-            } catch (err) {
-                console.error("Failed to copy using navigator.clipboard", err);
-            }
-        }
+    async function runBulkDelete(ids: string[]) {
+        setBulkAction("delete");
+        setBulkProgress({ done: 0, total: ids.length });
+        toast.info(`Đang xoá ${ids.length} liên kết…`, "Xử lý lần lượt, vui lòng không đóng trang.");
 
-        // Fallback
-        try {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.top = "0";
-            textArea.style.left = "0";
-            textArea.style.position = "fixed";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            const successful = document.execCommand("copy");
-            document.body.removeChild(textArea);
-            if (successful) {
-                setCopiedSlug(slug);
-                setTimeout(() => setCopiedSlug(null), 2000);
+        let ok = 0;
+        let failed = 0;
+        const deleted: string[] = [];
+
+        for (let index = 0; index < ids.length; index += 1) {
+            const result = await deleteLink(ids[index]);
+
+            if (result.success) {
+                ok += 1;
+                deleted.push(ids[index]);
             } else {
-                console.error("Fallback copy was unsuccessful");
+                failed += 1;
             }
-        } catch (err) {
-            console.error("Fallback copy failed", err);
-        }
-    }
 
-    function generateRandomPin() {
-        const pin = Math.floor(100000 + Math.random() * 900000).toString();
-        setResetPinInput(pin);
-    }
-
-    function openResetPinDialog(linkId: string, username: string) {
-        setResetPinDialog({ linkId, username });
-        setResetPinInput("");
-        setResetPinError(null);
-    }
-
-    function closeResetPinDialog() {
-        setResetPinDialog(null);
-        setResetPinInput("");
-        setResetPinError(null);
-    }
-
-    async function handleResetPin() {
-        if (!resetPinDialog) return;
-
-        // Validate if custom PIN is provided
-        if (resetPinInput && !/^\d{6}$/.test(resetPinInput)) {
-            setResetPinError("Mã PIN phải có đúng 6 chữ số");
-            return;
+            setBulkProgress({ done: index + 1, total: ids.length });
         }
 
-        setResettingPinId(resetPinDialog.linkId);
-        setResetPinError(null);
-
-        const result = await resetLinkPin(resetPinDialog.linkId, resetPinInput || undefined);
-
-        if (result.success && result.data) {
-            setResetPinResult({
-                username: result.data.username,
-                newPin: result.data.newPin,
-            });
-            closeResetPinDialog();
-        } else {
-            setResetPinError(result.error || "Không thể đặt lại PIN");
+        if (deleted.length > 0) {
+            const removed = new Set(deleted);
+            setLinks((previous) => previous.filter((link) => !removed.has(link.id)));
+            setSelectedIds(
+                (previous) => new Set(Array.from(previous).filter((id) => !removed.has(id)))
+            );
         }
 
-        setResettingPinId(null);
+        const summary = summarizeBulk("delete", { total: ids.length, ok, failed, skipped: 0 });
+        toast.show(summary);
+
+        setBulkAction(null);
+        setBulkProgress(null);
+        setConfirmState(null);
+
+        // Xoá làm lệch phân trang phía server (tổng số trang có thể giảm), nên
+        // lấy lại dữ liệu thay vì tin vào danh sách đã lọc cục bộ.
+        if (deleted.length > 0) router.refresh();
     }
 
-    function handleDialogClose() {
-        const wasSuccessful = createdCredentials !== null;
-        setIsCreateOpen(false);
-        setCreateError(null);
-        setCreatedCredentials(null);
+    /* ------------------------------------------------------------------ dialog */
 
-        // Reload page to show new link in table
-        if (wasSuccessful) {
-            setIsReloading(true);
-            // Small delay to show loading state
-            setTimeout(() => {
-                window.location.reload();
-            }, 300);
+    function handleCredentialsClose() {
+        setNewCredentials(null);
+        // Liên kết mới nằm ngoài trang hiện tại cho tới khi lấy lại dữ liệu.
+        router.refresh();
+    }
+
+    // Một hộp xác nhận duy nhất phục vụ cả xoá 1 dòng và xoá hàng loạt. Mọi
+    // nhánh trả về đủ các khoá để phần đọc bên dưới không phải kiểm tra từng cái.
+    const confirmProps: {
+        isOpen: boolean;
+        title: string;
+        message: string;
+        confirmText: string;
+        isLoading: boolean;
+        onConfirm: () => void;
+    } = (() => {
+        if (confirmState?.kind === "delete-bulk") {
+            return {
+                isOpen: true,
+                title: `Xoá ${confirmState.ids.length} liên kết?`,
+                message: bulkDeleteConfirmMessage(confirmState.ids.length),
+                confirmText: `Xoá ${confirmState.ids.length} liên kết`,
+                isLoading: bulkAction === "delete",
+                onConfirm: () => runBulkDelete(confirmState.ids),
+            };
         }
-    }
+
+        if (confirmState?.kind === "delete-one") {
+            const { link } = confirmState;
+            return {
+                isOpen: true,
+                title: "Xoá liên kết?",
+                message: `Xoá liên kết /${link.slug} của ${link.user.username}? Toàn bộ ảnh, dòng thời gian và lời nhắn sẽ bị xoá vĩnh viễn và không thể hoàn tác.`,
+                confirmText: "Xoá liên kết",
+                isLoading: rowBusy[link.id] === "delete",
+                onConfirm: () => handleDeleteConfirmed(link),
+            };
+        }
+
+        return {
+            isOpen: false,
+            title: "Xác nhận",
+            message: "",
+            confirmText: "Xác nhận",
+            isLoading: false,
+            onConfirm: () => undefined,
+        };
+    })();
+
+    const filtersActive = isFilterActive(filters);
 
     return (
         <div className="space-y-6">
-            {/* Actions Bar */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Quản Lý Liên Kết</h2>
-                    <p className="text-slate-400 mt-1">Tạo và quản lý liên kết người dùng</p>
+                    <p className="mt-1 text-slate-400">Tạo và quản lý liên kết người dùng</p>
                 </div>
 
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Tạo Liên Kết Mới
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-slate-800 border-slate-700 text-white">
-                        {createdCredentials ? (
-                            <>
-                                <DialogHeader>
-                                    <DialogTitle className="text-green-400 flex items-center gap-2">
-                                        <Check className="w-5 h-5" />
-                                        Đã Tạo Liên Kết Thành Công!
-                                    </DialogTitle>
-                                    <DialogDescription className="text-slate-400">
-                                        Lưu thông tin này - sẽ không hiển thị lại.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4 py-4">
-                                    <div className="bg-slate-900/50 rounded-lg p-4 space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-slate-400">Tên người dùng:</span>
-                                            <span className="font-mono text-white">{createdCredentials.username}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-slate-400">Mã PIN:</span>
-                                            <span className="font-mono text-white text-lg tracking-wider">
-                                                {createdCredentials.password}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-slate-400">Liên kết:</span>
-                                            <span className="font-mono text-violet-400">
-                                                /{createdCredentials.slug}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button
-                                        onClick={handleDialogClose}
-                                        variant="outline"
-                                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                                        disabled={isReloading}
-                                    >
-                                        {isReloading ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Đang tải...
-                                            </>
-                                        ) : (
-                                            "Đóng"
-                                        )}
-                                    </Button>
-                                </DialogFooter>
-                            </>
-                        ) : (
-                            <>
-                                <DialogHeader>
-                                    <DialogTitle>Tạo Liên Kết Mới</DialogTitle>
-                                    <DialogDescription className="text-slate-400">
-                                        Tạo người dùng mới với liên kết cá nhân hóa.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <form onSubmit={handleFormSubmit}>
-                                    <div className="space-y-4 py-4">
-                                        {createError && (
-                                            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
-                                                {createError}
-                                            </div>
-                                        )}
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsImportOpen(true)}
+                        className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-600 bg-slate-800/60 px-4 text-sm font-medium text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                    >
+                        <Upload className="h-4 w-4" aria-hidden="true" />
+                        Nhập JSON
+                    </button>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="create-username" className="text-slate-300">
-                                                Tên người dùng
-                                            </Label>
-                                            <Input
-                                                id="create-username"
-                                                name="username"
-                                                placeholder="Nhập tên người dùng"
-                                                required
-                                                disabled={isCreating}
-                                                className="bg-slate-900/50 border-slate-600 text-white"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="create-password" className="text-slate-300">
-                                                Mã PIN (6 chữ số) - Tùy chọn
-                                            </Label>
-                                            <Input
-                                                id="create-password"
-                                                name="password"
-                                                placeholder="Tự động tạo nếu để trống"
-                                                maxLength={6}
-                                                pattern="[0-9]{6}"
-                                                disabled={isCreating}
-                                                className="bg-slate-900/50 border-slate-600 text-white"
-                                            />
-                                            <p className="text-xs text-slate-500">
-                                                Để trống để tự động tạo mã PIN 6 chữ số
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="create-type" className="text-slate-300">
-                                                Loại giao diện
-                                            </Label>
-                                            <Select name="linkType" defaultValue="LOVE" disabled={isCreating}>
-                                                <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
-                                                    <SelectValue placeholder="Select template" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-slate-800 border-slate-700">
-                                                    <SelectItem value="LOVE" className="text-white focus:bg-slate-700 focus:text-white">
-                                                        <div className="flex items-center gap-2">
-                                                            <Heart className="w-4 h-4 text-pink-400" />
-                                                            Tình yêu (Cũ)
-                                                        </div>
-                                                    </SelectItem>
-                                                    <SelectItem value="LOVE2" className="text-white focus:bg-slate-700 focus:text-white">
-                                                        <div className="flex items-center gap-2">
-                                                            <Heart className="w-4 h-4 text-rose-400" />
-                                                            Tình yêu 2 (Lưu bút)
-                                                        </div>
-                                                    </SelectItem>
-                                                    <SelectItem value="IDOL" className="text-white focus:bg-slate-700 focus:text-white">
-                                                        <div className="flex items-center gap-2">
-                                                            <Star className="w-4 h-4 text-yellow-400" />
-                                                            Idol
-                                                        </div>
-                                                    </SelectItem>
-                                                    <SelectItem value="GRAD_PERSONAL" className="text-white focus:bg-slate-700 focus:text-white">
-                                                        <div className="flex items-center gap-2">
-                                                            <GraduationCap className="w-4 h-4 text-emerald-400" />
-                                                            Tốt nghiệp cá nhân
-                                                        </div>
-                                                    </SelectItem>
-                                                    <SelectItem value="GRAD_CLASS" className="text-white focus:bg-slate-700 focus:text-white">
-                                                        <div className="flex items-center gap-2">
-                                                            <Users className="w-4 h-4 text-cyan-400" />
-                                                            Tốt nghiệp tập thể
-                                                        </div>
-                                                    </SelectItem>
-                                                     <SelectItem value="GRAD_GROUP" className="text-white focus:bg-slate-700 focus:text-white">
-                                                         <div className="flex items-center gap-2">
-                                                             <Users className="w-4 h-4 text-orange-400" />
-                                                             Tốt nghiệp nhóm bạn
-                                                         </div>
-                                                     </SelectItem>
-                                                     <SelectItem value="WEDDING" className="text-white focus:bg-slate-700 focus:text-white">
-                                                         <div className="flex items-center gap-2">
-                                                             <Gem className="w-4 h-4 text-amber-400" />
-                                                             Đám cưới
-                                                         </div>
-                                                     </SelectItem>
-                                                     <SelectItem value="TRAVEL" className="text-white focus:bg-slate-700 focus:text-white">
-                                                         <div className="flex items-center gap-2">
-                                                             <MapPin className="w-4 h-4 text-teal-400" />
-                                                             Du lịch
-                                                         </div>
-                                                     </SelectItem>
-                                                     <SelectItem value="FRIENDSHIP" className="text-white focus:bg-slate-700 focus:text-white">
-                                                         <div className="flex items-center gap-2">
-                                                             <Smile className="w-4 h-4 text-purple-400" />
-                                                             Tình bạn
-                                                         </div>
-                                                     </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-
-                                    <DialogFooter>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={handleDialogClose}
-                                            className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                                        >
-                                            Hủy
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            disabled={isCreating}
-                                            className="bg-gradient-to-r from-violet-600 to-purple-600"
-                                        >
-                                            {isCreating ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                    Đang tạo...
-                                                </>
-                                            ) : (
-                                                "Tạo liên kết"
-                                            )}
-                                        </Button>
-                                    </DialogFooter>
-                                </form>
-                            </>
-                        )}
-                    </DialogContent>
-                </Dialog>
+                    <CreateLinkDialog />
+                </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl overflow-hidden">
+            <LinkFilterBar
+                ref={searchRef}
+                filters={filters}
+                onChange={setFilters}
+                onReset={() => setFilters(DEFAULT_LINK_FILTERS)}
+                resultCount={visibleLinks.length}
+                totalCount={links.length}
+            />
+
+            <BulkActionBar
+                selectedCount={selectedCount}
+                runningAction={bulkAction}
+                progress={bulkProgress}
+                onActivate={() => runBulkStatus("activate", Array.from(selectedIds))}
+                onDeactivate={() => runBulkStatus("deactivate", Array.from(selectedIds))}
+                onDelete={() => setConfirmState({ kind: "delete-bulk", ids: Array.from(selectedIds) })}
+                onClear={() => setSelectedIds(new Set())}
+            />
+
+            <div className="overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/50 backdrop-blur-xl">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-slate-700/50 hover:bg-slate-700/20">
+                            <TableHead className="w-10 pr-0">
+                                <input
+                                    ref={selectAllRef}
+                                    type="checkbox"
+                                    checked={allVisibleSelected}
+                                    disabled={visibleLinks.length === 0}
+                                    onChange={(event) => handleToggleSelectAll(event.target.checked)}
+                                    aria-label="Chọn tất cả liên kết đang hiển thị"
+                                    className="h-4 w-4 cursor-pointer rounded border-slate-500 bg-slate-900 accent-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
+                                />
+                            </TableHead>
+                            <TableHead className="w-10 px-2">
+                                <span className="sr-only">Yêu thích</span>
+                            </TableHead>
                             <TableHead className="text-slate-400">Tên người dùng</TableHead>
                             <TableHead className="text-slate-400">Liên kết</TableHead>
                             <TableHead className="text-slate-400">Giao diện</TableHead>
+                            <TableHead className="text-slate-400">Nhãn</TableHead>
                             <TableHead className="text-slate-400">Trạng thái</TableHead>
                             <TableHead className="text-slate-400">Ngày tạo</TableHead>
-                            <TableHead className="text-slate-400 text-right">Hành động</TableHead>
+                            <TableHead className="text-right text-slate-400">Hành động</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {links.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                                    Chưa có liên kết nào. Tạo liên kết đầu tiên để bắt đầu.
+                            <TableRow className="border-slate-700/50 hover:bg-transparent">
+                                <TableCell colSpan={COLUMN_COUNT} className="py-10">
+                                    <EmptyState
+                                        icon={<LinkIcon className="h-6 w-6" />}
+                                        title="Chưa có liên kết nào"
+                                        description="Tạo liên kết đầu tiên để bắt đầu, hoặc nhập một liên kết từ tệp JSON đã xuất trước đó."
+                                        className="border-slate-700 bg-transparent"
+                                    />
+                                </TableCell>
+                            </TableRow>
+                        ) : visibleLinks.length === 0 ? (
+                            <TableRow className="border-slate-700/50 hover:bg-transparent">
+                                <TableCell colSpan={COLUMN_COUNT} className="py-10">
+                                    <EmptyState
+                                        icon={<SearchX className="h-6 w-6" />}
+                                        title="Không có liên kết nào khớp bộ lọc"
+                                        description={`${links.length} liên kết trong trang này đều bị lọc bỏ. Bộ lọc chỉ áp dụng cho trang hiện tại — liên kết cần tìm có thể đang ở trang khác.`}
+                                        action={
+                                            filtersActive ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFilters(DEFAULT_LINK_FILTERS)}
+                                                    className="rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                                                >
+                                                    Xoá bộ lọc
+                                                </button>
+                                            ) : undefined
+                                        }
+                                        className="border-slate-700 bg-transparent"
+                                    />
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            links.map((link) => (
-                                <TableRow key={link.id} className="border-slate-700/50 hover:bg-slate-700/20">
-                                    <TableCell className="font-medium text-white">
-                                        {link.user.username}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <code className="text-violet-400 bg-violet-500/10 px-2 py-1 rounded text-sm">
-                                                /{link.slug}
-                                            </code>
-                                            <button
-                                                onClick={() =>
-                                                    copyToClipboard(
-                                                        `${typeof window !== "undefined" ? window.location.origin : ""}/${link.slug}`,
-                                                        link.slug
-                                                    )
-                                                }
-                                                className="text-slate-400 hover:text-white transition-colors"
-                                            >
-                                                {copiedSlug === link.slug ? (
-                                                    <Check className="w-4 h-4 text-green-400" />
-                                                ) : (
-                                                    <Copy className="w-4 h-4" />
-                                                )}
-                                            </button>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getTypeBadgeColor(
-                                                link.type
-                                            )}`}
-                                        >
-                                            {getTypeIcon(link.type)}
-                                            {link.type}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <button
-                                            onClick={() => handleToggleStatus(link.id)}
-                                            disabled={togglingId === link.id}
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${link.is_active
-                                                ? "bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20"
-                                                : "bg-slate-500/10 text-slate-400 border border-slate-500/30 hover:bg-slate-500/20"
-                                                }`}
-                                        >
-                                            {togglingId === link.id ? (
-                                                <Loader2 className="w-3 h-3 animate-spin" />
-                                            ) : (
-                                                <Power className="w-3 h-3" />
-                                            )}
-                                            {link.is_active ? "Hoạt động" : "Tạm dừng"}
-                                        </button>
-                                    </TableCell>
-                                    <TableCell className="text-slate-400 text-sm">
-                                        {new Date(link.created_at).toLocaleDateString("vi-VN")}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => setQrDialog({ slug: link.slug, username: link.user.username })}
-                                                className="p-2 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
-                                                title="Hiển thị mã QR"
-                                            >
-                                                <QrCode className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => openResetPinDialog(link.id, link.user.username)}
-                                                disabled={resettingPinId === link.id}
-                                                className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
-                                                title="Đặt lại PIN"
-                                            >
-                                                {resettingPinId === link.id ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                ) : (
-                                                    <KeyRound className="w-4 h-4" />
-                                                )}
-                                            </button>
-                                            <a
-                                                href={`/${link.slug}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                                            >
-                                                <ExternalLink className="w-4 h-4" />
-                                            </a>
-                                            <button
-                                                onClick={() => handleDelete(link.id)}
-                                                disabled={deletingId === link.id}
-                                                className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                            >
-                                                {deletingId === link.id ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                ) : (
-                                                    <Trash2 className="w-4 h-4" />
-                                                )}
-                                            </button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
+                            visibleLinks.map((link) => (
+                                <LinkRow
+                                    key={link.id}
+                                    link={link}
+                                    selected={selectedIds.has(link.id)}
+                                    locked={bulkAction !== null}
+                                    busyAction={rowBusy[link.id] ?? null}
+                                    copied={copiedSlug === link.slug}
+                                    onToggleSelect={handleToggleSelect}
+                                    onCopyLink={handleCopyLink}
+                                    onToggleStatus={handleToggleStatus}
+                                    onToggleFavorite={handleToggleFavorite}
+                                    onEditTags={(target) =>
+                                        setTagTarget({ id: target.id, slug: target.slug, tags: target.tags })
+                                    }
+                                    onShowQr={(target) =>
+                                        setQrDialog({ slug: target.slug, username: target.user.username })
+                                    }
+                                    onResetPin={(target) =>
+                                        setResetPinTarget({
+                                            linkId: target.id,
+                                            username: target.user.username,
+                                        })
+                                    }
+                                    onDuplicate={handleDuplicate}
+                                    onExport={handleExport}
+                                    onDelete={(target) => setConfirmState({ kind: "delete-one", link: target })}
+                                />
                             ))
                         )}
                     </TableBody>
                 </Table>
             </div>
 
-            {/* QR Code Dialog */}
             <QRCodeDialog
                 slug={qrDialog?.slug || ""}
                 username={qrDialog?.username}
@@ -636,116 +588,50 @@ export function LinksTable({ initialLinks }: LinksTableProps) {
                 onClose={() => setQrDialog(null)}
             />
 
-            {/* Reset PIN Input Dialog */}
-            <Dialog open={!!resetPinDialog} onOpenChange={() => closeResetPinDialog()}>
-                <DialogContent className="bg-slate-800 border-slate-700 text-white">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <KeyRound className="w-5 h-5 text-amber-400" />
-                            Đặt lại PIN
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-400">
-                            Nhập mã PIN 6 chữ số mới cho <span className="text-white font-medium">{resetPinDialog?.username}</span> hoặc tạo ngẫu nhiên.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        {resetPinError && (
-                            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
-                                {resetPinError}
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label htmlFor="reset-pin" className="text-slate-300">
-                                Mã PIN mới (6 chữ số)
-                            </Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="reset-pin"
-                                    value={resetPinInput}
-                                    onChange={(e) => setResetPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    placeholder="Để trống để tự động tạo"
-                                    maxLength={6}
-                                    className="bg-slate-900/50 border-slate-600 text-white font-mono text-lg tracking-widest"
-                                />
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={generateRandomPin}
-                                    className="border-slate-600 text-slate-300 hover:bg-slate-700 px-3"
-                                    title="Tạo PIN ngẫu nhiên"
-                                >
-                                    <Shuffle className="w-4 h-4" />
-                                </Button>
-                            </div>
-                            <p className="text-xs text-slate-500">
-                                Để trống để tự động tạo mã PIN 6 chữ số ngẫu nhiên
-                            </p>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={closeResetPinDialog}
-                            className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                        >
-                            Hủy
-                        </Button>
-                        <Button
-                            onClick={handleResetPin}
-                            disabled={!!resettingPinId}
-                            className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
-                        >
-                            {resettingPinId ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Đang đặt lại...
-                                </>
-                            ) : (
-                                "Đặt lại PIN"
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ResetPinDialog target={resetPinTarget} onClose={() => setResetPinTarget(null)} />
 
-            {/* Reset PIN Result Dialog */}
-            <Dialog open={!!resetPinResult} onOpenChange={() => setResetPinResult(null)}>
-                <DialogContent className="bg-slate-800 border-slate-700 text-white">
-                    <DialogHeader>
-                        <DialogTitle className="text-amber-400 flex items-center gap-2">
-                            <KeyRound className="w-5 h-5" />
-                            Đặt Lại PIN Thành Công!
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-400">
-                            Lưu mã PIN mới này - sẽ không hiển thị lại.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="bg-slate-900/50 rounded-lg p-4 space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400">Tên người dùng:</span>
-                                <span className="font-mono text-white">{resetPinResult?.username}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400">Mã PIN mới:</span>
-                                <span className="font-mono text-amber-400 text-xl tracking-wider">
-                                    {resetPinResult?.newPin}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button
-                            onClick={() => setResetPinResult(null)}
-                            variant="outline"
-                            className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                        >
-                            Đóng
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <TagEditorDialog
+                target={tagTarget}
+                onClose={() => setTagTarget(null)}
+                onSaved={(linkId, tags) => patchLink(linkId, { tags })}
+            />
+
+            <ImportLinkDialog
+                open={isImportOpen}
+                onOpenChange={setIsImportOpen}
+                onImported={(credentials) => {
+                    setCredentialsKind("import");
+                    setNewCredentials(credentials);
+                }}
+            />
+
+            <CredentialsDialog
+                credentials={newCredentials}
+                title={
+                    credentialsKind === "duplicate"
+                        ? "Đã nhân bản liên kết!"
+                        : "Đã nhập liên kết từ JSON!"
+                }
+                description="Đây là thông tin đăng nhập của liên kết mới. Hãy bàn giao cho khách."
+                note={
+                    credentialsKind === "duplicate"
+                        ? "Bản nhân bản sao chép nội dung, ảnh và dòng thời gian, nhưng bắt đầu ở trạng thái nháp để chủ trang mới kiểm tra trước khi đăng."
+                        : "Liên kết vừa nhập bắt đầu ở trạng thái nháp để bạn kiểm tra nội dung trước khi đăng."
+                }
+                onClose={handleCredentialsClose}
+            />
+
+            <ConfirmDialog
+                isOpen={confirmProps.isOpen}
+                title={confirmProps.title}
+                message={confirmProps.message}
+                confirmText={confirmProps.confirmText}
+                cancelText="Hủy"
+                variant="danger"
+                isLoading={confirmProps.isLoading}
+                onConfirm={confirmProps.onConfirm}
+                onCancel={() => setConfirmState(null)}
+            />
         </div>
     );
 }
