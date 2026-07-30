@@ -4,11 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Award, Sun, Moon, GraduationCap } from "lucide-react";
+import { Calendar, Image as ImageIcon, Mail, ChevronUp, ChevronLeft, ChevronRight, Settings, Sparkles, X, Target, Award, Coffee, Sun, Moon } from "lucide-react";
+import { useSwipeable } from "react-swipeable";
 import { GameSection } from "./GameSection";
 import { LetterBox } from "./LetterBox";
-import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
-import { normalizeGameTemplate } from "@/components/templates/game-registry";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -51,35 +50,77 @@ interface GradPersonalTemplateProps {
     slug: string;
 }
 
-type WindowId = "profile" | "gallery" | "timeline" | "goals" | "game" | "letters";
+interface Petal {
+    id: number;
+    left: number;
+    size: number;
+    delay: number;
+    duration: number;
+    color: string;
+    angle: number;
+}
 
-interface WindowState {
-    id: WindowId;
-    isOpen: boolean;
-    isMinimized: boolean;
-    zIndex: number;
+interface ThrownCap {
+    id: number;
+    left: number;
+    delay: number;
+    scale: number;
 }
 
 export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) {
-    const [windows, setWindows] = useState<WindowState[]>([
-        { id: "profile", isOpen: true, isMinimized: false, zIndex: 10 },
-        { id: "gallery", isOpen: false, isMinimized: false, zIndex: 5 },
-        { id: "timeline", isOpen: false, isMinimized: false, zIndex: 5 },
-        { id: "goals", isOpen: false, isMinimized: false, zIndex: 5 },
-        { id: "game", isOpen: false, isMinimized: false, zIndex: 5 },
-        { id: "letters", isOpen: false, isMinimized: false, zIndex: 5 },
-    ]);
-    const [activeWindow, setActiveWindow] = useState<WindowId | null>("profile");
+    const [activeSection, setActiveSection] = useState<string>("gallery");
+    const [showScrollTop, setShowScrollTop] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
     const profileData = data.profile_data as GradPersonalProfileData | null;
-    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
 
+    // Gói 1: Particle States
+    const [petals, setPetals] = useState<Petal[]>([]);
+    const [thrownCaps, setThrownCaps] = useState<ThrownCap[]>([]);
+
+    // Generate falling petals/flowers on mount
+    useEffect(() => {
+        const colors = [
+            "#ef4444", // Phoenix red
+            "#dc2626", // Deep red
+            "#c084fc", // Bằng Lăng purple
+            "#a855f7", // Deep purple
+            "#f472b6", // Pinkish red
+        ];
+        const generated = Array.from({ length: 18 }).map((_, i) => ({
+            id: i,
+            left: Math.random() * 100,
+            size: Math.random() * 12 + 8,
+            delay: Math.random() * 8,
+            duration: Math.random() * 8 + 6,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            angle: Math.random() * 360,
+        }));
+        setPetals(generated);
+    }, []);
+
+    const handleThrowCaps = () => {
+        const caps = Array.from({ length: 8 }).map((_, i) => ({
+            id: Date.now() + i,
+            left: 15 + Math.random() * 70, // spread horizontally
+            delay: Math.random() * 0.4,
+            scale: 0.7 + Math.random() * 0.5,
+        }));
+        setThrownCaps(prev => [...prev, ...caps]);
+        // Remove after animation finishes
+        setTimeout(() => {
+            setThrownCaps(prev => prev.filter(c => !caps.find(cc => cc.id === c.id)));
+        }, 2700);
+    };
+
+    // Read theme mode from localStorage
     useEffect(() => {
         const saved = localStorage.getItem(`theme_mode_${slug}`);
         if (saved) {
             const isSavedDark = saved === "dark";
             setOverrideDark(isSavedDark);
+            
             const root = document.documentElement;
             if (isSavedDark) {
                 root.style.setProperty("--theme-bg", "#0f0a07");
@@ -96,6 +137,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
         setOverrideDark(newDark);
         localStorage.setItem(`theme_mode_${slug}`, newDark ? "dark" : "light");
         window.dispatchEvent(new CustomEvent("theme-change", { detail: { isDark: newDark } }));
+        
         const root = document.documentElement;
         if (newDark) {
             root.style.setProperty("--theme-bg", "#0f0a07");
@@ -112,43 +154,22 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
     const slogan = profileData?.slogan || "Hành trình vạn dặm bắt đầu từ một bước chân.";
     const dreamJob = profileData?.dream_job;
     const dreamUniversity = profileData?.dream_university;
-    const goals = profileData?.goals || [];
 
-    const bringToFront = (id: WindowId) => {
-        setWindows(prev => prev.map(w => ({
-            ...w,
-            zIndex: w.id === id ? Math.max(...prev.map(p => p.zIndex)) + 1 : w.zIndex
-        })));
-        setActiveWindow(id);
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 400);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const openWindow = (id: WindowId) => {
-        setWindows(prev => prev.map(w => ({
-            ...w,
-            isOpen: w.id === id ? true : w.isOpen,
-            isMinimized: w.id === id ? false : w.isMinimized,
-            zIndex: w.id === id ? Math.max(...prev.map(p => p.zIndex)) + 1 : w.zIndex
-        })));
-        setActiveWindow(id);
-    };
-
-    const closeWindow = (id: WindowId) => {
-        setWindows(prev => prev.map(w => ({
-            ...w,
-            isOpen: w.id === id ? false : w.isOpen
-        })));
-        if (activeWindow === id) setActiveWindow(null);
-    };
-
-    const minimizeWindow = (id: WindowId) => {
-        setWindows(prev => prev.map(w => ({
-            ...w,
-            isMinimized: w.id === id ? true : w.isMinimized
-        })));
-    };
-
-    const openLightbox = (index: number) => { setLightboxIndex(index); };
-    const closeLightbox = () => { setLightboxIndex(null); };
+    // Lightbox navigation
+    const openLightbox = (index: number) => { setLightboxIndex(index); setIsPopupOpen(true); };
+    const closeLightbox = () => { setLightboxIndex(null); setIsPopupOpen(false); };
     const nextImage = useCallback(() => {
         if (lightboxIndex !== null && data.galleries.length > 0) {
             setLightboxIndex((lightboxIndex + 1) % data.galleries.length);
@@ -160,6 +181,7 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
         }
     }, [lightboxIndex, data.galleries.length]);
 
+    // Keyboard navigation for lightbox
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (lightboxIndex === null) return;
@@ -171,434 +193,527 @@ export function GradPersonalTemplate({ data, slug }: GradPersonalTemplateProps) 
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [lightboxIndex, nextImage, prevImage]);
 
-    const taskbarItems: { id: WindowId; label: string; icon: typeof ImageIcon }[] = [
-        { id: "profile", label: "Profile", icon: GraduationCap },
-        { id: "gallery", label: "Album", icon: ImageIcon },
-        { id: "timeline", label: "Hành Trình", icon: Calendar },
-        { id: "goals", label: "Mục Tiêu", icon: Target },
-        { id: "game", label: "Thử Thách", icon: Sparkles },
-        { id: "letters", label: "Lưu Bút", icon: Mail },
-    ];
-
-    const WindowChrome = ({ id, title, children, className = "" }: { id: WindowId; title: string; children: React.ReactNode; className?: string }) => {
-        const win = windows.find(w => w.id === id);
-        if (!win || !win.isOpen || win.isMinimized) return null;
-        const isActive = activeWindow === id;
-
-        return (
-            <div
-                className={`absolute transition-all duration-200 ${className}`}
-                style={{ zIndex: win.zIndex }}
-                onClick={() => bringToFront(id)}
-            >
-                <div className={`rounded-xl overflow-hidden shadow-2xl border ${isDark ? "bg-[#1a1612] border-amber-900/30" : "bg-white border-amber-200"} ${isActive ? "ring-2 ring-amber-400/50" : ""}`}>
-                    {/* Title Bar */}
-                    <div className={`flex items-center justify-between px-3 py-2 border-b ${isDark ? "bg-[#25201b] border-amber-900/20" : "bg-gradient-to-r from-amber-100 to-orange-50 border-amber-200"}`}>
-                        <div className="flex items-center gap-2">
-                            <div className="flex gap-1.5">
-                                <button onClick={() => closeWindow(id)} className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors" />
-                                <button onClick={() => minimizeWindow(id)} className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors" />
-                                <button className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors" />
-                            </div>
-                            <span className={`text-xs font-semibold ${isDark ? "text-amber-200" : "text-amber-900"}`}>{title}</span>
-                        </div>
-                    </div>
-                    {/* Content */}
-                    <div className="max-h-[60vh] overflow-y-auto">
-                        {children}
-                    </div>
-                </div>
-            </div>
-        );
-    };
+    // Swipe handlers for mobile gallery navigation
+    const swipeHandlers = useSwipeable({
+        onSwipedLeft: () => {
+            if (lightboxIndex !== null) nextImage();
+        },
+        onSwipedRight: () => {
+            if (lightboxIndex !== null) prevImage();
+        },
+        preventScrollOnSwipe: true,
+        trackMouse: false,
+    });
 
     return (
-        <div className={`min-h-screen relative transition-colors duration-500 overflow-hidden ${isDark ? "bg-gradient-to-br from-[#0f0a07] via-[#1a1208] to-[#0f0a07]" : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"}`}>
-            <style jsx>{`
-                @keyframes window-open {
-                    0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-                    100% { opacity: 1; transform: scale(1) translateY(0); }
+        <div className={`min-h-screen relative pb-16 transition-colors duration-500 bg-gradient-to-b ${isDark ? "from-[#0f0a07] to-[#1d120a]" : "from-[#3a2213] to-[#53331c]"} overflow-x-hidden`}>
+            {/* Gói 1: Particle & Cap CSS Animations Injected Safely */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes petal-fall {
+                    0% {
+                        transform: translateY(-20px) rotate(var(--rot, 0deg)) translateX(0);
+                        opacity: 0;
+                    }
+                    10% { opacity: 0.8; }
+                    90% { opacity: 0.8; }
+                    100% {
+                        transform: translateY(105vh) rotate(calc(var(--rot, 0deg) + 360deg)) translateX(50px);
+                        opacity: 0;
+                    }
                 }
-                .window-animate { animation: window-open 0.3s ease-out; }
-                @keyframes desktop-icon-hover {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-4px); }
+                .animate-petal {
+                    animation: petal-fall linear infinite;
                 }
-                @keyframes laurelSway {
-                    0%, 100% { transform: rotate(-2deg); }
-                    50% { transform: rotate(2deg); }
+                @keyframes cap-fly-up {
+                    0% {
+                        transform: translateY(100vh) scale(0.4) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% { opacity: 1; }
+                    40% {
+                        transform: translateY(-25vh) scale(1.1) rotate(180deg);
+                    }
+                    90% { opacity: 0.8; }
+                    100% {
+                        transform: translateY(100vh) scale(0.6) rotate(360deg);
+                        opacity: 0;
+                    }
                 }
-                .laurel-left { animation: laurelSway 5s ease-in-out infinite; transform-origin: bottom center; }
-                .laurel-right { animation: laurelSway 5s ease-in-out infinite reverse; transform-origin: bottom center; }
-                @keyframes waxShimmer {
-                    0%, 100% { box-shadow: 0 2px 8px rgba(180, 83, 9, 0.4), inset 0 1px 2px rgba(255, 220, 150, 0.3); }
-                    50% { box-shadow: 0 2px 12px rgba(180, 83, 9, 0.6), inset 0 1px 3px rgba(255, 220, 150, 0.5); }
+                .animate-cap {
+                    animation: cap-fly-up 2.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
                 }
-                .wax-seal {
-                    animation: waxShimmer 3s ease-in-out infinite;
-                    background: radial-gradient(circle at 30% 30%, #f59e0b 0%, #b45309 60%, #78350f 100%);
-                    box-shadow: 0 2px 8px rgba(180, 83, 9, 0.5), inset 0 1px 2px rgba(255, 220, 150, 0.3);
-                }
-                @keyframes phoenixRise {
-                    0% { transform: translateY(20px) rotate(-5deg); opacity: 0; }
-                    50% { opacity: 0.4; }
-                    100% { transform: translateY(-10px) rotate(5deg); opacity: 0; }
-                }
-                .phoenix-accent { animation: phoenixRise 8s ease-in-out infinite; }
-                @keyframes ribbonFlow {
-                    0%, 100% { transform: skewX(-2deg); }
-                    50% { transform: skewX(2deg); }
-                }
-                .ribbon-banner { animation: ribbonFlow 6s ease-in-out infinite; }
-                @keyframes stampPress {
-                    0% { opacity: 0; transform: scale(1.3) rotate(-20deg); }
-                    60% { opacity: 0.8; transform: scale(0.95) rotate(-12deg); }
-                    100% { opacity: 0.7; transform: scale(1) rotate(-10deg); }
-                }
-                .grad-stamp { animation: stampPress 0.5s ease-out both; }
-                .diploma-border {
-                    position: relative;
-                }
-                .diploma-border::before {
-                    content: '';
-                    position: absolute;
-                    inset: 4px;
-                    border: 1px double currentColor;
-                    border-radius: inherit;
-                    opacity: 0.3;
-                    pointer-events: none;
-                }
-                .desk-wood-grain {
-                    background-image:
-                        repeating-linear-gradient(
-                            90deg,
-                            transparent 0px,
-                            transparent 60px,
-                            rgba(120, 53, 15, 0.03) 60px,
-                            rgba(120, 53, 15, 0.03) 62px
-                        ),
-                        repeating-linear-gradient(
-                            90deg,
-                            transparent 0px,
-                            transparent 120px,
-                            rgba(180, 83, 9, 0.04) 120px,
-                            rgba(180, 83, 9, 0.04) 121px
-                        );
-                }
-                .desk-wood-grain-dark {
-                    background-image:
-                        repeating-linear-gradient(
-                            90deg,
-                            transparent 0px,
-                            transparent 60px,
-                            rgba(251, 191, 36, 0.04) 60px,
-                            rgba(251, 191, 36, 0.04) 62px
-                        ),
-                        repeating-linear-gradient(
-                            90deg,
-                            transparent 0px,
-                            transparent 120px,
-                            rgba(217, 119, 6, 0.05) 120px,
-                            rgba(217, 119, 6, 0.05) 121px
-                        );
-                }
-            `}</style>
+            `}} />
 
-            {/* Desk wood grain + Phoenix accent */}
-            <div className={`absolute inset-0 pointer-events-none ${isDark ? "desk-wood-grain-dark" : "desk-wood-grain"}`} />
-            <svg className={`phoenix-accent absolute top-20 right-8 w-24 h-24 ${isDark ? "text-amber-500/20" : "text-amber-600/15"} pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M50 90 Q 30 70, 35 50 Q 40 30, 50 20 Q 60 30, 65 50 Q 70 70, 50 90 Z" />
-                <path d="M50 20 Q 45 10, 40 5 M 50 20 Q 55 10, 60 5" />
-                <path d="M35 50 Q 25 45, 15 50 Q 25 55, 35 60" />
-                <path d="M65 50 Q 75 45, 85 50 Q 75 55, 65 60" />
-                <circle cx="50" cy="35" r="2" fill="currentColor" />
-            </svg>
-            <svg className={`phoenix-accent absolute bottom-32 left-8 w-20 h-20 ${isDark ? "text-orange-500/15" : "text-orange-600/10"} pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: "3s" }}>
-                <path d="M50 90 Q 30 70, 35 50 Q 40 30, 50 20 Q 60 30, 65 50 Q 70 70, 50 90 Z" />
-                <path d="M35 50 Q 25 45, 15 50 Q 25 55, 35 60" />
-                <path d="M65 50 Q 75 45, 85 50 Q 75 55, 65 60" />
-            </svg>
+            {/* Gói 1: Falling petals container */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+                {petals.map((petal) => (
+                    <div
+                        key={petal.id}
+                        style={{
+                            left: `${petal.left}%`,
+                            width: `${petal.size}px`,
+                            height: `${petal.size * 0.75}px`,
+                            backgroundColor: petal.color,
+                            borderRadius: "50% 0 50% 50%",
+                            animationDelay: `${petal.delay}s`,
+                            animationDuration: `${petal.duration}s`,
+                            '--rot': `${petal.angle}deg`,
+                        } as React.CSSProperties}
+                        className="absolute -top-10 animate-petal opacity-0"
+                    />
+                ))}
+            </div>
 
-            {/* Desktop Grid Pattern */}
-            <div className={`absolute inset-0 pointer-events-none opacity-[0.03] bg-[repeating-linear-gradient(0deg,transparent,transparent_40px,currentColor_40px,currentColor_41px),repeating-linear-gradient(90deg,transparent,transparent_40px,currentColor_40px,currentColor_41px)] ${isDark ? "text-amber-200" : "text-amber-900"}`} />
+            {/* Gói 1: Thrown Caps overlay */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-40">
+                {thrownCaps.map((cap) => (
+                    <div
+                        key={cap.id}
+                        style={{
+                            left: `${cap.left}%`,
+                            animationDelay: `${cap.delay}s`,
+                            transform: `scale(${cap.scale})`,
+                        }}
+                        className="absolute bottom-0 animate-cap opacity-0"
+                    >
+                        {/* Graduation Cap SVG */}
+                        <svg viewBox="0 0 24 24" className="w-16 h-16 text-slate-900 fill-current drop-shadow-2xl">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M17 10v4.7c0 1.3-2.2 2.3-5 2.3s-5-1-5-2.3V10l5 2.5L17 10z" />
+                            <path d="M21 7.5v8.5" className="stroke-yellow-500 stroke-[1.5]" />
+                            <circle cx="21" cy="16" r="1.5" className="fill-yellow-500" />
+                        </svg>
+                    </div>
+                ))}
+            </div>
 
-            {/* Top Bar */}
-            <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 border-b ${isDark ? "bg-[#1a1612]/95 border-amber-900/30" : "bg-white/95 border-amber-200 shadow-sm"} backdrop-blur-sm`}>
-                <div className="flex items-center gap-3">
-                    <GraduationCap className={`w-5 h-5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                    <span className={`text-sm font-bold ${isDark ? "text-amber-200" : "text-amber-900"}`}>GradOS</span>
-                    <span className={`text-xs ${isDark ? "text-amber-400/60" : "text-amber-600/60"}`}>v{graduationYear}</span>
+            {/* Wooden grain background texture simulator */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-10 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]" />
+
+            {/* Theme Toggle Button */}
+            {!isPopupOpen && (
+                <button
+                    onClick={handleThemeToggle}
+                    className={`fixed top-4 right-16 z-30 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
+                        isDark 
+                            ? "bg-[#25201b]/95 text-yellow-400 border border-amber-900/30 hover:bg-[#332e28]" 
+                            : "bg-white/95 text-amber-900 hover:bg-white border border-amber-900/10"
+                    }`}
+                    title={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+                >
+                    {isDark ? (
+                        <Sun className="w-5 h-5" />
+                    ) : (
+                        <Moon className="w-5 h-5" />
+                    )}
+                </button>
+            )}
+
+            {/* Edit Button */}
+            {!isPopupOpen && (
+                <Link
+                    href={`/${slug}/edit`}
+                    className={`fixed top-4 right-4 z-30 p-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all border ${
+                        isDark 
+                            ? "bg-[#25201b]/95 border-amber-900/30 text-amber-200 hover:bg-[#332e28]" 
+                            : "bg-[#fefefe]/95 border-amber-900/10 text-[#3a2213] hover:bg-white"
+                    }`}
+                    title="Chỉnh sửa trang"
+                    aria-label="Chỉnh sửa trang"
+                >
+                    <Settings className="w-5 h-5" />
+                </Link>
+            )}
+
+            {/* Desk items layout (Only visible on PC for premium look) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 hidden lg:block opacity-75">
+                {/* Coffee mug */}
+                <div className={`absolute top-12 left-12 w-20 h-20 rounded-full shadow-2xl flex items-center justify-center border-4 ${isDark ? "bg-[#28201a] border-[#3e3229]" : "bg-[#ece6e2] border-[#dacdbf]"}`}>
+                    <div className="w-12 h-12 rounded-full bg-[#5c4033] flex items-center justify-center text-xs font-mono text-[#dacdbf] font-semibold">
+                        <Coffee className="w-5 h-5 animate-pulse" />
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={handleThemeToggle} className={`p-2 rounded-lg transition-all hover:scale-110 ${isDark ? "text-yellow-400 hover:bg-amber-900/30" : "text-amber-700 hover:bg-amber-100"}`}>
-                        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    </button>
-                    <Link href={`/${slug}/edit`} className={`p-2 rounded-lg transition-all hover:scale-110 ${isDark ? "text-amber-300 hover:bg-amber-900/30" : "text-amber-700 hover:bg-amber-100"}`}>
-                        <Settings className="w-4 h-4" />
-                    </Link>
+                {/* Pen and Ruler */}
+                <div className="absolute top-48 left-16 w-32 h-2 bg-yellow-400 rounded-full shadow-xl rotate-[45deg]" />
+                <div className="absolute top-52 left-10 w-36 h-3 bg-slate-200 rounded shadow-xl rotate-[35deg] border-l-4 border-slate-400" />
+                {/* Graduation cap */}
+                <div className="absolute bottom-16 left-12 w-28 h-28 opacity-90 rotate-[-15deg] drop-shadow-2xl">
+                    <div className="relative">
+                        <div className="w-20 h-20 bg-slate-900 rotate-[45deg] mx-auto shadow-lg" />
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-16 h-8 bg-slate-950 rounded-b-full shadow-inner" />
+                        <div className="absolute top-10 right-4 w-12 h-0.5 bg-yellow-500 origin-left rotate-[40deg]" />
+                    </div>
+                </div>
+                {/* Pinned notes */}
+                <div className={`absolute top-24 right-16 w-32 h-32 shadow-xl rotate-[6deg] p-3 border flex flex-col justify-between ${isDark ? "bg-[#2d2722]/95 border-amber-950/30 text-slate-300" : "bg-yellow-100/95 border-yellow-200 text-slate-700"}`}>
+                    <div className="w-3.5 h-3.5 bg-red-500 rounded-full shadow absolute -top-1.5 left-1/2 -translate-x-1/2" />
+                    <p className={`text-[10px] font-mono italic font-semibold ${isDark ? "text-slate-300" : "text-slate-700"}`}>NOTE: Thi đại học cố lên nha! 💪</p>
+                    <span className="text-[8px] text-right text-slate-400 font-mono">12/12</span>
                 </div>
             </div>
 
-            {/* Desktop Area */}
-            <div className="pt-14 pb-20 px-4 min-h-screen relative">
-                {/* Desktop Icons */}
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 max-w-2xl mx-auto mb-8">
-                    {taskbarItems.map((item) => {
-                        const win = windows.find(w => w.id === item.id);
-                        const isOpen = win?.isOpen && !win?.isMinimized;
-                        return (
-                            <button
-                                key={item.id}
-                                onDoubleClick={() => openWindow(item.id)}
-                                onClick={() => openWindow(item.id)}
-                                className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:scale-105 ${isOpen ? (isDark ? "bg-amber-900/30 ring-1 ring-amber-500/50" : "bg-amber-100 ring-1 ring-amber-400") : (isDark ? "hover:bg-amber-900/20" : "hover:bg-amber-50")}`}
-                            >
-                                <div className={`p-3 rounded-xl ${isDark ? "bg-[#25201b] border border-amber-900/30" : "bg-white border border-amber-200 shadow-sm"}`}>
-                                    <item.icon className={`w-6 h-6 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                                </div>
-                                <span className={`text-[10px] font-medium text-center ${isDark ? "text-amber-200" : "text-amber-900"}`}>{item.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Windows Container */}
-                <div className="relative max-w-4xl mx-auto min-h-[60vh]">
-                    {/* Profile Window */}
-                    <WindowChrome id="profile" title={`${studentName} - Profile`} className="window-animate left-0 right-0 mx-auto max-w-md">
-                        <div className={`p-6 text-center space-y-4 diploma-border ${isDark ? "text-amber-200" : "text-amber-900"}`}>
-                            {/* Laurel wreath around avatar */}
-                            <div className="relative inline-block">
-                                {/* Left laurel */}
-                                <svg className="laurel-left absolute -left-6 top-1/2 -translate-y-1/2 w-8 h-16 pointer-events-none" viewBox="0 0 32 64" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                    <path d="M16 60 Q 4 50, 6 30 Q 8 14, 16 4" strokeLinecap="round" />
-                                    <ellipse cx="8" cy="20" rx="5" ry="3" transform="rotate(-30 8 20)" fill="currentColor" opacity="0.4" />
-                                    <ellipse cx="6" cy="30" rx="5" ry="3" transform="rotate(-40 6 30)" fill="currentColor" opacity="0.4" />
-                                    <ellipse cx="6" cy="40" rx="5" ry="3" transform="rotate(-50 6 40)" fill="currentColor" opacity="0.4" />
-                                    <ellipse cx="8" cy="50" rx="5" ry="3" transform="rotate(-60 8 50)" fill="currentColor" opacity="0.4" />
-                                </svg>
-                                {/* Right laurel (mirror) */}
-                                <svg className="laurel-right absolute -right-6 top-1/2 -translate-y-1/2 w-8 h-16 pointer-events-none" viewBox="0 0 32 64" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                    <path d="M16 60 Q 28 50, 26 30 Q 24 14, 16 4" strokeLinecap="round" />
-                                    <ellipse cx="24" cy="20" rx="5" ry="3" transform="rotate(30 24 20)" fill="currentColor" opacity="0.4" />
-                                    <ellipse cx="26" cy="30" rx="5" ry="3" transform="rotate(40 26 30)" fill="currentColor" opacity="0.4" />
-                                    <ellipse cx="26" cy="40" rx="5" ry="3" transform="rotate(50 26 40)" fill="currentColor" opacity="0.4" />
-                                    <ellipse cx="24" cy="50" rx="5" ry="3" transform="rotate(60 24 50)" fill="currentColor" opacity="0.4" />
-                                </svg>
-                                <div className={`inline-block p-1 rounded-full ${isDark ? "bg-gradient-to-br from-amber-500 to-orange-600" : "bg-gradient-to-br from-amber-400 to-orange-500"}`}>
-                                    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white">
-                                        {studentAvatar ? (
-                                            <Image src={studentAvatar} alt={studentName} width={96} height={96} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full bg-amber-100 flex items-center justify-center text-3xl">🎓</div>
-                                        )}
-                                    </div>
-                                </div>
-                                {/* Wax seal stamp */}
-                                <div className="wax-seal absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-white text-[8px] font-bold pointer-events-none">
-                                    <GraduationCap className="w-4 h-4" />
-                                </div>
-                            </div>
-                            {/* Ribbon banner for name */}
-                            <div className={`relative inline-block ribbon-banner`}>
-                                <div className={`relative px-6 py-1.5 ${isDark ? "bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 text-amber-50" : "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-white"} shadow-md`}>
-                                    <h2 className="text-xl font-bold tracking-wide">{studentName}</h2>
-                                    {/* Ribbon tails */}
-                                    <div className={`absolute -left-2 top-0 bottom-0 w-2 ${isDark ? "bg-amber-900" : "bg-amber-600"}`} style={{ clipPath: "polygon(100% 0, 100% 100%, 0 50%)" }} />
-                                    <div className={`absolute -right-2 top-0 bottom-0 w-2 ${isDark ? "bg-amber-900" : "bg-amber-600"}`} style={{ clipPath: "polygon(0 0, 0 100%, 100% 50%)" }} />
-                                </div>
-                            </div>
-                            <p className={`text-sm ${isDark ? "text-amber-300/70" : "text-amber-700"}`}>Lớp {className} • {schoolName}</p>
-                            <p className={`text-xs ${isDark ? "text-amber-400/60" : "text-amber-600"}`}>Niên khóa {graduationYear}</p>
-                            <p className={`italic text-sm ${isDark ? "text-amber-200/80" : "text-amber-800"}`}>&ldquo;{slogan}&rdquo;</p>
-                            {(dreamJob || dreamUniversity) && (
-                                <div className="flex flex-wrap justify-center gap-2 pt-2">
-                                    {dreamJob && (
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${isDark ? "bg-amber-900/30 text-amber-200 border border-amber-700/30" : "bg-amber-100 text-amber-800"}`}>
-                                            <Target className="w-3 h-3" /> {dreamJob}
-                                        </span>
-                                    )}
-                                    {dreamUniversity && (
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${isDark ? "bg-orange-900/30 text-orange-200 border border-orange-700/30" : "bg-orange-100 text-orange-800"}`}>
-                                            <Award className="w-3 h-3" /> {dreamUniversity}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </WindowChrome>
-
-                    {/* Gallery Window */}
-                    <WindowChrome id="gallery" title="Album Lưu Bút" className="window-animate left-0 right-0 mx-auto max-w-2xl">
-                        <div className="p-4">
-                            {data.galleries.length === 0 ? (
-                                <div className="text-center py-12 text-amber-500/60">
-                                    <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                    <p className="text-sm">Chưa có hình ảnh nào</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                    {data.galleries.map((item, index) => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => openLightbox(index)}
-                                            className={`aspect-square rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform border ${isDark ? "border-amber-900/30" : "border-amber-200"}`}
-                                        >
-                                            <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover" />
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </WindowChrome>
-
-                    {/* Timeline Window */}
-                    <WindowChrome id="timeline" title="Hành Trình" className="window-animate left-0 right-0 mx-auto max-w-2xl">
-                        <div className="p-4">
-                            {data.timelines.length === 0 ? (
-                                <div className="text-center py-12 text-amber-500/60">
-                                    <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                    <p className="text-sm">Chưa có sự kiện nào</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {data.timelines.map((event) => (
-                                        <div key={event.id} className={`relative p-4 rounded-xl border ${isDark ? "bg-[#25201b]/50 border-amber-900/20" : "bg-amber-50 border-amber-200"}`}>
-                                            <div className="flex items-start justify-between gap-3 mb-1">
-                                                <div className={`grad-stamp inline-block px-2.5 py-1 rounded border-2 ${isDark ? "border-amber-500/60 text-amber-400 bg-amber-950/30" : "border-amber-600 text-amber-700 bg-amber-100/60"}`} style={{ fontFamily: "'Courier New', monospace" }}>
-                                                    <span className="text-[10px] font-bold tracking-widest uppercase">{new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" })}</span>
-                                                </div>
-                                                <Calendar className={`w-4 h-4 mt-1 ${isDark ? "text-amber-500/60" : "text-amber-500"}`} />
-                                            </div>
-                                            <h3 className={`font-bold mb-1 ${isDark ? "text-amber-100" : "text-amber-900"}`}>{event.title}</h3>
-                                            {event.description && <p className={`text-sm ${isDark ? "text-amber-200/70" : "text-amber-700"}`}>{event.description}</p>}
-                                            {event.image_url && (
-                                                <div className="mt-3 rounded-lg overflow-hidden max-w-xs border-2 border-double" style={{ borderColor: isDark ? "rgba(217, 119, 6, 0.3)" : "rgba(180, 83, 9, 0.3)" }}>
-                                                    <Image src={event.image_url} alt={event.title} width={200} height={150} className="w-full h-auto" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </WindowChrome>
-
-                    {/* Goals Window */}
-                    <WindowChrome id="goals" title="Mục Tiêu" className="window-animate left-0 right-0 mx-auto max-w-lg">
-                        <div className="p-4">
-                            {goals.length === 0 ? (
-                                <div className="text-center py-12 text-amber-500/60">
-                                    <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                    <p className="text-sm">Chưa có mục tiêu nào</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {goals.map((goal) => (
-                                        <div key={goal.id} className={`p-3 rounded-lg border flex items-start gap-3 ${isDark ? "bg-[#25201b]/50 border-amber-900/20" : "bg-amber-50 border-amber-200"}`}>
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${goal.status === "done" ? (isDark ? "bg-green-600 border-green-500" : "bg-green-500 border-green-400") : (isDark ? "border-amber-700" : "border-amber-300")}`}>
-                                                {goal.status === "done" && <span className="text-white text-xs">✓</span>}
-                                            </div>
-                                            <div>
-                                                <h4 className={`font-semibold text-sm ${isDark ? "text-amber-100" : "text-amber-900"} ${goal.status === "done" ? "line-through opacity-60" : ""}`}>{goal.title}</h4>
-                                                {goal.description && <p className={`text-xs mt-0.5 ${isDark ? "text-amber-300/70" : "text-amber-700"}`}>{goal.description}</p>}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </WindowChrome>
-
-                    {/* Game Window */}
-                    <WindowChrome id="game" title="Thử Thách" className="window-animate left-0 right-0 mx-auto max-w-2xl">
-                        <div className="p-4">
-                            {gameTemplateId === "A" ? (
-                                <GameSection quiz={profileData?.quiz} studentName={studentName} isDark={isDark} />
-                            ) : (
-                                <TemplateVariantGame
-                                    linkType={data.type}
-                                    variantId={gameTemplateId}
-                                    profileData={data.profile_data as Record<string, unknown> | null}
-                                    photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))}
-                                    timelines={data.timelines.map(t => ({ id: t.id, title: t.title, description: t.description }))}
-                                    isDark={isDark}
+            {/* Hero Header */}
+            <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-16 pb-8 max-w-4xl mx-auto text-center">
+                <div className="text-center px-4 w-full max-w-xl mx-auto">
+                    
+                    {/* Polaroid student avatar photo */}
+                    <div 
+                        onClick={handleThrowCaps}
+                        className={`relative inline-block ${isDark ? "bg-[#25201b] border-amber-950/20 text-slate-100" : "bg-white border-slate-200 text-slate-700"} p-3 pb-6 border rounded-md shadow-2xl rotate-[-2deg] hover:rotate-0 transition-transform duration-300 mb-8 cursor-pointer group`}
+                        title="Click để tung nón tốt nghiệp! 🎓"
+                    >
+                        {/* Washi tape decoration */}
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-20 h-5 bg-yellow-100/80 border border-yellow-200/50 rotate-[1deg] shadow-sm" />
+                        
+                        <div className="w-28 h-28 sm:w-32 sm:h-32 bg-slate-50 relative overflow-hidden rounded-sm border border-slate-100 mx-auto">
+                            {studentAvatar ? (
+                                <Image
+                                    src={studentAvatar}
+                                    alt={studentName}
+                                    fill
+                                    className="object-cover"
                                 />
+                            ) : (
+                                <div className="w-full h-full bg-slate-100 flex items-center justify-center text-4xl">
+                                    🎓
+                                </div>
                             )}
                         </div>
-                    </WindowChrome>
-
-                    {/* Letters Window */}
-                    <WindowChrome id="letters" title="Hòm Lưu Bút" className="window-animate left-0 right-0 mx-auto max-w-2xl">
-                        <div className="p-4">
-                            <LetterBox slug={slug} initialLetters={data.letters} isDark={isDark} />
+                        <span className={`block font-serif italic text-sm mt-3 font-semibold ${isDark ? "text-slate-200" : "text-slate-700"}`}>
+                            {studentName}
+                        </span>
+                        
+                        {/* Interactive Hint */}
+                        <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[9px] font-sans font-bold px-2 py-0.5 rounded-full shadow-md scale-0 group-hover:scale-100 transition-all duration-200 whitespace-nowrap">
+                            Tung nón tốt nghiệp! 🎓
                         </div>
-                    </WindowChrome>
-                </div>
-            </div>
+                    </div>
 
-            {/* Taskbar */}
-            <div className={`fixed bottom-0 left-0 right-0 z-50 border-t ${isDark ? "bg-[#1a1612]/98 border-amber-900/30" : "bg-white/98 border-amber-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]"} backdrop-blur-sm`}>
-                <div className="flex items-center justify-center gap-1 px-2 py-2 overflow-x-auto">
-                    {taskbarItems.map((item) => {
-                        const win = windows.find(w => w.id === item.id);
-                        const isOpen = win?.isOpen;
-                        const isMinimized = win?.isMinimized;
-                        const isActive = activeWindow === item.id && isOpen && !isMinimized;
+                    {/* Class and school details written like chalk on wood */}
+                    <p className="text-[#e2c19e] font-serif font-semibold text-sm sm:text-base mb-2">
+                        Niên khóa {graduationYear} • Lớp {className} • Trường {schoolName}
+                    </p>
+                    <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto mb-6 italic font-serif">
+                        &ldquo;{slogan}&rdquo;
+                    </p>
 
-                        return (
+                    {/* Dream tags */}
+                    {(dreamJob || dreamUniversity) && (
+                        <div className="flex flex-wrap justify-center gap-3 mb-8">
+                            {dreamJob && (
+                                <span className="inline-flex items-center gap-1.5 bg-[#e2c19e]/15 border border-[#e2c19e]/30 text-[#e2c19e] px-3 py-1.5 rounded-full text-xs font-semibold shadow-inner">
+                                    <Target className="w-3.5 h-3.5" /> Mơ ước: {dreamJob}
+                                </span>
+                            )}
+                            {dreamUniversity && (
+                                <span className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-200 px-3 py-1.5 rounded-full text-xs font-semibold shadow-inner">
+                                    <Award className="w-3.5 h-3.5" /> Đại học: {dreamUniversity}
+                                </span>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Desk drawer navigation tabs */}
+                    <div className="inline-flex flex-wrap justify-center gap-2 bg-black/30 p-1.5 rounded-full border border-white/5 shadow-md">
+                        {[
+                            { id: "gallery", icon: ImageIcon, label: "Album Lưu Giữ" },
+                            { id: "timeline", icon: Calendar, label: "Hành Trình" },
+                            { id: "roadmap", icon: Target, label: "Mục Tiêu" },
+                            { id: "game", icon: Sparkles, label: "Thử Thách" },
+                            { id: "letters", icon: Mail, label: "Hòm Lưu Bút" },
+                        ].map((tab) => (
                             <button
-                                key={item.id}
-                                onClick={() => {
-                                    if (!isOpen) {
-                                        openWindow(item.id);
-                                    } else if (isMinimized) {
-                                        openWindow(item.id);
-                                    } else if (isActive) {
-                                        minimizeWindow(item.id);
-                                    } else {
-                                        bringToFront(item.id);
-                                    }
-                                }}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                                    isActive
-                                        ? (isDark ? "bg-amber-600 text-white" : "bg-amber-500 text-white")
-                                        : isOpen
-                                            ? (isDark ? "bg-amber-900/40 text-amber-200 hover:bg-amber-900/60" : "bg-amber-100 text-amber-800 hover:bg-amber-200")
-                                            : (isDark ? "text-amber-400/70 hover:bg-amber-900/30 hover:text-amber-300" : "text-amber-700 hover:bg-amber-50")
+                                key={tab.id}
+                                onClick={() => setActiveSection(tab.id)}
+                                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+                                    activeSection === tab.id
+                                        ? "bg-[#e2c19e] text-[#3a2213] shadow-md scale-105"
+                                        : "text-slate-300 hover:text-[#e2c19e] hover:bg-white/5"
                                 }`}
                             >
-                                <item.icon className="w-4 h-4" />
-                                <span className="hidden sm:inline">{item.label}</span>
-                                {isOpen && !isMinimized && <div className="w-1.5 h-1.5 rounded-full bg-current" />}
+                                <tab.icon className="w-4 h-4" />
+                                {tab.label}
+                                {tab.id === "gallery" && data.galleries.length > 0 && (
+                                    <span className="text-xs opacity-75">({data.galleries.length})</span>
+                                )}
                             </button>
-                        );
-                    })}
+                        ))}
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Lightbox */}
+            {/* Notebook page content */}
+            <main className="max-w-4xl mx-auto px-4 relative z-10">
+                {/* Spiral notebook layout container */}
+                <div className={`rounded-3xl p-6 sm:p-8 border-t-8 border-[#dacdbf] shadow-2xl relative transition-colors duration-500 ${isDark ? "bg-[#181512] text-slate-100" : "bg-[#fcfbf9] text-slate-800"}`}>
+                    
+                    {/* Ring binder holes design down the left edge (PC layout only) */}
+                    <div className="absolute left-4 top-10 bottom-10 w-4 hidden md:flex flex-col justify-between pointer-events-none opacity-40 z-15">
+                        {[...Array(10)].map((_, i) => (
+                            <div key={i} className={`w-3.5 h-3.5 rounded-full ${isDark ? "bg-black/40 border-r border-[#181512]" : "bg-slate-900/20 border-r border-white"} flex items-center justify-center`}>
+                                <div className={`w-2 h-2 rounded-full ${isDark ? "bg-amber-950/40" : "bg-[#53331c]/50"}`} />
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="md:pl-8">
+                        {/* Gallery Section */}
+                        {activeSection === "gallery" && (
+                            <section className="space-y-6">
+                                <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-6 flex items-center gap-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                                    <span className={`p-2 rounded-xl ${isDark ? "bg-amber-950/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>📸</span>
+                                    Cuốn Album Lưu Bút
+                                </h2>
+                                {data.galleries.length === 0 ? (
+                                    <div className="text-center py-16 text-slate-400 font-serif italic">
+                                        <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                        <p>Chưa có hình ảnh nào được lưu trữ.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                        {data.galleries.map((item, index) => (
+                                            <div
+                                                key={item.id}
+                                                onClick={() => openLightbox(index)}
+                                                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all hover:scale-[1.01] border ${isDark ? "bg-zinc-950/40 border-zinc-800/80" : "bg-slate-50 border-slate-100"}`}
+                                            >
+                                                <Image
+                                                    src={item.image_url}
+                                                    alt={item.caption || "Kỷ niệm"}
+                                                    fill
+                                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                                />
+                                                {item.caption && (
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent p-3 pt-6 z-10">
+                                                        <p className="text-white text-xs sm:text-sm truncate font-serif italic">{item.caption}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
+                        {/* Timeline / Journey Section */}
+                        {activeSection === "timeline" && (
+                            <section className="space-y-6">
+                                <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-6 flex items-center gap-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                                    <span className={`p-2 rounded-xl ${isDark ? "bg-amber-950/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>⏳</span>
+                                    Hành Trình Trưởng Thành
+                                </h2>
+                                {data.timelines.length === 0 ? (
+                                    <div className="text-center py-16 text-slate-400 font-serif italic">
+                                        <Calendar className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                                        <p>Chưa ghi nhận cột mốc hành trình nào.</p>
+                                    </div>
+                                ) : (
+                                    <div className={`relative pl-6 border-l ml-2 space-y-8 ${isDark ? "border-amber-700/40" : "border-amber-900/20"}`}>
+                                        {data.timelines.map((event) => (
+                                            <div key={event.id} className="relative">
+                                                {/* Wax stamp dot style */}
+                                                <div className={`absolute -left-[31px] top-1.5 w-4 h-4 rounded-full shadow-md border-4 bg-amber-700 ${isDark ? "border-[#181512] bg-amber-500" : "border-white bg-amber-700"}`} />
+
+                                                <div className={`transition-all rounded-2xl p-4 sm:p-5 border shadow-sm ${isDark ? "bg-zinc-900/40 hover:bg-[#201c18] border-zinc-700 text-slate-200" : "bg-slate-50/50 hover:bg-slate-50 border-slate-100 text-slate-800"}`}>
+                                                    <span className={`text-xs font-semibold font-mono ${isDark ? "text-amber-300" : "text-amber-700"}`}>
+                                                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                                                            month: "long",
+                                                            year: "numeric",
+                                                        })}
+                                                    </span>
+                                                    <h3 className={`text-base sm:text-lg font-serif font-bold mt-1 mb-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                                                        {event.title}
+                                                    </h3>
+                                                    {event.description && (
+                                                        <p className={`text-sm leading-relaxed mb-3 font-serif italic ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                                                            &ldquo;{event.description}&rdquo;
+                                                        </p>
+                                                    )}
+
+                                                    {event.image_url && (
+                                                        <div className={`relative aspect-video max-w-md rounded-xl overflow-hidden shadow-inner border ${isDark ? "border-zinc-700" : "border-slate-200/50"}`}>
+                                                            <Image
+                                                                src={event.image_url}
+                                                                alt={event.title}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
+                        {/* Gói 4: Bản Đồ Mục Tiêu */}
+                        {activeSection === "roadmap" && (
+                            <section className="space-y-6">
+                                <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-2 flex items-center gap-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                                    <span className={`p-2 rounded-xl ${isDark ? "bg-amber-950/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>🎯</span>
+                                    Bản Đồ Mục Tiêu Tương Lai
+                                </h2>
+                                <p className={`text-xs sm:text-sm mb-6 font-serif italic ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                                    Những cột mốc học tập, ước mơ và kế hoạch tương lai của {studentName}.
+                                </p>
+
+                                <div className="relative py-8 px-2 max-w-lg mx-auto">
+                                    {/* Center connector line */}
+                                    <div className={`absolute left-6 md:left-1/2 top-4 bottom-4 w-0.5 border-l-2 border-dashed ${isDark ? "border-amber-700/40" : "border-amber-900/20"} -translate-x-1/2`} />
+
+                                    <div className="space-y-12">
+                                        {(profileData?.goals && profileData.goals.length > 0 ? profileData.goals : [
+                                            { id: "g1", title: "Tốt nghiệp THPT", description: "Vượt qua kỳ thi tốt nghiệp THPT với kết quả xuất sắc", status: "done" },
+                                            { id: "g2", title: `Đỗ Đại học${dreamUniversity ? `: ${dreamUniversity}` : ""}`, description: `Đặt chân vào cổng trường đại học mơ ước`, status: "todo" },
+                                            { id: "g3", title: "Khám phá đời sinh viên", description: "Học hỏi hết mình và rèn luyện kỹ năng sống", status: "todo" },
+                                            { id: "g4", title: `Đạt công việc mơ ước${dreamJob ? `: ${dreamJob}` : ""}`, description: "Trở thành chuyên gia giỏi trong ngành nghề yêu thích", status: "todo" }
+                                        ] as GoalItem[]).map((goal: GoalItem, idx: number) => {
+                                            const isDone = goal.status === "done";
+                                            const alignmentClass = idx % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row";
+                                            const textAlignmentClass = idx % 2 === 0 ? "md:text-right" : "md:text-left";
+                                            const offsetClass = idx % 2 === 0 ? "md:pr-10" : "md:pl-10";
+
+                                            return (
+                                                <div key={goal.id} className={`flex items-start ${alignmentClass} relative w-full`}>
+                                                    {/* Circle Node */}
+                                                    <div className={`absolute left-6 md:left-1/2 w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 -translate-x-1/2 transition-all duration-300 ${
+                                                        isDone 
+                                                            ? "bg-emerald-500 border-emerald-200 text-white shadow-lg shadow-emerald-500/20" 
+                                                            : "bg-slate-200 border-slate-300 text-slate-500"
+                                                    }`}>
+                                                        {isDone ? "✓" : idx + 1}
+                                                    </div>
+
+                                                    {/* Content Card */}
+                                                    <div className={`w-full pl-12 md:pl-0 md:w-1/2 ${offsetClass}`}>
+                                                        <div className={`p-5 rounded-2xl border transition-all hover:shadow-md ${
+                                                            isDone 
+                                                                ? (isDark ? "bg-emerald-950/20 border-emerald-900/30 text-slate-100" : "bg-emerald-50/50 border-emerald-100 text-slate-800")
+                                                                : (isDark ? "bg-zinc-900/40 border-zinc-800 text-slate-400" : "bg-slate-50 border-slate-100 text-slate-600")
+                                                        }`}>
+                                                            <div className={`flex items-center gap-2 mb-1.5 ${idx % 2 === 0 ? "md:justify-end" : "md:justify-start"}`}>
+                                                                <h4 className="font-serif font-bold text-sm sm:text-base leading-tight">
+                                                                    {goal.title}
+                                                                </h4>
+                                                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-sans font-bold uppercase ${
+                                                                    isDone ? "bg-emerald-500/10 text-emerald-500" : "bg-slate-500/10 text-slate-500"
+                                                                }`}>
+                                                                    {isDone ? "Đã đạt" : "Mục tiêu"}
+                                                                </span>
+                                                            </div>
+                                                            <p className={`text-xs ${textAlignmentClass} font-serif italic`}>
+                                                                {goal.description}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className={`max-w-md mx-auto p-4 rounded-xl text-center border font-serif italic text-xs ${
+                                    isDark ? "bg-amber-950/15 border-amber-900/20 text-amber-200/80" : "bg-amber-50/50 border-amber-900/10 text-amber-900"
+                                }`}>
+                                    &ldquo;Vũ trụ sẽ đồng lòng giúp sức khi bạn nỗ lực hết mình hướng về mục tiêu! ✨&rdquo;
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Challenges / Trivia Quiz Section (Gói 3) */}
+                        {activeSection === "game" && (
+                            <section className="space-y-6">
+                                <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-6 flex items-center gap-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                                    <span className={`p-2 rounded-xl ${isDark ? "bg-amber-950/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>🎲</span>
+                                    Thử Thách Độ Hiểu Nhau
+                                </h2>
+                                <GameSection quiz={profileData?.quiz} studentName={studentName} isDark={isDark} />
+                            </section>
+                        )}
+
+                        {/* Time Capsule Wishes / Letters Section (Gói 2) */}
+                        {activeSection === "letters" && (
+                            <section className="space-y-6">
+                                <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-2 flex items-center gap-2 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                                    <span className={`p-2 rounded-xl ${isDark ? "bg-amber-950/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>✉️</span>
+                                    Bức Thư Thời Gian
+                                </h2>
+                                <p className={`text-xs sm:text-sm mb-6 font-serif italic ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                                    Để lại những dòng lưu bút gửi gắm lời chúc ấm áp và cảm động dành cho {studentName}.
+                                </p>
+                                <LetterBox initialLetters={data.letters} slug={slug} theme="every" isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
+                            </section>
+                        )}
+                    </div>
+                </div>
+            </main>
+
+            {/* Gallery Lightbox */}
             {lightboxIndex !== null && data.galleries[lightboxIndex] && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={closeLightbox}>
-                    <div className={`rounded-xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#1a1612] text-amber-100" : "bg-white text-amber-900"}`} onClick={(e) => e.stopPropagation()}>
-                        <div className={`flex items-center justify-between p-3 border-b ${isDark ? "bg-[#25201b] border-amber-900/30" : "bg-amber-100 border-amber-200"}`}>
-                            <span className="text-sm font-medium">{lightboxIndex + 1} / {data.galleries.length}</span>
-                            <button onClick={closeLightbox} className="hover:scale-110 transition-transform"><X className="w-5 h-5" /></button>
-                        </div>
-                        <div className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
-                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
-                                <Image src={data.galleries[lightboxIndex].image_url} alt={data.galleries[lightboxIndex].caption || "Photo"} fill className="object-contain" priority />
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={closeLightbox}>
+                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-[#181512] text-slate-100 border border-amber-900/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-amber-500 to-[#3a2213] p-4 text-white flex-shrink-0">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">
+                                    {lightboxIndex + 1} / {data.galleries.length}
+                                </span>
+                                <button onClick={closeLightbox} className="hover:scale-110 transition-transform">
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
                         </div>
+                        {/* Image */}
+                        <div {...swipeHandlers} className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
+                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                                <Image
+                                    src={data.galleries[lightboxIndex].image_url}
+                                    alt={data.galleries[lightboxIndex].caption || "Kỷ niệm"}
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
+                            </div>
+                        </div>
+                        {/* Caption */}
                         {data.galleries[lightboxIndex].caption && (
-                            <div className={`px-4 py-2 text-center text-sm ${isDark ? "text-amber-200" : "text-amber-700"}`}>{data.galleries[lightboxIndex].caption}</div>
+                            <div className={`px-4 py-2 text-center text-sm font-serif italic ${isDark ? "text-slate-300" : "text-gray-600"}`}>
+                                {data.galleries[lightboxIndex].caption}
+                            </div>
                         )}
-                        <div className={`flex justify-center items-center gap-4 p-3 border-t ${isDark ? "border-amber-900/30" : "border-amber-200"}`}>
-                            <button onClick={prevImage} className={`p-2 rounded-lg transition-all hover:scale-110 ${isDark ? "bg-amber-900/30 text-amber-400" : "bg-amber-100 text-amber-600"}`}><ChevronLeft className="w-5 h-5" /></button>
-                            <button onClick={nextImage} className={`p-2 rounded-lg transition-all hover:scale-110 ${isDark ? "bg-amber-900/30 text-amber-400" : "bg-amber-100 text-amber-600"}`}><ChevronRight className="w-5 h-5" /></button>
+                        {/* Navigation */}
+                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-amber-900/20" : "border-gray-100"}`}>
+                            <button
+                                onClick={prevImage}
+                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-amber-950/30 text-amber-400 hover:bg-amber-950/50" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}
+                                aria-label="Ảnh trước"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={nextImage}
+                                className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-amber-950/30 text-amber-400 hover:bg-amber-950/50" : "bg-amber-50 text-amber-600 hover:bg-amber-100"}`}
+                                aria-label="Ảnh tiếp theo"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Scroll To Top */}
+            {showScrollTop && !isPopupOpen && (
+                <button
+                    onClick={scrollToTop}
+                    className="fixed bottom-6 right-6 z-30 p-3 bg-gradient-to-r from-amber-500 to-[#3a2213] text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    title="Lên đầu trang"
+                    aria-label="Lên đầu trang"
+                >
+                    <ChevronUp className="w-5 h-5" />
+                </button>
             )}
         </div>
     );
