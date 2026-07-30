@@ -15,6 +15,7 @@ import {
 } from "next/font/google";
 import { Suspense } from "react";
 import { LoadingProvider, NavigationProgress } from "@/components/providers";
+import { ToastProvider } from "@/components/ui/toast";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import "./globals.css";
 
@@ -127,8 +128,6 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ec4899" },
     { media: "(prefers-color-scheme: dark)", color: "#be185d" },
@@ -152,11 +151,13 @@ export default function RootLayout({
         className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${playfairDisplay.variable} ${dancingScript.variable} ${quicksand.variable} ${nunito.variable} ${pacifico.variable} ${montserrat.variable} ${comfortaa.variable} ${caveat.variable} ${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
         <LoadingProvider>
-          <Suspense fallback={null}>
-            <NavigationProgress />
-          </Suspense>
-          {children}
-          <PWAInstallPrompt />
+          <ToastProvider>
+            <Suspense fallback={null}>
+              <NavigationProgress />
+            </Suspense>
+            {children}
+            <PWAInstallPrompt />
+          </ToastProvider>
         </LoadingProvider>
       </body>
     </html>

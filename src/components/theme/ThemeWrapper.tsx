@@ -14,6 +14,8 @@ interface ThemeWrapperProps {
     config: ThemeConfig | null;
     children: ReactNode;
     type?: string;
+    /** `Link.profile_data.theme` — only GRAD_GROUP varies its dark background by sub-theme. */
+    subTheme?: string | null;
 }
 
 // Default theme values
@@ -127,7 +129,7 @@ function optimizeColor(hexColor: string, isDark: boolean): string {
     return hexColor;
 }
 
-export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
+export function ThemeWrapper({ config, children, type, subTheme }: ThemeWrapperProps) {
     const params = useParams();
     const slug = params?.slug as string | undefined;
 
@@ -184,7 +186,9 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
         return () => observer.disconnect();
     }, []);
 
-    // Get dark mode background color matching templates
+    // Get dark mode background color matching templates.
+    // Each value must match the `darkBg` its template passes to useThemeToggle,
+    // otherwise the page background and the template chrome disagree.
     const getDarkBgColor = () => {
         switch (type) {
             case "IDOL":
@@ -196,18 +200,25 @@ export function ThemeWrapper({ config, children, type }: ThemeWrapperProps) {
             case "GRAD_CLASS":
                 return "#162a22";
             case "GRAD_GROUP":
-                // Guess caravan as default or read from local storage if available
-                if (typeof window !== "undefined" && slug) {
-                    try {
-                        const savedProfile = localStorage.getItem(`profile_data_${slug}`);
-                        if (savedProfile) {
-                            const parsed = JSON.parse(savedProfile);
-                            if (parsed.theme === "station") return "#05040a";
-                            if (parsed.theme === "scrapbook") return "#1c1611";
-                        }
-                    } catch {}
-                }
+                // Sub-theme lives in Link.profile_data.theme and is passed down from
+                // the server (page-client). It used to be read from a localStorage
+                // key `profile_data_${slug}` that nothing ever wrote, so `station`
+                // and `scrapbook` always fell back to caravan's background.
+                if (subTheme === "station") return "#05040a";
+                if (subTheme === "scrapbook") return "#1c1611";
                 return "#0f0a07"; // default Caravan dark bg
+            case "WEDDING":
+                return "#14100a";
+            case "TRAVEL":
+                return "#0a1017";
+            case "FRIENDSHIP":
+                return "#140f1c";
+            case "LOVE":
+            case "EVERY":
+                // Matches LoveTemplateV2's darkBg. The routed LoveTemplate is deploy
+                // code with no dark palette and exposes no toggle, so this only takes
+                // effect if LoveTemplateV2 is wired into page-client.
+                return "#171018";
             default:
                 return "#121214";
         }
