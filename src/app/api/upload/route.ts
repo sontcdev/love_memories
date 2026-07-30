@@ -73,11 +73,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const isValidJwt = supabaseServiceKey && supabaseServiceKey.startsWith("eyJ");
-        if (!isValidJwt) {
+        // Supabase supports both legacy service_role JWTs and the newer
+        // `sb_secret_...` API keys. Both are server-only credentials.
+        if (!supabaseServiceKey || !(
+            supabaseServiceKey.startsWith("eyJ") ||
+            supabaseServiceKey.startsWith("sb_secret_")
+        )) {
             console.error(
-                "SUPABASE_SERVICE_ROLE_KEY is missing or not a valid JWT.\n" +
-                "Get it from: Supabase Dashboard → Project Settings → API → service_role key"
+                "SUPABASE_SERVICE_ROLE_KEY is missing or invalid.\n" +
+                "Get a Secret key from: Supabase Dashboard → Project Settings → API Keys"
             );
             return NextResponse.json(
                 { success: false, error: "Dịch vụ lưu trữ chưa được cấu hình" },

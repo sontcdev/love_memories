@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import { generateSlug, generatePin, generateSessionToken } from "@/lib/utils";
+import { generateSlug, generatePin, generateSessionToken } from "@/lib/tokens";
 import { LinkType } from "@prisma/client";
 
 export async function loginAdmin(formData: FormData) {

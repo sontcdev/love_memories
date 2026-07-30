@@ -321,7 +321,8 @@ export async function getLinkForEdit(slug: string) {
             include: {
                 config: true,
                 galleries: { orderBy: { sort_order: "asc" } },
-                timelines: { orderBy: { date: "asc" } },
+                // Match the public read: manual drag order first, date as tie-breaker.
+                timelines: { orderBy: [{ sort_order: "asc" }, { date: "asc" }] },
                 letters: { orderBy: { sort_order: "asc" } },
             },
         });

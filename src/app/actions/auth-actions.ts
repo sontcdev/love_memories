@@ -90,7 +90,11 @@ const getCachedLinkData = cache(async (slug: string) => {
                 orderBy: { sort_order: "asc" },
             },
             timelines: {
-                orderBy: { date: "asc" },
+                // sort_order is the source of truth so a manual drag in the edit
+                // page is reflected publicly; date is the tie-breaker. Existing
+                // rows all have sort_order = 0 (column default), so this
+                // reproduces the previous date-only ordering until the first drag.
+                orderBy: [{ sort_order: "asc" }, { date: "asc" }],
             },
             letters: {
                 orderBy: { sort_order: "asc" },

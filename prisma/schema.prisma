@@ -80,6 +80,16 @@ model Link {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
+  // Publish state, owned by the PAGE OWNER — distinct from `is_active`, which is
+  // the admin's kill switch. Defaults to true so every existing link stays live
+  // without a data migration.
+  is_published Boolean   @default(true)
+  published_at DateTime?
+
+  // Owner-facing organisation. All nullable/defaulted for the same reason.
+  is_favorite Boolean  @default(false)
+  tags        String[] @default([])
+
   // ProfileData - Dynamic JSON field based on template type
   // LOVE: { boy_name, girl_name, anniversary_date, ... }
   // IDOL: { idol_name, fan_name, ... }
@@ -93,9 +103,26 @@ model Link {
   timelines Timeline[]
   letters   Letter[]
   quiz_votes QuizVote[]
+  revisions LinkRevision[]
 
   @@index([slug])
   @@map("links")
+}
+
+/// Snapshot of a link's editable content, written before each successful save so
+/// an owner can roll back. Cascade-deleted with the link.
+model LinkRevision {
+  id           String   @id @default(cuid())
+  link_id      String
+  profile_data Json?
+  /// Short human label, e.g. "Tự động lưu" or "Trước khi đăng".
+  label        String?
+  created_at   DateTime @default(now())
+
+  link Link @relation(fields: [link_id], references: [id], onDelete: Cascade)
+
+  @@index([link_id, created_at])
+  @@map("link_revisions")
 }
 
 // ============================================================================

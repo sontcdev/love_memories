@@ -13,9 +13,13 @@ export async function getTimelineEvents(slug: string) {
             return { success: false, error: access.error, data: [] };
         }
 
+        // Thứ tự do người dùng kéo thả (`sort_order`) là nguồn sự thật.
+        // `date` chỉ còn là tiêu chí phụ: mọi bản ghi cũ đều có sort_order = 0
+        // (giá trị mặc định), nên danh sách chưa từng sắp xếp lại vẫn hiện ra
+        // đúng theo thời gian như trước.
         const events = await prisma.timeline.findMany({
             where: { link_id: access.linkId },
-            orderBy: { date: "asc" },
+            orderBy: [{ sort_order: "asc" }, { date: "asc" }],
         });
 
         return { success: true, data: events };
@@ -89,6 +93,13 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
 
             return { success: true, data: updated };
         } else {
+            // Sự kiện mới luôn được xếp xuống cuối danh sách (giống addGalleryImage),
+            // thay vì để sort_order = 0 rồi trộn lẫn với các bản ghi cũ.
+            const maxOrder = await prisma.timeline.aggregate({
+                where: { link_id: access.linkId },
+                _max: { sort_order: true },
+            });
+
             const created = await prisma.timeline.create({
                 data: {
                     link_id: access.linkId,
@@ -98,6 +109,7 @@ export async function upsertTimelineEvent(slug: string, data: TimelineEventData)
                     image_url: data.image_url || null,
                     video_url: data.video_url || null,
                     audio_url: data.audio_url || null,
+                    sort_order: (maxOrder._max.sort_order || 0) + 1,
                 },
             });
 
@@ -138,6 +150,45 @@ export async function deleteTimelineEvent(slug: string, eventId: string) {
     } catch (error) {
         console.error("Delete timeline event error:", error);
         return { success: false, error: "Không thể xóa sự kiện" };
+    }
+}
+
+/**
+ * Lưu thứ tự mới sau khi người dùng kéo thả.
+ *
+ * Viết theo đúng khuôn `reorderGalleryImages` trong gallery-actions.ts: nhận
+ * mảng id theo thứ tự hiển thị mong muốn và ghi `sort_order = index + 1`.
+ * Toàn bộ nằm trong MỘT transaction nên không bao giờ có trạng thái nửa vời —
+ * hoặc cả danh sách được sắp lại, hoặc không thay đổi gì.
+ *
+ * Điều kiện `link_id` trong `where` vừa là bộ lọc quyền: id thuộc link khác sẽ
+ * không khớp, transaction lỗi và toàn bộ thay đổi bị hủy.
+ */
+export async function reorderTimelineEvents(slug: string, eventIds: string[]) {
+    try {
+        const access = await verifyAccess(slug);
+        if (!access.success || !access.linkId) {
+            return { success: false, error: access.error };
+        }
+
+        const linkId = access.linkId;
+
+        await prisma.$transaction(
+            eventIds.map((id, index) =>
+                prisma.timeline.update({
+                    where: { id, link_id: linkId },
+                    data: { sort_order: index + 1 },
+                })
+            )
+        );
+
+        revalidatePath(`/${slug}`);
+        revalidatePath(`/${slug}/edit`);
+
+        return { success: true };
+    } catch (error) {
+        console.error("Reorder timeline events error:", error);
+        return { success: false, error: "Không thể sắp xếp lại sự kiện" };
     }
 }
 
