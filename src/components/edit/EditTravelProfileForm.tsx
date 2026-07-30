@@ -1,17 +1,25 @@
 "use client";
 
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { updateLinkProfile, TravelProfileData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Plane } from "lucide-react";
+import { Save, Loader2, Plane, Undo2, Redo2 } from "lucide-react";
+import { useFormFeedback } from "./useFormFeedback";
+import { useFormAutoSave, type SaveStatus } from "./useAutoSave";
+import { SaveStatusIndicator } from "./SaveStatusIndicator";
+import { useUndoRedo } from "./useUndoRedo";
 
+// Thông báo lỗi bằng tiếng Việt: với `mode: "onChange"` (xem bên dưới) các lỗi này
+// hiện ngay khi người dùng đang gõ, nên không được để lọt thông báo mặc định
+// (tiếng Anh) của zod.
 const travelProfileSchema = z.object({
-    trip_name: z.string().min(1, "Bắt buộc").max(50),
-    destination: z.string().max(100).optional(),
+    trip_name: z.string().min(1, "Bắt buộc").max(50, "Tối đa 50 ký tự"),
+    destination: z.string().max(100, "Tối đa 100 ký tự").optional(),
     start_date: z.string().optional(),
     end_date: z.string().optional(),
-    travelers: z.string().max(100).optional(),
+    travelers: z.string().max(100, "Tối đa 100 ký tự").optional(),
 });
 
 type TravelFormData = z.infer<typeof travelProfileSchema>;
@@ -21,9 +29,52 @@ interface EditTravelProfileFormProps {
     initialData: TravelProfileData | null;
     isSubmitting: boolean;
     setIsSubmitting: (v: boolean) => void;
-    message: { type: "success" | "error"; text: string } | null;
-    setMessage: (m: { type: "success" | "error"; text: string } | null) => void;
     onSuccess?: () => void;
+}
+
+/**
+ * Hàng điều khiển đặt ngay trên nút "Lưu thay đổi": trạng thái tự động lưu +
+ * hoàn tác/làm lại.
+ *
+ * Cả hai nút đều là `type="button"` — nếu để mặc định, bấm hoàn tác sẽ submit form.
+ */
+function FormSaveToolbar({
+    status,
+    lastSavedAt,
+    error,
+    onRetry,
+    canUndo,
+    canRedo,
+    onUndo,
+    onRedo,
+}: {
+    status: SaveStatus;
+    lastSavedAt: Date | null;
+    error: string | null;
+    onRetry: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    onUndo: () => void;
+    onRedo: () => void;
+}) {
+    const buttonClass =
+        "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40";
+
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+            <SaveStatusIndicator status={status} lastSavedAt={lastSavedAt} error={error} onRetry={onRetry} />
+            <div className="ml-auto flex items-center gap-2">
+                <button type="button" onClick={onUndo} disabled={!canUndo} className={buttonClass} title="Hoàn tác (Ctrl+Z)">
+                    <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Hoàn tác
+                </button>
+                <button type="button" onClick={onRedo} disabled={!canRedo} className={buttonClass} title="Làm lại (Ctrl+Shift+Z)">
+                    <Redo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Làm lại
+                </button>
+            </div>
+        </div>
+    );
 }
 
 export function EditTravelProfileForm({
@@ -31,16 +82,21 @@ export function EditTravelProfileForm({
     initialData,
     isSubmitting,
     setIsSubmitting,
-    message,
-    setMessage,
     onSuccess,
 }: EditTravelProfileFormProps) {
+    const setMessage = useFormFeedback();
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        watch,
+        reset: resetFormValues,
+        formState: { errors, isDirty, isValid },
     } = useForm<TravelFormData>({
         resolver: zodResolver(travelProfileSchema),
+        // `mode: "onChange"` là BẮT BUỘC: cổng chặn của tự động lưu là
+        // `isDirty && isValid`, mà với mode mặc định ("onSubmit") thì `isValid` chỉ
+        // được cập nhật sau lần submit đầu tiên. Nút "Lưu thay đổi" không đổi hành vi.
+        mode: "onChange",
         defaultValues: {
             trip_name: initialData?.trip_name || "",
             destination: initialData?.destination || initialData?.destinations || "",
@@ -50,11 +106,42 @@ export function EditTravelProfileForm({
         },
     });
 
+    /** ĐƯỜNG DUY NHẤT ghi hồ sơ — dùng chung cho nút Lưu và tự động lưu. */
+    const persist = useCallback(
+        async (data: TravelFormData) => updateLinkProfile(slug, data),
+        [slug]
+    );
+
+    /**
+     * Tự động lưu — BỔ SUNG cho nút Lưu, không thay thế.
+     *
+     * - `isDirty`: form chưa ai chạm vào thì không ghi.
+     * - `isValid`: dữ liệu sai thì không ghi.
+     * - `!isSubmitting`: đang lưu tay thì không chen ngang.
+     *
+     * Hồ sơ chuyến đi không có ô tải ảnh, nên không cần chặn theo trạng thái upload.
+     */
+    const autoSave = useFormAutoSave<TravelFormData>({
+        watch,
+        isDirty,
+        isValid,
+        save: persist,
+        enabled: isDirty && isValid && !isSubmitting,
+    });
+
+    /**
+     * Hoàn tác/làm lại. `keepDefaultValues: true` để hoàn tác về đúng dữ liệu ban
+     * đầu thì form trở lại "sạch" và tự động lưu tự dừng.
+     */
+    const undoRedo = useUndoRedo<TravelFormData>({
+        value: watch(),
+        onChange: (previous) => resetFormValues(previous, { keepDefaultValues: true }),
+    });
+
     const onSubmit = async (data: TravelFormData) => {
         setIsSubmitting(true);
-        setMessage(null);
 
-        const result = await updateLinkProfile(slug, data);
+        const result = await persist(data);
 
         if (result.success) {
             setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
@@ -136,17 +223,17 @@ export function EditTravelProfileForm({
                 />
             </div>
 
-            {/* Message */}
-            {message && (
-                <div
-                    className={`p-3 rounded-lg text-sm ${message.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
-                >
-                    {message.text}
-                </div>
-            )}
+            {/* Trạng thái tự động lưu + hoàn tác, đặt ngay trên nút Lưu */}
+            <FormSaveToolbar
+                status={autoSave.status}
+                lastSavedAt={autoSave.lastSavedAt}
+                error={autoSave.error}
+                onRetry={autoSave.saveNow}
+                canUndo={undoRedo.canUndo}
+                canRedo={undoRedo.canRedo}
+                onUndo={undoRedo.undo}
+                onRedo={undoRedo.redo}
+            />
 
             {/* Submit */}
             <button
