@@ -1,5 +1,9 @@
 "use client";
 
+// GalleryManagerV2 — bản giữ nguyên implementation mới (toast, auto-save, undo/redo…).
+// GalleryManager.tsx đã rollback về đúng phiên bản trên nhánh deploy và chỉ phục vụ
+// các LinkType đã có trên deploy; file V2 này phục vụ WEDDING/TRAVEL/FRIENDSHIP.
+
 import { useState, useCallback } from "react";
 import { Gallery } from "@prisma/client";
 import { MultiImageUpload } from "@/components/ui/MultiImageUpload";
@@ -22,6 +26,7 @@ import {
     GripVertical,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
     DndContext,
     closestCenter,
@@ -42,40 +47,21 @@ import { CSS } from "@dnd-kit/utilities";
 
 const MAX_PHOTOS = 20;
 
-interface GalleryManagerProps {
+interface GalleryManagerV2Props {
     slug: string;
     initialGallery: Gallery[];
     isDark?: boolean;
-}
-
-// Full-screen loading overlay component
-// Full-screen loading overlay component
-function LoadingOverlay({ message, isDark }: { message: string; isDark?: boolean }) {
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-            <div className={`rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 border transition-all ${
-                isDark ? "bg-slate-900 border-purple-500/20 text-white shadow-[0_0_30px_rgba(168,85,247,0.2)]" : "bg-white border-gray-100 text-gray-700"
-            }`}>
-                <div className="relative">
-                    <div className={`w-12 h-12 border-4 rounded-full animate-pulse ${isDark ? "border-purple-900/50" : "border-pink-200"}`} />
-                    <Loader2 className={`w-12 h-12 animate-spin absolute inset-0 ${isDark ? "text-purple-500" : "text-pink-500"}`} />
-                </div>
-                <p className={`font-medium ${isDark ? "text-purple-200" : "text-gray-700"}`}>{message}</p>
-            </div>
-        </div>
-    );
 }
 
 // Sortable Image Component
 interface SortableImageProps {
     image: Gallery;
     isDeleting: boolean;
-    isLoading: boolean;
     onEdit: () => void;
     onDelete: () => void;
 }
 
-function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: SortableImageProps) {
+function SortableImage({ image, isDeleting, onEdit, onDelete }: SortableImageProps) {
     const {
         attributes,
         listeners,
@@ -129,15 +115,14 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
                 <div className="absolute top-2 right-2 flex gap-1 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
                     <button
                         onClick={onEdit}
-                        disabled={isLoading}
-                        className="p-2 bg-white/90 rounded-full hover:bg-white shadow-sm disabled:opacity-50"
+                        className="p-2 bg-white/90 rounded-full hover:bg-white shadow-sm"
                         title="Sửa chú thích"
                     >
                         <Edit3 className="w-4 h-4 text-gray-600" />
                     </button>
                     <button
                         onClick={onDelete}
-                        disabled={isLoading || isDeleting}
+                        disabled={isDeleting}
                         className="p-2 bg-white/90 rounded-full hover:bg-red-50 shadow-sm disabled:opacity-50"
                         title="Xóa"
                     >
@@ -160,17 +145,13 @@ function SortableImage({ image, isDeleting, isLoading, onEdit, onDelete }: Sorta
     );
 }
 
-export function GalleryManager({ slug, initialGallery, isDark = false }: GalleryManagerProps) {
+export function GalleryManagerV2({ slug, initialGallery, isDark = false }: GalleryManagerV2Props) {
     const [gallery, setGallery] = useState<Gallery[]>(initialGallery);
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingImage, setEditingImage] = useState<Gallery | null>(null);
     const [editCaption, setEditCaption] = useState("");
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-    // Loading states
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadingMessage, setLoadingMessage] = useState("");
     const [savingCaption, setSavingCaption] = useState(false);
 
     const isLimitReached = gallery.length >= MAX_PHOTOS;
@@ -179,9 +160,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
     // Handle multiple image uploads
     const handleUploadComplete = useCallback(
         async (urls: string[]) => {
-            setIsLoading(true);
-            setLoadingMessage(`Đang lưu ${urls.length} ảnh...`);
-
             // Add all images in parallel
             const results = await Promise.all(
                 urls.map(url => addGalleryImage(slug, url))
@@ -196,8 +174,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
             }
 
             setIsAddingNew(false);
-            setIsLoading(false);
-            setLoadingMessage("");
         },
         [slug]
     );
@@ -206,8 +182,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
     const handleDelete = async (imageId: string) => {
         setDeleteConfirmId(null);
         setDeletingId(imageId);
-        setIsLoading(true);
-        setLoadingMessage("Đang xóa ảnh...");
 
         const result = await deleteGalleryImage(slug, imageId);
 
@@ -216,8 +190,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
         }
 
         setDeletingId(null);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Handle edit caption
@@ -235,8 +207,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
         if (!editingImage) return;
 
         setSavingCaption(true);
-        setIsLoading(true);
-        setLoadingMessage("Đang lưu...");
 
         const result = await updateGalleryImage(slug, editingImage.id, editCaption);
 
@@ -248,8 +218,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
 
         closeEditDialog();
         setSavingCaption(false);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Drag and drop sensors
@@ -277,22 +245,13 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
             setGallery(newGallery);
 
             // Persist to database
-            setIsLoading(true);
-            setLoadingMessage("Đang lưu thứ tự...");
-
             const imageIds = newGallery.map((img) => img.id);
             await reorderGalleryImages(slug, imageIds);
-
-            setIsLoading(false);
-            setLoadingMessage("");
         }
     };
 
     return (
         <div className="space-y-6">
-            {/* Global Loading Overlay */}
-            {isLoading && <LoadingOverlay message={loadingMessage} isDark={isDark} />}
-
             {/* Delete Confirm Dialog */}
             <ConfirmDialog
                 isOpen={deleteConfirmId !== null}
@@ -316,7 +275,7 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
                 </div>
                 <button
                     onClick={() => setIsAddingNew(true)}
-                    disabled={isLoading || isLimitReached}
+                    disabled={isLimitReached}
                     className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
                         isDark 
                             ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35 hover:shadow-purple-500/20" 
@@ -355,8 +314,7 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
                             </div>
                             <button
                                 onClick={() => setIsAddingNew(false)}
-                                disabled={isLoading}
-                                className={`p-2 rounded-full disabled:opacity-50 transition-colors ${
+                                className={`p-2 rounded-full transition-colors ${
                                     isDark ? "hover:bg-slate-800 text-purple-300 hover:text-white" : "hover:bg-gray-100 text-gray-500"
                                 }`}
                             >
@@ -375,21 +333,29 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
 
             {/* Gallery Grid */}
             {gallery.length === 0 ? (
-                <div className={`text-center py-16 rounded-2xl border transition-all ${
-                    isDark 
-                        ? "bg-slate-950/40 border-purple-950/40" 
-                        : "bg-gray-50 border-gray-100"
-                }`}>
-                    <ImageIcon className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-purple-900/60" : "text-gray-300"}`} />
-                    <p className={`mb-4 ${isDark ? "text-purple-300/60" : "text-gray-500"}`}>Chưa có ảnh nào</p>
-                    <button
-                        onClick={() => setIsAddingNew(true)}
-                        className={`font-medium transition-colors ${
-                            isDark ? "text-purple-400 hover:text-purple-300" : "text-pink-500 hover:text-pink-600"
-                        }`}
-                    >
-                        Tải ảnh đầu tiên lên
-                    </button>
+                /* Bọc trong `dark` để EmptyState dùng biến thể dark: khi nội dung nền tối
+                   (trang sửa không gắn class `dark` lên <html> như trang công khai). */
+                <div className={isDark ? "dark" : undefined}>
+                    <EmptyState
+                        compact
+                        icon={<ImageIcon className="w-5 h-5" />}
+                        title="Chưa có ảnh nào"
+                        description={`Tải ảnh lên để bắt đầu bộ sưu tập. Bạn có thể thêm tối đa ${MAX_PHOTOS} ảnh, mỗi lần chọn tối đa 5 ảnh.`}
+                        className={isDark ? "dark:bg-slate-950/40 dark:border-purple-500/25" : "bg-gray-50"}
+                        action={
+                            <button
+                                onClick={() => setIsAddingNew(true)}
+                                className={`inline-flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-all shadow-md ${
+                                    isDark
+                                        ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35"
+                                        : "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-pink-500/20"
+                                }`}
+                            >
+                                <Plus className="w-4 h-4" />
+                                Tải ảnh đầu tiên lên
+                            </button>
+                        }
+                    />
                 </div>
             ) : (
                 <>
@@ -413,7 +379,6 @@ export function GalleryManager({ slug, initialGallery, isDark = false }: Gallery
                                         key={image.id}
                                         image={image}
                                         isDeleting={deletingId === image.id}
-                                        isLoading={isLoading}
                                         onEdit={() => startEdit(image)}
                                         onDelete={() => setDeleteConfirmId(image.id)}
                                     />

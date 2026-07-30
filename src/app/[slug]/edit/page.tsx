@@ -1,10 +1,16 @@
 import { redirect } from "next/navigation";
+import type { LinkType } from "@prisma/client";
 import { checkLinkAccess, getLinkData } from "@/app/actions/auth-actions";
 import { EditPageClient } from "./edit-client";
+import { EditPageClientV2 } from "./edit-client-v2";
 
 interface PageProps {
     params: Promise<{ slug: string }>;
 }
+
+// Các LinkType chưa tồn tại trên nhánh `deploy`. Chỉ nhóm này dùng edit shell mới;
+// 7 type còn lại dùng `EditPageClient`, là code deploy nguyên bản.
+const V2_EDIT_TYPES: LinkType[] = ["WEDDING", "TRAVEL", "FRIENDSHIP"];
 
 export default async function EditPage({ params }: PageProps) {
     const { slug } = await params;
@@ -22,6 +28,15 @@ export default async function EditPage({ params }: PageProps) {
 
     if (!linkResult.success || !linkResult.data) {
         redirect(`/${slug}`);
+    }
+
+    if (V2_EDIT_TYPES.includes(linkResult.data.type)) {
+        return (
+            <EditPageClientV2
+                slug={slug}
+                linkData={linkResult.data}
+            />
+        );
     }
 
     return (

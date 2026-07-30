@@ -1,22 +1,36 @@
 "use client";
 
-import { useState } from "react";
+// EditConfigFormV2 — bản giữ nguyên implementation mới (toast, auto-save, undo/redo…).
+// EditConfigForm.tsx đã rollback về đúng phiên bản trên nhánh deploy và chỉ phục vụ
+// các LinkType đã có trên deploy; file V2 này phục vụ WEDDING/TRAVEL/FRIENDSHIP.
+
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { LinkType } from "@prisma/client";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Palette, Type } from "lucide-react";
+import { Save, Loader2, Palette, Type, Music, Undo2, Redo2 } from "lucide-react";
+import { GameTemplateSelector } from "./GameTemplateSelector";
+import { normalizeGameTemplate, type GameVariantId } from "@/components/templates/game-registry";
+import { useFormFeedback } from "./useFormFeedback";
+import { useFormAutoSave, type SaveStatus } from "./useAutoSave";
+import { SaveStatusIndicator } from "./SaveStatusIndicator";
+import { useUndoRedo } from "./useUndoRedo";
 
 // ============================================================================
 // SCHEMA
 // ============================================================================
 
+// Thông báo lỗi bằng tiếng Việt: với `mode: "onChange"` (xem bên dưới) các lỗi này
+// hiện ngay khi người dùng đang gõ — dán một link nhạc dở dang là thấy ngay — nên
+// không được để lọt thông báo tiếng Anh.
 const configSchema = z.object({
-    background_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
-    accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
-    text_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().or(z.literal("")),
+    background_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Mã màu không hợp lệ (ví dụ: #ffffff)").optional().or(z.literal("")),
+    accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Mã màu không hợp lệ (ví dụ: #ffffff)").optional().or(z.literal("")),
+    text_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Mã màu không hợp lệ (ví dụ: #ffffff)").optional().or(z.literal("")),
     font_family: z.string().optional(),
-    music_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+    music_url: z.string().url("Đường dẫn không hợp lệ").optional().or(z.literal("")),
     auto_play: z.boolean().optional(),
 });
 
@@ -70,24 +84,80 @@ const ACCENT_COLORS = [
 // COMPONENT
 // ============================================================================
 
-interface EditConfigFormProps {
+interface EditConfigFormV2Props {
     slug: string;
+    linkType: LinkType;
     initialConfig: LinkConfigData | null;
     onSuccess?: () => void;
 }
 
-export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFormProps) {
+/**
+ * Hàng điều khiển đặt ngay trên nút "Lưu cài đặt": trạng thái tự động lưu +
+ * hoàn tác/làm lại.
+ *
+ * Cả hai nút đều là `type="button"` — nếu để mặc định, bấm hoàn tác sẽ submit form.
+ */
+function FormSaveToolbar({
+    status,
+    lastSavedAt,
+    error,
+    onRetry,
+    canUndo,
+    canRedo,
+    onUndo,
+    onRedo,
+}: {
+    status: SaveStatus;
+    lastSavedAt: Date | null;
+    error: string | null;
+    onRetry: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    onUndo: () => void;
+    onRedo: () => void;
+}) {
+    const buttonClass =
+        "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40";
+
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+            <SaveStatusIndicator status={status} lastSavedAt={lastSavedAt} error={error} onRetry={onRetry} />
+            <div className="ml-auto flex items-center gap-2">
+                <button type="button" onClick={onUndo} disabled={!canUndo} className={buttonClass} title="Hoàn tác (Ctrl+Z)">
+                    <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Hoàn tác
+                </button>
+                <button type="button" onClick={onRedo} disabled={!canRedo} className={buttonClass} title="Làm lại (Ctrl+Shift+Z)">
+                    <Redo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Làm lại
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess }: EditConfigFormV2Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const setMessage = useFormFeedback();
+    const [gameTemplate, setGameTemplate] = useState<GameVariantId>(
+        normalizeGameTemplate(initialConfig?.game_template)
+    );
 
     const {
         register,
         handleSubmit,
         setValue,
         watch,
-        formState: { errors },
+        reset: resetFormValues,
+        formState: { errors, isDirty, isValid },
     } = useForm<ConfigFormData>({
         resolver: zodResolver(configSchema),
+        // `mode: "onChange"` là BẮT BUỘC, không phải tùy chọn thẩm mỹ: cổng chặn của
+        // tự động lưu là `isDirty && isValid`, mà với mode mặc định ("onSubmit") thì
+        // `isValid` chỉ được cập nhật sau lần submit đầu tiên — tự động lưu sẽ hoặc
+        // không bao giờ chạy, hoặc chạy với dữ liệu chưa hợp lệ. Đổi mode KHÔNG ảnh
+        // hưởng nút "Lưu cài đặt": `handleSubmit` vẫn validate như trước.
+        mode: "onChange",
         defaultValues: {
             background_color: initialConfig?.background_color || "#ffffff",
             accent_color: initialConfig?.accent_color || "#ec4899",
@@ -101,18 +171,75 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
     const selectedColor = watch("background_color");
     const selectedAccentColor = watch("accent_color");
 
+    /**
+     * ĐƯỜNG DUY NHẤT ghi cài đặt xuống server.
+     *
+     * Cả nút "Lưu cài đặt" và tự động lưu đều đi qua đây, nên không có chỗ nào gọi
+     * `updateLinkConfig` lần thứ hai — hai luồng không thể lệch nhau về payload (ví
+     * dụ quên kèm `game_template`) hay về cách chuyển "" thành `undefined`.
+     */
+    const persist = useCallback(
+        async (data: ConfigFormData) =>
+            updateLinkConfig(slug, {
+                background_color: data.background_color || undefined,
+                accent_color: data.accent_color || undefined,
+                text_color: data.text_color || undefined,
+                font_family: data.font_family || undefined,
+                music_url: data.music_url || undefined,
+                auto_play: data.auto_play,
+                game_template: gameTemplate,
+            }),
+        [slug, gameTemplate]
+    );
+
+    /**
+     * Bộ chọn trò chơi nằm NGOÀI react-hook-form (state riêng), nên `isDirty` của
+     * form không biết nó đã đổi. Nếu chỉ nghe `watch()` thì đổi trò chơi rồi rời
+     * trang là mất — dù nút "Lưu cài đặt" vẫn lưu nó.
+     *
+     * Mốc so sánh giữ trong ref để không đổi giữa các lần render.
+     */
+    const initialGameTemplate = useRef(gameTemplate);
+    const gameTemplateDirty = gameTemplate !== initialGameTemplate.current;
+
+    /**
+     * Tự động lưu — BỔ SUNG cho nút Lưu, không thay thế.
+     *
+     * Cổng `enabled` chặn mọi trường hợp không nên ghi:
+     * - `isDirty || gameTemplateDirty`: chưa ai chạm vào gì thì không ghi (mở trang
+     *   không phải là sửa).
+     * - `isValid`: mã màu hay link nhạc còn dở dang thì không ghi.
+     * - `!isSubmitting`: đang lưu tay thì không chen ngang.
+     *
+     * Tab cài đặt không có ô tải ảnh, nên không cần chặn theo trạng thái upload.
+     */
+    const autoSave = useFormAutoSave({
+        watch: () => ({ ...watch(), game_template: gameTemplate }),
+        isDirty: isDirty || gameTemplateDirty,
+        isValid,
+        save: persist,
+        enabled: (isDirty || gameTemplateDirty) && isValid && !isSubmitting,
+    });
+
+    /**
+     * Hoàn tác/làm lại cho các ô của form (màu, phông chữ, nhạc).
+     *
+     * `keepDefaultValues: true` để react-hook-form tính lại `isDirty` bằng cách so
+     * với giá trị gốc: hoàn tác về đúng cài đặt ban đầu thì form trở lại "sạch".
+     *
+     * Lựa chọn trò chơi nằm ngoài lịch sử này — nó có UI chọn riêng, gộp vào cùng
+     * một ngăn xếp undo sẽ khiến người dùng bấm "Hoàn tác" mà không hiểu vừa hoàn
+     * tác cái gì.
+     */
+    const undoRedo = useUndoRedo<ConfigFormData>({
+        value: watch(),
+        onChange: (previous) => resetFormValues(previous, { keepDefaultValues: true }),
+    });
+
     const onSubmit = async (data: ConfigFormData) => {
         setIsSubmitting(true);
-        setMessage(null);
 
-        const result = await updateLinkConfig(slug, {
-            background_color: data.background_color || undefined,
-            accent_color: data.accent_color || undefined,
-            text_color: data.text_color || undefined,
-            font_family: data.font_family || undefined,
-            music_url: data.music_url || undefined,
-            auto_play: data.auto_play,
-        });
+        const result = await persist(data);
 
         if (result.success) {
             setMessage({ type: "success", text: "Đã lưu cài đặt!" });
@@ -139,7 +266,16 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                         <button
                             key={color}
                             type="button"
-                            onClick={() => setValue("background_color", color)}
+                            onClick={() =>
+                                // `shouldDirty` là bắt buộc: mặc định `setValue` KHÔNG
+                                // đánh dấu form là đã sửa, nên chọn màu bằng ô mẫu sẽ
+                                // không kích hoạt tự động lưu và người dùng mất màu vừa
+                                // chọn nếu rời trang.
+                                setValue("background_color", color, {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                })
+                            }
                             className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedColor === color
                                 ? "border-purple-500 ring-2 ring-purple-200 scale-110"
                                 : "border-gray-200 hover:border-gray-300"
@@ -181,7 +317,14 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                         <button
                             key={color}
                             type="button"
-                            onClick={() => setValue("accent_color", color)}
+                            onClick={() =>
+                                // Xem ghi chú ở ô màu nền: thiếu `shouldDirty` thì tự
+                                // động lưu không bao giờ thấy thay đổi này.
+                                setValue("accent_color", color, {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                })
+                            }
                             className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedAccentColor === color
                                 ? "border-gray-800 ring-2 ring-gray-300 scale-110"
                                 : "border-gray-200 hover:border-gray-300"
@@ -228,8 +371,8 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                 </select>
             </div>
 
-            {/* Music URL - temporarily disabled */}
-            {/* <div>
+            {/* Music URL */}
+            <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Music className="w-5 h-5 text-pink-500" />
                     <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
@@ -238,11 +381,15 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                 <input
                     {...register("music_url")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all"
-                    placeholder="https://example.com/music.mp3"
+                    placeholder="https://youtube.com/watch?v=... hoặc .mp3 URL"
                 />
                 {errors.music_url && (
                     <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
                 )}
+                <p className="mt-1 text-xs text-gray-500">
+                    Hỗ trợ YouTube và file audio trực tiếp (.mp3). Link TikTok cần người xem
+                    bấm play thủ công.
+                </p>
 
                 <label className="flex items-center gap-3 mt-4 cursor-pointer">
                     <input
@@ -254,19 +401,26 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                         Tự động phát nhạc khi tải trang
                     </span>
                 </label>
-            </div> */}
+            </div>
 
-            {/* Message */}
-            {message && (
-                <div
-                    className={`p-3 rounded-lg text-sm ${message.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
-                >
-                    {message.text}
-                </div>
-            )}
+            {/* Game Template Selector */}
+            <GameTemplateSelector
+                linkType={linkType}
+                value={gameTemplate}
+                onChange={setGameTemplate}
+            />
+
+            {/* Trạng thái tự động lưu + hoàn tác, đặt ngay trên nút Lưu */}
+            <FormSaveToolbar
+                status={autoSave.status}
+                lastSavedAt={autoSave.lastSavedAt}
+                error={autoSave.error}
+                onRetry={autoSave.saveNow}
+                canUndo={undoRedo.canUndo}
+                canRedo={undoRedo.canRedo}
+                onUndo={undoRedo.undo}
+                onRedo={undoRedo.redo}
+            />
 
             {/* Submit */}
             <button

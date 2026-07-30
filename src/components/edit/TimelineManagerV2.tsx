@@ -1,12 +1,17 @@
 "use client";
 
-import { useState, useOptimistic, useTransition } from "react";
+// TimelineManagerV2 — bản giữ nguyên implementation mới (toast, auto-save, undo/redo…).
+// TimelineManager.tsx đã rollback về đúng phiên bản trên nhánh deploy và chỉ phục vụ
+// các LinkType đã có trên deploy; file V2 này phục vụ WEDDING/TRAVEL/FRIENDSHIP.
+
+import { useMemo, useState, useOptimistic, useTransition } from "react";
 import Image from "next/image";
 import { Timeline } from "@prisma/client";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import {
     upsertTimelineEvent,
     deleteTimelineEvent,
+    reorderTimelineEvents,
 } from "@/app/actions/timeline-actions";
 import {
     Dialog,
@@ -19,6 +24,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useToast } from "@/components/ui/toast";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type Announcements,
+    type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
     Plus,
     Trash2,
@@ -28,9 +53,10 @@ import {
     Calendar,
     Image as ImageIcon,
     AlertCircle,
+    GripVertical,
 } from "lucide-react";
 
-interface TimelineManagerProps {
+interface TimelineManagerV2Props {
     slug: string;
     initialTimeline: Timeline[];
     isDark?: boolean;
@@ -57,22 +83,197 @@ const emptyForm: FormData = {
     audio_url: "",
 };
 
-export function TimelineManager({ slug, initialTimeline, isDark = false }: TimelineManagerProps) {
+/**
+ * Sắp xếp theo THỨ TỰ KÉO THẢ, không theo ngày.
+ *
+ * Quan trọng: `getLinkData()` (auth-actions.ts) vẫn trả về timelines với
+ * `orderBy: { date: "asc" }`, nên nếu để nguyên thứ tự nhận được từ server thì
+ * mọi lần kéo thả sẽ bị ghi đè ngay ở lần tải lại trang. Vì vậy danh sách được
+ * sắp lại tại client theo `sort_order`, còn `date` chỉ dùng để hiển thị và làm
+ * tiêu chí phụ khi các bản ghi cũ còn chung `sort_order = 0`.
+ */
+function sortByOrder(events: Timeline[]): Timeline[] {
+    return [...events].sort(
+        (a, b) =>
+            a.sort_order - b.sort_order ||
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+}
+
+interface SortableEventProps {
+    event: Timeline;
+    isDeleting: boolean;
+    /** Khóa kéo thả trong lúc chờ server lưu thứ tự, tránh chồng chéo yêu cầu. */
+    isReorderPending: boolean;
+    isDark: boolean;
+    onEdit: () => void;
+    onDelete: () => void;
+}
+
+function SortableEvent({
+    event,
+    isDeleting,
+    isReorderPending,
+    isDark,
+    onEdit,
+    onDelete,
+}: SortableEventProps) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: event.id, disabled: isReorderPending });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : "auto",
+        opacity: isDragging ? 0.8 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`group rounded-xl border p-4 transition-all ${
+                isDark
+                    ? "bg-slate-950/40 border-purple-500/20 hover:border-purple-500/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.1)]"
+                    : "bg-white border-gray-200 hover:shadow-md"
+            } ${isDeleting ? "opacity-50" : ""} ${
+                isDragging
+                    ? isDark
+                        ? "ring-2 ring-purple-500 shadow-xl"
+                        : "ring-2 ring-indigo-500 shadow-xl"
+                    : ""
+            }`}
+        >
+            <div className="flex gap-3 items-start">
+                {/* Tay kéo — chỉ phần tử này nhận sự kiện kéo, nhờ vậy nút Sửa/Xóa
+                    vẫn bấm được bình thường. Là <button> thật nên người dùng
+                    bàn phím Tab tới được rồi dùng Space/Enter + mũi tên để đổi thứ tự. */}
+                <button
+                    type="button"
+                    {...attributes}
+                    {...listeners}
+                    disabled={isReorderPending}
+                    aria-label={`Kéo để sắp xếp lại sự kiện ${event.title}`}
+                    title="Kéo để sắp xếp"
+                    className={`shrink-0 mt-1 p-1.5 rounded-lg cursor-grab active:cursor-grabbing touch-none transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                        isDark
+                            ? "text-purple-400/70 hover:text-purple-200 hover:bg-slate-800 focus-visible:outline-purple-400"
+                            : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus-visible:outline-indigo-500"
+                    }`}
+                >
+                    <GripVertical className="w-4 h-4" aria-hidden="true" />
+                </button>
+
+                {/* Date Badge */}
+                <div
+                    className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex flex-col items-center justify-center text-white ${
+                        isDark
+                            ? "bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-900/20"
+                            : "bg-gradient-to-br from-indigo-400 to-purple-400"
+                    }`}
+                >
+                    <span className="text-base sm:text-lg font-bold leading-none">
+                        {new Date(event.date).getDate()}
+                    </span>
+                    <span className="text-xs opacity-80">
+                        {new Date(event.date).toLocaleDateString("en", { month: "short" })}
+                    </span>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold break-words ${isDark ? "text-purple-100" : "text-gray-800"}`}>{event.title}</h3>
+                    <p className={`text-xs ${isDark ? "text-purple-400/60" : "text-gray-400"}`}>
+                        {new Date(event.date).toLocaleDateString("vi-VN", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                        })}
+                    </p>
+                    {event.description && (
+                        <p className={`text-sm mt-1 line-clamp-2 ${isDark ? "text-purple-300/80" : "text-gray-500"}`}>
+                            {event.description}
+                        </p>
+                    )}
+                </div>
+
+                {/* Thumbnail */}
+                {event.image_url && (
+                    <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden border bg-gray-100 ${
+                        isDark ? "border-purple-500/20" : "border-gray-200"
+                    }`}>
+                        <Image
+                            src={event.image_url}
+                            alt={event.title}
+                            width={56}
+                            height={56}
+                            className="object-cover"
+                            style={{ width: '100%', height: '100%' }}
+                        />
+                    </div>
+                )}
+            </div>
+
+            {/* Actions - Always visible on mobile */}
+            <div className={`flex justify-end gap-1 mt-3 pt-3 border-t sm:border-t-0 sm:mt-0 sm:pt-0 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity ${
+                isDark ? "border-purple-950/40" : "border-gray-100"
+            }`}>
+                <button
+                    onClick={onEdit}
+                    className={`p-2 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                        isDark ? "text-purple-400 hover:bg-slate-800" : "text-indigo-500 hover:bg-gray-100"
+                    }`}
+                    title="Sửa"
+                >
+                    <Edit3 className="w-4 h-4" />
+                    <span className="sm:hidden">Sửa</span>
+                </button>
+                <button
+                    onClick={onDelete}
+                    disabled={isDeleting}
+                    className={`p-2 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                        isDark ? "text-red-400 hover:bg-red-950/40" : "text-red-500 hover:bg-red-50"
+                    }`}
+                    title="Xóa"
+                >
+                    {isDeleting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <>
+                            <Trash2 className="w-4 h-4" />
+                            <span className="sm:hidden">Xóa</span>
+                        </>
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export function TimelineManagerV2({ slug, initialTimeline, isDark = false }: TimelineManagerV2Props) {
     const [, startTransition] = useTransition();
 
     // Optimistic state for instant UI updates
+    // Dùng `sortByOrder` thay vì so sánh `date` để cùng một quy tắc thứ tự
+    // được áp dụng ở mọi nơi trong component.
     const [, addOptimistic] = useOptimistic(
         initialTimeline,
         (state: Timeline[], action: { type: "add" | "update" | "delete"; payload: Timeline | string }) => {
             switch (action.type) {
                 case "add":
-                    return [...state, action.payload as Timeline].sort(
-                        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-                    );
+                    return sortByOrder([...state, action.payload as Timeline]);
                 case "update":
-                    return state
-                        .map((e) => (e.id === (action.payload as Timeline).id ? (action.payload as Timeline) : e))
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    return sortByOrder(
+                        state.map((e) =>
+                            e.id === (action.payload as Timeline).id ? (action.payload as Timeline) : e
+                        )
+                    );
                 case "delete":
                     return state.filter((e) => e.id !== action.payload);
                 default:
@@ -81,7 +282,7 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         }
     );
 
-    const [timeline, setTimeline] = useState<Timeline[]>(initialTimeline);
+    const [timeline, setTimeline] = useState<Timeline[]>(() => sortByOrder(initialTimeline));
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [formData, setFormData] = useState<FormData>(emptyForm);
     const [isSaving, setIsSaving] = useState(false);
@@ -89,10 +290,8 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [showImageUpload, setShowImageUpload] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    // Global loading state
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadingMessage, setLoadingMessage] = useState("");
+    const [isReordering, setIsReordering] = useState(false);
+    const toast = useToast();
 
     const isEditing = !!formData.id;
     const isLimitReached = timeline.length >= MAX_EVENTS;
@@ -136,8 +335,6 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         if (!isFormValid) return;
 
         setIsSaving(true);
-        setIsLoading(true);
-        setLoadingMessage(isEditing ? "Đang cập nhật..." : "Đang thêm...");
         setError(null);
 
         // Create optimistic event for immediate UI update
@@ -174,19 +371,15 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         });
 
         if (result.success && result.data) {
-            // Update real state
+            // KHÔNG sắp xếp lại theo `date` ở đây: làm vậy sẽ xóa sạch thứ tự
+            // người dùng vừa kéo thả. Sự kiện sửa được thay tại chỗ, sự kiện mới
+            // luôn nối vào cuối — khớp với `sort_order = max + 1` mà server gán.
             if (isEditing) {
                 setTimeline((prev) =>
-                    prev
-                        .map((e) => (e.id === formData.id ? (result.data as Timeline) : e))
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    prev.map((e) => (e.id === formData.id ? (result.data as Timeline) : e))
                 );
             } else {
-                setTimeline((prev) =>
-                    [...prev, result.data as Timeline].sort(
-                        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-                    )
-                );
+                setTimeline((prev) => [...prev, result.data as Timeline]);
             }
             handleCloseDialog();
         } else {
@@ -194,16 +387,12 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         }
 
         setIsSaving(false);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Delete event
     const handleDelete = async (eventId: string) => {
         setDeleteConfirmId(null);
         setDeletingId(eventId);
-        setIsLoading(true);
-        setLoadingMessage("Đang xóa...");
 
         startTransition(() => {
             addOptimistic({ type: "delete", payload: eventId });
@@ -216,8 +405,6 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         }
 
         setDeletingId(null);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Handle image upload
@@ -226,24 +413,85 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
         setShowImageUpload(false);
     };
 
+    // Sensors — giữ đúng cấu hình của GalleryManager: PointerSensor cần di chuyển
+    // 8px mới bắt đầu kéo (để không "ăn" cú bấm vào nút), KeyboardSensor cho phép
+    // sắp xếp bằng bàn phím.
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    // Thông báo tiếng Việt cho trình đọc màn hình (mặc định của dnd-kit là tiếng Anh).
+    const announcements = useMemo<Announcements>(() => {
+        const titleOf = (id?: string | number) =>
+            timeline.find((e) => e.id === id)?.title ?? "sự kiện";
+        const positionOf = (id?: string | number) => {
+            const index = timeline.findIndex((e) => e.id === id);
+            return index === -1 ? 0 : index + 1;
+        };
+
+        return {
+            onDragStart: ({ active }) =>
+                `Bắt đầu di chuyển "${titleOf(active.id)}" từ vị trí ${positionOf(active.id)} trên ${timeline.length}.`,
+            onDragOver: ({ active, over }) =>
+                over
+                    ? `"${titleOf(active.id)}" đang ở vị trí ${positionOf(over.id)} trên ${timeline.length}.`
+                    : undefined,
+            onDragEnd: ({ active, over }) =>
+                over
+                    ? `Đã đặt "${titleOf(active.id)}" vào vị trí ${positionOf(over.id)} trên ${timeline.length}.`
+                    : `Đã bỏ "${titleOf(active.id)}" tại vị trí cũ.`,
+            onDragCancel: ({ active }) =>
+                `Đã hủy di chuyển "${titleOf(active.id)}", thứ tự không thay đổi.`,
+        };
+    }, [timeline]);
+
+    // Kéo thả xong: cập nhật UI ngay, rồi lưu xuống DB. Thất bại thì trả lại
+    // thứ tự cũ và hiện toast lỗi.
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = timeline.findIndex((e) => e.id === active.id);
+        const newIndex = timeline.findIndex((e) => e.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return;
+
+        const previous = timeline; // ảnh chụp để hoàn tác khi lỗi
+
+        // Ghi luôn sort_order phía client để các lần render/sắp xếp sau vẫn đúng.
+        const reordered = arrayMove(timeline, oldIndex, newIndex).map((e, index) => ({
+            ...e,
+            sort_order: index + 1,
+        }));
+
+        setTimeline(reordered);
+        setIsReordering(true);
+
+        const result = await reorderTimelineEvents(
+            slug,
+            reordered.map((e) => e.id)
+        );
+
+        if (!result.success) {
+            setTimeline(previous); // hoàn tác
+            toast.error(
+                "Không thể lưu thứ tự mới",
+                result.error || "Thứ tự đã được trả về như trước. Vui lòng thử lại."
+            );
+        }
+
+        setIsReordering(false);
+    };
+
 
     return (
         <div className="space-y-6">
-            {/* Global Loading Overlay */}
-            {isLoading && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-                    <div className={`rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 border transition-all ${
-                        isDark ? "bg-slate-900 border-purple-500/20 text-white shadow-[0_0_30px_rgba(168,85,247,0.2)]" : "bg-white border-gray-100 text-gray-700"
-                    }`}>
-                        <div className="relative">
-                            <div className={`w-12 h-12 border-4 rounded-full animate-pulse ${isDark ? "border-purple-900/50" : "border-indigo-200"}`} />
-                            <Loader2 className={`w-12 h-12 animate-spin absolute inset-0 ${isDark ? "text-purple-500" : "text-indigo-500"}`} />
-                        </div>
-                        <p className={`font-medium ${isDark ? "text-purple-200" : "text-gray-700"}`}>{loadingMessage}</p>
-                    </div>
-                </div>
-            )}
-
             {/* Delete Confirm Dialog */}
             <ConfirmDialog
                 isOpen={deleteConfirmId !== null}
@@ -267,7 +515,7 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
                 </div>
                 <Button
                     onClick={handleAddNew}
-                    disabled={isLimitReached || isLoading}
+                    disabled={isLimitReached}
                     className={`text-white transition-all shadow-md ${
                         isDark 
                             ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35 hover:shadow-purple-500/20" 
@@ -451,117 +699,73 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
 
             {/* Timeline List */}
             {timeline.length === 0 ? (
-                <div className={`text-center py-16 rounded-2xl border transition-all ${
-                    isDark 
-                        ? "bg-slate-950/40 border-purple-950/40" 
-                        : "bg-gray-50 border-gray-100"
-                }`}>
-                    <Calendar className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-purple-900/60" : "text-gray-300"}`} />
-                    <p className={`mb-4 ${isDark ? "text-purple-300/60" : "text-gray-500"}`}>Chưa có sự kiện nào</p>
-                    <button
-                        onClick={handleAddNew}
-                        className={`font-medium transition-colors ${
-                            isDark ? "text-purple-400 hover:text-purple-300" : "text-indigo-500 hover:text-indigo-600"
-                        }`}
-                    >
-                        Thêm sự kiện đầu tiên
-                    </button>
+                /* Bọc trong `dark` để EmptyState dùng biến thể dark: khi nội dung nền tối
+                   (trang sửa không gắn class `dark` lên <html> như trang công khai). */
+                <div className={isDark ? "dark" : undefined}>
+                    <EmptyState
+                        compact
+                        icon={<Calendar className="w-5 h-5" />}
+                        title="Chưa có sự kiện nào"
+                        description={`Thêm cột mốc đầu tiên để kể lại câu chuyện của bạn. Dòng thời gian chứa tối đa ${MAX_EVENTS} sự kiện.`}
+                        className={isDark ? "dark:bg-slate-950/40 dark:border-purple-500/25" : "bg-gray-50"}
+                        action={
+                            <Button
+                                onClick={handleAddNew}
+                                className={`text-white transition-all shadow-md ${
+                                    isDark
+                                        ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-900/35"
+                                        : "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                                }`}
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Thêm sự kiện đầu tiên
+                            </Button>
+                        }
+                    />
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {timeline.map((event) => (
-                        <div
-                            key={event.id}
-                            className={`group rounded-xl border p-4 transition-all ${
-                                isDark 
-                                    ? "bg-slate-950/40 border-purple-500/20 hover:border-purple-500/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.1)]" 
-                                    : "bg-white border-gray-200 hover:shadow-md"
-                            }`}
+                <>
+                    {/* Gợi ý + trạng thái lưu thứ tự */}
+                    <div className={`flex items-center gap-1.5 text-xs ${isDark ? "text-purple-400/60" : "text-gray-400"}`}>
+                        {isReordering ? (
+                            <>
+                                <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+                                <span>Đang lưu thứ tự...</span>
+                            </>
+                        ) : (
+                            <>
+                                <GripVertical className="w-3 h-3" aria-hidden="true" />
+                                <span>Kéo thả để sắp xếp lại sự kiện (ngày chỉ để hiển thị)</span>
+                            </>
+                        )}
+                    </div>
+
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                        accessibility={{ announcements }}
+                    >
+                        <SortableContext
+                            items={timeline.map((e) => e.id)}
+                            strategy={verticalListSortingStrategy}
                         >
-                            <div className="flex gap-3 items-start">
-                                {/* Date Badge */}
-                                <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex flex-col items-center justify-center text-white ${
-                                    isDark 
-                                        ? "bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-900/20" 
-                                        : "bg-gradient-to-br from-indigo-400 to-purple-400"
-                                }`}>
-                                    <span className="text-base sm:text-lg font-bold leading-none">
-                                        {new Date(event.date).getDate()}
-                                    </span>
-                                    <span className="text-xs opacity-80">
-                                        {new Date(event.date).toLocaleDateString("en", { month: "short" })}
-                                    </span>
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                    <h3 className={`font-semibold break-words ${isDark ? "text-purple-100" : "text-gray-800"}`}>{event.title}</h3>
-                                    <p className={`text-xs ${isDark ? "text-purple-400/60" : "text-gray-400"}`}>
-                                        {new Date(event.date).toLocaleDateString("vi-VN", {
-                                            year: "numeric",
-                                            month: "short",
-                                            day: "numeric",
-                                        })}
-                                    </p>
-                                    {event.description && (
-                                        <p className={`text-sm mt-1 line-clamp-2 ${isDark ? "text-purple-300/80" : "text-gray-500"}`}>
-                                            {event.description}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {/* Thumbnail */}
-                                {event.image_url && (
-                                    <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden border bg-gray-100 ${
-                                        isDark ? "border-purple-500/20" : "border-gray-200"
-                                    }`}>
-                                        <Image
-                                            src={event.image_url}
-                                            alt={event.title}
-                                            width={56}
-                                            height={56}
-                                            className="object-cover"
-                                            style={{ width: '100%', height: '100%' }}
-                                        />
-                                    </div>
-                                )}
+                            <div className="space-y-3">
+                                {timeline.map((event) => (
+                                    <SortableEvent
+                                        key={event.id}
+                                        event={event}
+                                        isDeleting={deletingId === event.id}
+                                        isReorderPending={isReordering}
+                                        isDark={isDark}
+                                        onEdit={() => handleEdit(event)}
+                                        onDelete={() => setDeleteConfirmId(event.id)}
+                                    />
+                                ))}
                             </div>
-
-                            {/* Actions - Always visible on mobile */}
-                            <div className={`flex justify-end gap-1 mt-3 pt-3 border-t sm:border-t-0 sm:mt-0 sm:pt-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ${
-                                isDark ? "border-purple-950/40" : "border-gray-100"
-                            }`}>
-                                <button
-                                    onClick={() => handleEdit(event)}
-                                    className={`p-2 rounded-lg text-sm flex items-center gap-1 transition-colors ${
-                                        isDark ? "text-purple-400 hover:bg-slate-800" : "text-indigo-500 hover:bg-gray-100"
-                                    }`}
-                                    title="Sửa"
-                                >
-                                    <Edit3 className="w-4 h-4" />
-                                    <span className="sm:hidden">Sửa</span>
-                                </button>
-                                <button
-                                    onClick={() => setDeleteConfirmId(event.id)}
-                                    disabled={deletingId === event.id}
-                                    className={`p-2 rounded-lg text-sm flex items-center gap-1 transition-colors ${
-                                        isDark ? "text-red-400 hover:bg-red-950/40" : "text-red-500 hover:bg-red-50"
-                                    }`}
-                                    title="Xóa"
-                                >
-                                    {deletingId === event.id ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Trash2 className="w-4 h-4" />
-                                            <span className="sm:hidden">Xóa</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        </SortableContext>
+                    </DndContext>
+                </>
             )}
         </div>
     );

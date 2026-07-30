@@ -1,15 +1,42 @@
 "use client";
 
-import { useState } from "react";
+// EditProfileFormV2 — bản giữ nguyên implementation mới (toast, auto-save, undo/redo…).
+// EditProfileForm.tsx đã rollback về đúng phiên bản trên nhánh deploy và chỉ phục vụ
+// các LinkType đã có trên deploy; file V2 này phục vụ WEDDING/TRAVEL/FRIENDSHIP.
+
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
-import { updateLinkProfile, LoveProfileData, IdolProfileData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Heart, Camera } from "lucide-react";
-import { EditIdolProfileForm } from "./EditIdolProfileForm";
-import { EditGradProfileForm } from "./EditGradProfileForm";
-import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
+import { updateLinkProfile, LoveProfileData, IdolProfileData, WeddingProfileData, TravelProfileData, FriendshipProfileData, EveryProfileData } from "@/app/actions/profile-actions";
+import { Save, Loader2, Heart, Camera, LayoutGrid, Undo2, Redo2 } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useFormFeedback } from "./useFormFeedback";
+import { useFormAutoSave, type SaveStatus } from "./useAutoSave";
+import { SaveStatusIndicator } from "./SaveStatusIndicator";
+import { useUndoRedo } from "./useUndoRedo";
+
+// A page is exactly one LinkType, so only one of these can ever render. Loading
+// all six was the single biggest contributor to the /[slug]/edit bundle.
+const EditIdolProfileForm = dynamic(() =>
+    import("./EditIdolProfileFormV2").then((m) => m.EditIdolProfileFormV2)
+);
+const EditGradProfileForm = dynamic(() =>
+    import("./EditGradProfileFormV2").then((m) => m.EditGradProfileFormV2)
+);
+const EditGradGroupProfileForm = dynamic(() =>
+    import("./EditGradGroupProfileFormV2").then((m) => m.EditGradGroupProfileFormV2)
+);
+const EditWeddingProfileForm = dynamic(() =>
+    import("./EditWeddingProfileForm").then((m) => m.EditWeddingProfileForm)
+);
+const EditTravelProfileForm = dynamic(() =>
+    import("./EditTravelProfileForm").then((m) => m.EditTravelProfileForm)
+);
+const EditFriendshipProfileForm = dynamic(() =>
+    import("./EditFriendshipProfileForm").then((m) => m.EditFriendshipProfileForm)
+);
 
 
 // ============================================================================
@@ -17,8 +44,10 @@ import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
 // ============================================================================
 
 const loveProfileSchema = z.object({
-    boy_name: z.string().min(1, "Required").max(50),
-    girl_name: z.string().min(1, "Required").max(50),
+    // Thông báo bằng tiếng Việt: với `mode: "onChange"` (xem bên dưới) người dùng
+    // nhìn thấy các lỗi này ngay khi đang gõ, không còn chỉ khi bấm Lưu.
+    boy_name: z.string().min(1, "Bắt buộc").max(50),
+    girl_name: z.string().min(1, "Bắt buộc").max(50),
     anniversary_date: z.string().optional(),
     title: z.string().max(100).optional(),
     short_note: z.string().max(200).optional(),
@@ -26,13 +55,21 @@ const loveProfileSchema = z.object({
 
 type LoveFormData = z.infer<typeof loveProfileSchema>;
 
+const everyProfileSchema = z.object({
+    group_name: z.string().min(1, "Bắt buộc").max(50),
+    owner_name: z.string().max(50).optional(),
+    title: z.string().max(100).optional(),
+    short_note: z.string().max(200).optional(),
+});
+
+type EveryFormData = z.infer<typeof everyProfileSchema>;
 
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-interface EditProfileFormProps {
+interface EditProfileFormV2Props {
     slug: string;
     linkType: LinkType;
     initialData: Record<string, unknown> | null;
@@ -40,9 +77,8 @@ interface EditProfileFormProps {
     onSuccess?: () => void;
 }
 
-export function EditProfileForm({ slug, linkType, initialData, isDark = false, onSuccess }: EditProfileFormProps) {
+export function EditProfileFormV2({ slug, linkType, initialData, isDark = false, onSuccess }: EditProfileFormV2Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     // Render based on link type
     if (linkType === "LOVE" || linkType === "LOVE2") {
@@ -52,8 +88,18 @@ export function EditProfileForm({ slug, linkType, initialData, isDark = false, o
                 initialData={initialData as LoveProfileData}
                 isSubmitting={isSubmitting}
                 setIsSubmitting={setIsSubmitting}
-                message={message}
-                setMessage={setMessage}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "EVERY") {
+        return (
+            <EveryProfileForm
+                slug={slug}
+                initialData={initialData as EveryProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
                 onSuccess={onSuccess}
             />
         );
@@ -66,8 +112,6 @@ export function EditProfileForm({ slug, linkType, initialData, isDark = false, o
                 initialData={initialData as IdolProfileData}
                 isSubmitting={isSubmitting}
                 setIsSubmitting={setIsSubmitting}
-                message={message}
-                setMessage={setMessage}
                 onSuccess={onSuccess}
                 isDark={isDark}
             />
@@ -97,6 +141,42 @@ export function EditProfileForm({ slug, linkType, initialData, isDark = false, o
         );
     }
 
+    if (linkType === "WEDDING") {
+        return (
+            <EditWeddingProfileForm
+                slug={slug}
+                initialData={initialData as WeddingProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "TRAVEL") {
+        return (
+            <EditTravelProfileForm
+                slug={slug}
+                initialData={initialData as TravelProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "FRIENDSHIP") {
+        return (
+            <EditFriendshipProfileForm
+                slug={slug}
+                initialData={initialData as FriendshipProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
     return null;
 }
 
@@ -109,9 +189,76 @@ interface FormProps<T> {
     initialData: T | null;
     isSubmitting: boolean;
     setIsSubmitting: (v: boolean) => void;
-    message: { type: "success" | "error"; text: string } | null;
-    setMessage: (m: { type: "success" | "error"; text: string } | null) => void;
     onSuccess?: () => void;
+}
+
+// ============================================================================
+// THANH TRẠNG THÁI LƯU + HOÀN TÁC
+// ============================================================================
+
+/**
+ * Hàng điều khiển đặt ngay trên nút "Lưu thay đổi".
+ *
+ * Gom chung vào một component vì cả hồ sơ LOVE và EVERY đều cần y hệt nhau, và
+ * vì hai thứ này chỉ có nghĩa khi ở cạnh nhau: người dùng nhìn thấy "đã lưu tự
+ * động" thì lập tức cần biết mình vẫn hoàn tác được.
+ *
+ * Hai nút đều là `type="button"` — nếu để mặc định, bấm hoàn tác sẽ submit form.
+ */
+function FormSaveToolbar({
+    status,
+    lastSavedAt,
+    error,
+    onRetry,
+    canUndo,
+    canRedo,
+    onUndo,
+    onRedo,
+}: {
+    status: SaveStatus;
+    lastSavedAt: Date | null;
+    error: string | null;
+    onRetry: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    onUndo: () => void;
+    onRedo: () => void;
+}) {
+    const buttonClass =
+        "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40";
+
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+            <SaveStatusIndicator
+                status={status}
+                lastSavedAt={lastSavedAt}
+                error={error}
+                onRetry={onRetry}
+            />
+            <div className="ml-auto flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={onUndo}
+                    disabled={!canUndo}
+                    className={buttonClass}
+                    title="Hoàn tác (Ctrl+Z)"
+                >
+                    <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Hoàn tác
+                </button>
+                <button
+                    type="button"
+                    onClick={onRedo}
+                    disabled={!canRedo}
+                    className={buttonClass}
+                    title="Làm lại (Ctrl+Shift+Z)"
+                >
+                    <Redo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Làm lại
+                </button>
+            </div>
+        </div>
+    );
 }
 
 function LoveProfileForm({
@@ -119,10 +266,9 @@ function LoveProfileForm({
     initialData,
     isSubmitting,
     setIsSubmitting,
-    message,
-    setMessage,
     onSuccess,
 }: FormProps<LoveProfileData>) {
+    const setMessage = useFormFeedback();
     const [boyAvatar, setBoyAvatar] = useState<string>(initialData?.boy_avatar || "");
     const [girlAvatar, setGirlAvatar] = useState<string>(initialData?.girl_avatar || "");
     const [uploadingBoy, setUploadingBoy] = useState(false);
@@ -131,9 +277,18 @@ function LoveProfileForm({
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        watch,
+        reset: resetFormValues,
+        formState: { errors, isDirty, isValid },
     } = useForm<LoveFormData>({
         resolver: zodResolver(loveProfileSchema),
+        // `mode: "onChange"` là BẮT BUỘC ở đây, không phải tùy chọn thẩm mỹ:
+        // cổng chặn của tự động lưu là `isDirty && isValid`, mà với mode mặc định
+        // ("onSubmit") thì `isValid` chỉ được cập nhật sau lần submit đầu tiên —
+        // tự động lưu sẽ hoặc không bao giờ chạy, hoặc chạy với dữ liệu chưa hợp lệ.
+        // Đổi mode KHÔNG ảnh hưởng nút "Lưu thay đổi": `handleSubmit` vẫn validate
+        // như trước, chỉ khác là lỗi hiện sớm hơn.
+        mode: "onChange",
         defaultValues: {
             boy_name: initialData?.boy_name || "",
             girl_name: initialData?.girl_name || "",
@@ -251,18 +406,61 @@ function LoveProfileForm({
         setUploading(false);
     };
 
+    /**
+     * ĐƯỜNG DUY NHẤT ghi hồ sơ xuống server.
+     *
+     * Cả nút "Lưu thay đổi" và tự động lưu đều đi qua đây, nên không có chỗ nào
+     * gọi `updateLinkProfile` lần thứ hai — hai luồng không thể lệch nhau về
+     * payload (ví dụ quên kèm avatar) hay về cách xử lý lỗi.
+     */
+    const persist = useCallback(
+        async (data: LoveFormData) => {
+            return updateLinkProfile(slug, {
+                ...data,
+                boy_avatar: boyAvatar,
+                girl_avatar: girlAvatar,
+            });
+        },
+        [slug, boyAvatar, girlAvatar]
+    );
+
+    /**
+     * Tự động lưu — BỔ SUNG cho nút Lưu, không thay thế.
+     *
+     * Cổng `enabled` chặn mọi trường hợp không nên ghi:
+     * - `isDirty`: form chưa ai chạm vào thì không ghi (mở trang không phải là sửa).
+     * - `isValid`: dữ liệu sai thì không ghi (server cũng sẽ từ chối).
+     * - `!isSubmitting`: đang lưu tay thì không chen ngang.
+     * - `!uploadingBoy && !uploadingGirl`: đang tải ảnh thì `boyAvatar`/`girlAvatar`
+     *   còn là URL cũ, ghi lúc này sẽ đè mất ảnh vừa tải lên.
+     */
+    const autoSave = useFormAutoSave<LoveFormData>({
+        watch,
+        isDirty,
+        isValid,
+        save: persist,
+        enabled: isDirty && isValid && !isSubmitting && !uploadingBoy && !uploadingGirl,
+    });
+
+    /**
+     * Hoàn tác/làm lại cho các ô chữ của form.
+     *
+     * `keepDefaultValues: true` để react-hook-form tính lại `isDirty` bằng cách so
+     * với giá trị gốc: hoàn tác về đúng dữ liệu ban đầu thì form trở lại "sạch" và
+     * tự động lưu tự dừng — đúng như mong đợi.
+     *
+     * Ảnh đại diện nằm ngoài lịch sử này (chúng là state riêng, và đã được tải lên
+     * storage rồi nên "hoàn tác" cũng không thu hồi được file).
+     */
+    const undoRedo = useUndoRedo<LoveFormData>({
+        value: watch(),
+        onChange: (previous) => resetFormValues(previous, { keepDefaultValues: true }),
+    });
+
     const onSubmit = async (data: LoveFormData) => {
         setIsSubmitting(true);
-        setMessage(null);
 
-        // Include avatars in the data
-        const fullData = {
-            ...data,
-            boy_avatar: boyAvatar,
-            girl_avatar: girlAvatar,
-        };
-
-        const result = await updateLinkProfile(slug, fullData);
+        const result = await persist(data);
 
         if (result.success) {
             setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
@@ -434,17 +632,17 @@ function LoveProfileForm({
                 )}
             </div>
 
-            {/* Message */}
-            {message && (
-                <div
-                    className={`p-3 rounded-lg text-sm ${message.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
-                >
-                    {message.text}
-                </div>
-            )}
+            {/* Trạng thái tự động lưu + hoàn tác, đặt ngay trên nút Lưu */}
+            <FormSaveToolbar
+                status={autoSave.status}
+                lastSavedAt={autoSave.lastSavedAt}
+                error={autoSave.error}
+                onRetry={autoSave.saveNow}
+                canUndo={undoRedo.canUndo}
+                canRedo={undoRedo.canRedo}
+                onUndo={undoRedo.undo}
+                onRedo={undoRedo.redo}
+            />
 
             {/* Submit */}
             <button
@@ -464,6 +662,138 @@ function LoveProfileForm({
                         Lưu thay đổi
                     </>
                 )}
+            </button>
+        </form>
+    );
+}
+
+function EveryProfileForm({
+    slug,
+    initialData,
+    isSubmitting,
+    setIsSubmitting,
+    onSuccess,
+}: FormProps<EveryProfileData>) {
+    const setMessage = useFormFeedback();
+    const {
+        register,
+        handleSubmit,
+        watch,
+        reset: resetFormValues,
+        formState: { errors, isDirty, isValid },
+    } = useForm<EveryFormData>({
+        resolver: zodResolver(everyProfileSchema),
+        // Xem giải thích ở LoveProfileForm: cổng của tự động lưu dựa vào `isValid`,
+        // giá trị này chỉ đáng tin với mode "onChange".
+        mode: "onChange",
+        defaultValues: {
+            group_name: initialData?.group_name || "",
+            owner_name: initialData?.owner_name || "",
+            title: initialData?.title || "",
+            short_note: initialData?.short_note || "",
+        },
+    });
+
+    /** Đường duy nhất ghi hồ sơ — dùng chung cho nút Lưu và tự động lưu. */
+    const persist = useCallback(
+        async (data: EveryFormData) => updateLinkProfile(slug, data),
+        [slug]
+    );
+
+    const autoSave = useFormAutoSave<EveryFormData>({
+        watch,
+        isDirty,
+        isValid,
+        save: persist,
+        enabled: isDirty && isValid && !isSubmitting,
+    });
+
+    const undoRedo = useUndoRedo<EveryFormData>({
+        value: watch(),
+        onChange: (previous) => resetFormValues(previous, { keepDefaultValues: true }),
+    });
+
+    const onSubmit = async (data: EveryFormData) => {
+        setIsSubmitting(true);
+
+        const result = await persist(data);
+
+        if (result.success) {
+            setMessage({ type: "success", text: "Đã cập nhật hồ sơ!" });
+            onSuccess?.();
+        } else {
+            setMessage({ type: "error", text: result.error || "Không thể cập nhật" });
+        }
+
+        setIsSubmitting(false);
+    };
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="mb-4 flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5 text-teal-500" />
+                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ kỷ niệm chung</h3>
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Tên nhóm / sự kiện <span className="text-red-500">*</span>
+                </label>
+                <input
+                    {...register("group_name")}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Our Memories"
+                />
+                {errors.group_name && <p className="mt-1 text-sm text-red-500">{errors.group_name.message}</p>}
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Người tạo / đại diện</label>
+                <input
+                    {...register("owner_name")}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Tên người tạo trang"
+                />
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Tiêu đề trang</label>
+                <input
+                    {...register("title")}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Không gian kỷ niệm"
+                />
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Mô tả ngắn</label>
+                <textarea
+                    {...register("short_note")}
+                    rows={3}
+                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-2 outline-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-300"
+                    placeholder="Trang này lưu lại điều gì?"
+                />
+                {errors.short_note && <p className="mt-1 text-sm text-red-500">{errors.short_note.message}</p>}
+            </div>
+
+            <FormSaveToolbar
+                status={autoSave.status}
+                lastSavedAt={autoSave.lastSavedAt}
+                error={autoSave.error}
+                onRetry={autoSave.saveNow}
+                canUndo={undoRedo.canUndo}
+                canRedo={undoRedo.canRedo}
+                onUndo={undoRedo.undo}
+                onRedo={undoRedo.redo}
+            />
+
+            <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-500 py-3 font-semibold text-white shadow-md transition-all hover:bg-teal-600 disabled:opacity-50"
+            >
+                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
             </button>
         </form>
     );

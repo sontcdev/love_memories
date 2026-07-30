@@ -1,11 +1,19 @@
 "use client";
 
+// EditIdolConfigFormV2 — bản giữ nguyên implementation mới (toast, auto-save, undo/redo…).
+// EditIdolConfigForm.tsx đã rollback về đúng phiên bản trên nhánh deploy và chỉ phục vụ
+// các LinkType đã có trên deploy; file V2 này phục vụ WEDDING/TRAVEL/FRIENDSHIP.
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { LinkType } from "@prisma/client";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Palette, Type } from "lucide-react";
+import { Save, Loader2, Palette, Type, Music } from "lucide-react";
+import { GameTemplateSelector } from "./GameTemplateSelector";
+import { normalizeGameTemplate, type GameVariantId } from "@/components/templates/game-registry";
+import { useFormFeedback } from "./useFormFeedback";
 
 // ============================================================================
 // SCHEMA
@@ -68,16 +76,20 @@ const IDOL_ACCENT_COLORS = [
 // COMPONENT
 // ============================================================================
 
-interface EditIdolConfigFormProps {
+interface EditIdolConfigFormV2Props {
     slug: string;
+    linkType?: LinkType;
     initialConfig: LinkConfigData | null;
     onSuccess?: () => void;
     isDark?: boolean;
 }
 
-export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = false }: EditIdolConfigFormProps) {
+export function EditIdolConfigFormV2({ slug, linkType = "IDOL", initialConfig, onSuccess, isDark = false }: EditIdolConfigFormV2Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const setMessage = useFormFeedback();
+    const [gameTemplate, setGameTemplate] = useState<GameVariantId>(
+        normalizeGameTemplate(initialConfig?.game_template)
+    );
 
     const {
         register,
@@ -102,7 +114,6 @@ export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = fa
 
     const onSubmit = async (data: ConfigFormData) => {
         setIsSubmitting(true);
-        setMessage(null);
 
         const result = await updateLinkConfig(slug, {
             background_color: data.background_color || undefined,
@@ -111,6 +122,7 @@ export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = fa
             font_family: data.font_family || undefined,
             music_url: data.music_url || undefined,
             auto_play: data.auto_play,
+            game_template: gameTemplate,
         });
 
         if (result.success) {
@@ -256,8 +268,8 @@ export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = fa
                 </select>
             </div>
 
-            {/* Music URL - temporarily disabled */}
-            {/* <div>
+            {/* Music URL */}
+            <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Music className="w-5 h-5 text-pink-500" />
                     <h3 className={`text-lg font-semibold ${isDark ? "text-purple-100" : "text-gray-800"}`}>Nhạc nền</h3>
@@ -275,6 +287,10 @@ export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = fa
                 {errors.music_url && (
                     <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
                 )}
+                <p className={`mt-1 text-xs ${isDark ? "text-purple-200/60" : "text-gray-500"}`}>
+                    Hỗ trợ YouTube và file audio trực tiếp (.mp3). Link TikTok cần người xem
+                    bấm play thủ công.
+                </p>
 
                 <label className="flex items-center gap-3 mt-4 cursor-pointer">
                     <input
@@ -290,24 +306,15 @@ export function EditIdolConfigForm({ slug, initialConfig, onSuccess, isDark = fa
                         Tự động phát nhạc khi tải trang
                     </span>
                 </label>
-            </div> */}
+            </div>
 
-            {/* Message */}
-            {message && (
-                <div
-                    className={`p-3 rounded-lg text-sm border ${
-                        message.type === "success"
-                            ? isDark
-                                ? "bg-green-950/40 text-green-300 border-green-800/40"
-                                : "bg-green-50 text-green-700 border-green-200"
-                            : isDark
-                                ? "bg-red-950/40 text-red-300 border-red-800/40"
-                                : "bg-red-50 text-red-700 border-red-200"
-                    }`}
-                >
-                    {message.text}
-                </div>
-            )}
+            {/* Game Template Selector */}
+            <GameTemplateSelector
+                linkType={linkType}
+                value={gameTemplate}
+                onChange={setGameTemplate}
+                isDark={isDark}
+            />
 
             {/* Submit */}
             <button

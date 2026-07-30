@@ -1,5 +1,9 @@
 "use client";
 
+// CareerPathManagerV2 — bản giữ nguyên implementation mới (toast, auto-save, undo/redo…).
+// CareerPathManager.tsx đã rollback về đúng phiên bản trên nhánh deploy và chỉ phục vụ
+// các LinkType đã có trên deploy; file V2 này phục vụ WEDDING/TRAVEL/FRIENDSHIP.
+
 import { useState, useOptimistic, useTransition } from "react";
 import Image from "next/image";
 import { Timeline } from "@prisma/client";
@@ -33,7 +37,7 @@ import {
     Mic,
 } from "lucide-react";
 
-interface CareerPathManagerProps {
+interface CareerPathManagerV2Props {
     slug: string;
     initialTimeline: Timeline[];
 }
@@ -59,7 +63,7 @@ const emptyForm: FormData = {
     audio_url: "",
 };
 
-export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerProps) {
+export function CareerPathManagerV2({ slug, initialTimeline }: CareerPathManagerV2Props) {
     const [, startTransition] = useTransition();
 
     // Optimistic state for instant UI updates
@@ -91,10 +95,6 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [showImageUpload, setShowImageUpload] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    // Global loading state
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadingMessage, setLoadingMessage] = useState("");
 
     const isEditing = !!formData.id;
     const isLimitReached = timeline.length >= MAX_EVENTS;
@@ -138,8 +138,6 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
         if (!isFormValid) return;
 
         setIsSaving(true);
-        setIsLoading(true);
-        setLoadingMessage(isEditing ? "Đang cập nhật..." : "Đang thêm...");
         setError(null);
 
         // Create optimistic event for immediate UI update
@@ -196,16 +194,12 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
         }
 
         setIsSaving(false);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Delete event
     const handleDelete = async (eventId: string) => {
         setDeleteConfirmId(null);
         setDeletingId(eventId);
-        setIsLoading(true);
-        setLoadingMessage("Đang xóa...");
 
         startTransition(() => {
             addOptimistic({ type: "delete", payload: eventId });
@@ -218,8 +212,6 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
         }
 
         setDeletingId(null);
-        setIsLoading(false);
-        setLoadingMessage("");
     };
 
     // Handle image upload
@@ -231,19 +223,6 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
 
     return (
         <div className="space-y-6">
-            {/* Global Loading Overlay */}
-            {isLoading && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100]">
-                    <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4">
-                        <div className="relative">
-                            <div className="w-12 h-12 border-4 border-indigo-200 rounded-full animate-pulse" />
-                            <Loader2 className="w-12 h-12 text-indigo-500 animate-spin absolute inset-0" />
-                        </div>
-                        <p className="text-gray-700 font-medium">{loadingMessage}</p>
-                    </div>
-                </div>
-            )}
-
             {/* Delete Confirm Dialog */}
             <ConfirmDialog
                 isOpen={deleteConfirmId !== null}
@@ -267,7 +246,7 @@ export function CareerPathManager({ slug, initialTimeline }: CareerPathManagerPr
                 </div>
                 <Button
                     onClick={handleAddNew}
-                    disabled={isLimitReached || isLoading}
+                    disabled={isLimitReached}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 >
                     <Plus className="w-4 h-4 mr-2" />

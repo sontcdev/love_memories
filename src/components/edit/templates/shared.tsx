@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useCallback, useEffect, useState, Suspense, type ComponentType, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Gallery, Letter, LetterReply, Link as PrismaLink, LinkConfig, LinkType, Timeline } from "@prisma/client";
 import {
@@ -15,14 +16,35 @@ import {
     User,
     type LucideIcon,
 } from "lucide-react";
-import { EditConfigForm } from "@/components/edit/EditConfigForm";
-import { EditIdolConfigForm } from "@/components/edit/EditIdolConfigForm";
-import { EditProfileForm } from "@/components/edit/EditProfileForm";
-import { GalleryManager } from "@/components/edit/GalleryManager";
-import { TimelineManager } from "@/components/edit/TimelineManager";
 import { EditTemplateLoading } from "@/app/[slug]/edit/edit-template-loading";
-import { TemplateFeaturePanel } from "@/components/edit/templates/TemplateFeaturePanel";
-import { LetterBox } from "@/components/shared/LetterBox";
+
+// Only one tab is ever on screen, but statically importing all six panels put
+// every one of them in the /[slug]/edit bundle. EditProfileForm is the worst
+// offender because it in turn fans out to the per-LinkType profile forms.
+// ssr is left on (the default) so the panel is still server-rendered.
+//
+// Các panel dưới đây trỏ vào bản `*V2`: shell này chỉ phục vụ WEDDING/TRAVEL/
+// FRIENDSHIP, còn 7 LinkType đã có trên deploy dùng `edit-client.tsx` (code
+// deploy) với các form không hậu tố. Đừng đổi về tên không hậu tố.
+const EditProfileForm = dynamic(() =>
+    import("@/components/edit/EditProfileFormV2").then((m) => m.EditProfileFormV2)
+);
+const GalleryManager = dynamic(() =>
+    import("@/components/edit/GalleryManagerV2").then((m) => m.GalleryManagerV2)
+);
+const TimelineManager = dynamic(() =>
+    import("@/components/edit/TimelineManagerV2").then((m) => m.TimelineManagerV2)
+);
+const LetterBox = dynamic(() => import("@/components/shared/LetterBox").then((m) => m.LetterBox));
+const TemplateFeaturePanel = dynamic(() =>
+    import("@/components/edit/templates/TemplateFeaturePanel").then((m) => m.TemplateFeaturePanel)
+);
+const EditConfigForm = dynamic(() =>
+    import("@/components/edit/EditConfigFormV2").then((m) => m.EditConfigFormV2)
+);
+const EditIdolConfigForm = dynamic(() =>
+    import("@/components/edit/EditIdolConfigFormV2").then((m) => m.EditIdolConfigFormV2)
+);
 
 export type LinkWithRelations = PrismaLink & {
     config: LinkConfig | null;
@@ -105,13 +127,12 @@ export function useTemplateEditState({
     supportsThemeMode?: boolean;
 }) {
     const [activeTab, setActiveTab] = useState<EditTabId>(tabs[0]?.id ?? "profile");
-    const [isInitializing, setIsInitializing] = useState(true);
+    // Gate the first paint only until the persisted night-mode choice has been read
+    // from localStorage, so the page never flashes the wrong palette. There is no
+    // artificial delay: this resolves on the first client effect, and starts already
+    // resolved for templates that have no night mode at all.
+    const [isInitializing, setIsInitializing] = useState(supportsThemeMode);
     const [overrideDark, setOverrideDark] = useState<boolean | null>(null);
-
-    useEffect(() => {
-        const timer = window.setTimeout(() => setIsInitializing(false), 500);
-        return () => window.clearTimeout(timer);
-    }, []);
 
     const isDarkBackground = useCallback((hex?: string | null) => {
         if (!hex) return false;
@@ -127,14 +148,18 @@ export function useTemplateEditState({
     useEffect(() => {
         if (!supportsThemeMode) return;
         const saved = localStorage.getItem(`theme_mode_${slug}`);
-        if (!saved) return;
 
-        const isSavedDark = saved === "dark";
-        setOverrideDark(isSavedDark);
-        document.documentElement.style.setProperty(
-            "--theme-bg",
-            isSavedDark ? "#0b0813" : linkData.config?.background_color || "#ffffff"
-        );
+        if (saved) {
+            const isSavedDark = saved === "dark";
+            setOverrideDark(isSavedDark);
+            document.documentElement.style.setProperty(
+                "--theme-bg",
+                isSavedDark ? "#0b0813" : linkData.config?.background_color || "#ffffff"
+            );
+        }
+
+        // Theme resolved (whether or not a value was stored) — release the first paint.
+        setIsInitializing(false);
     }, [linkData.config?.background_color, slug, supportsThemeMode]);
 
     const isDark = supportsThemeMode && (overrideDark !== null ? overrideDark : isDarkBackground(linkData.config?.background_color));
@@ -212,7 +237,42 @@ export function TemplateTabButton({
     );
 }
 
-export function EditFormContent({
+export function EditFormContent(props: {
+    activeTab: EditTabId;
+    slug: string;
+    linkData: LinkWithRelations;
+    isDark: boolean;
+}) {
+    return (
+        // Switching tabs now fetches a chunk. Without a boundary the panel area
+        // would blank out mid-navigation; this keeps the layout height stable.
+        <Suspense fallback={<EditPanelFallback isDark={props.isDark} />}>
+            <EditFormPanel {...props} />
+        </Suspense>
+    );
+}
+
+function EditPanelFallback({ isDark }: { isDark: boolean }) {
+    return (
+        <div
+            role="status"
+            aria-busy="true"
+            className="flex min-h-[16rem] flex-col gap-3 py-4"
+        >
+            <span className="sr-only">Đang tải nội dung…</span>
+            {[0, 1, 2, 3].map((row) => (
+                <div
+                    key={row}
+                    aria-hidden="true"
+                    className={`h-11 rounded-lg motion-safe:animate-pulse ${isDark ? "bg-white/10" : "bg-slate-200/70"
+                        } ${row === 3 ? "w-2/3" : "w-full"}`}
+                />
+            ))}
+        </div>
+    );
+}
+
+function EditFormPanel({
     activeTab,
     slug,
     linkData,
