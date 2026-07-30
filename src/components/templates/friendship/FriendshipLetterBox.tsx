@@ -31,10 +31,12 @@ type LetterWithReplies = Letter & { replies: LetterReply[] };
 interface FriendshipLetterBoxProps {
     slug: string;
     initialLetters: LetterWithReplies[];
+    /** Chế độ đêm, do FriendshipTemplate truyền xuống (xem AGENTS.md › Night/Light Mode). */
+    isDark?: boolean;
     onPopupOpenChange?: (isOpen: boolean) => void;
 }
 
-export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }: FriendshipLetterBoxProps) {
+export function FriendshipLetterBox({ slug, initialLetters, isDark = false, onPopupOpenChange }: FriendshipLetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
     const [showForm, setShowForm] = useState(false);
     const [name, setName] = useState("");
@@ -50,6 +52,51 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
     const [replyVideoUrl, setReplyVideoUrl] = useState<string>("");
     const [showVideoRecorder, setShowVideoRecorder] = useState(false);
     const [showReplyVideoRecorder, setShowReplyVideoRecorder] = useState(false);
+
+    // Bảng màu tím–hồng tinh nghịch, giữ chất nhóm bạn ở cả hai chế độ.
+    // Nền đêm #1b1428 / #241a33 khớp với surfaceClass/bubbleClass của FriendshipTemplate.
+    const cardClass = isDark
+        ? "bg-[#1b1428]/90 border-violet-900/60 shadow-lg shadow-black/40"
+        : "bg-white/80 border-violet-100 shadow-sm";
+    const emptyCardClass = isDark
+        ? "bg-[#1b1428]/70 border-violet-900/50"
+        : "bg-white/60 border-violet-100";
+    const headingClass = isDark ? "text-violet-100" : "text-violet-900";
+    const bodyClass = isDark ? "text-violet-100/80" : "text-gray-700";
+    const mutedClass = isDark ? "text-violet-200/55" : "text-gray-500";
+    const faintClass = isDark ? "text-violet-200/40" : "text-gray-400";
+    const accentClass = isDark ? "text-violet-300" : "text-violet-600";
+    const smileClass = isDark ? "text-violet-300" : "text-violet-500";
+    const fieldClass = isDark
+        ? "bg-[#140f1c] border-violet-900/70 text-violet-50 placeholder:text-violet-200/35 focus:ring-violet-500/50"
+        : "bg-white/80 border-violet-200 placeholder:text-gray-400 focus:ring-violet-300";
+    const lockedBorderClass = isDark
+        ? "bg-[#1b1428]/70 border-violet-900/40 opacity-70 shadow-lg shadow-black/30"
+        : "bg-white/80 border-gray-200 opacity-75 shadow-sm";
+    const lockBadgeClass = isDark ? "bg-violet-900/50" : "bg-violet-100";
+    const dividerClass = isDark ? "border-violet-900/60" : "border-violet-100";
+    const replyStripClass = isDark
+        ? "border-violet-900/50 bg-violet-950/30"
+        : "border-violet-50 bg-violet-50/30";
+    const replyFormClass = isDark
+        ? "border-violet-900/60 bg-[#181120]"
+        : "border-violet-100 bg-violet-50/50";
+    const replyCardClass = isDark
+        ? "bg-[#241a33]/90 border-violet-900/55"
+        : "bg-white/80 border-violet-100";
+    const subtleHoverClass = isDark ? "hover:bg-violet-900/25" : "hover:bg-violet-50/50";
+    const closeBtnClass = isDark
+        ? "hover:bg-violet-900/30 text-violet-200/60"
+        : "hover:bg-violet-50 text-gray-400";
+    const ghostBtnClass = isDark
+        ? "border-violet-900/70 text-violet-200 hover:bg-violet-900/30"
+        : "border-violet-200 text-violet-600 hover:bg-violet-50";
+    const trashBtnClass = isDark
+        ? "text-violet-200/45 hover:bg-red-950/40 hover:text-red-400"
+        : "text-gray-400 hover:bg-red-50 hover:text-red-500";
+    const replySubmitClass = isDark
+        ? "bg-violet-600 hover:bg-violet-500 text-violet-50"
+        : "bg-violet-400 hover:bg-violet-500 text-white";
 
     const isLocked = (letter: LetterWithReplies): boolean => {
         if (!letter.unlock_date) return false;
@@ -165,10 +212,10 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 </button>
             ) : (
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-violet-100 p-4 shadow-sm">
+                <div className={`backdrop-blur-sm rounded-xl border p-4 ${cardClass}`}>
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium text-lg text-violet-900 flex items-center gap-2">
-                            <Smile className="w-5 h-5 text-violet-500" />
+                        <h3 className={`font-medium text-lg flex items-center gap-2 ${headingClass}`}>
+                            <Smile className={`w-5 h-5 ${smileClass}`} />
                             Chia sẻ kỷ niệm
                         </h3>
                         <button
@@ -176,7 +223,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                 setShowForm(false);
                                 onPopupOpenChange?.(false);
                             }}
-                            className="p-1 rounded-lg hover:bg-violet-50 text-gray-400"
+                            className={`p-1 rounded-lg transition-colors ${closeBtnClass}`}
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -188,7 +235,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             maxLength={50}
-                            className="w-full px-4 py-2 rounded-lg border border-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-300 bg-white/80"
+                            className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 ${fieldClass}`}
                             required
                         />
                         <textarea
@@ -197,7 +244,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                             onChange={(e) => setContent(e.target.value)}
                             maxLength={1000}
                             rows={4}
-                            className="w-full px-4 py-2 rounded-lg border border-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-300 bg-white/80 resize-none"
+                            className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 resize-none ${fieldClass}`}
                             required
                         />
                         <div className="flex gap-2">
@@ -246,27 +293,27 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
             )}
 
             {letters.length === 0 ? (
-                <div className="text-center py-12 bg-white/60 backdrop-blur-sm rounded-xl border border-violet-100">
-                    <Mail className="w-12 h-12 text-violet-300 mx-auto mb-3" />
-                    <p className="text-gray-500">Chưa có kỷ niệm nào</p>
-                    <p className="text-sm text-gray-400 mt-1">Hãy là người đầu tiên chia sẻ!</p>
+                <div className={`text-center py-12 backdrop-blur-sm rounded-xl border ${emptyCardClass}`}>
+                    <Mail className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-violet-700/70" : "text-violet-300"}`} />
+                    <p className={mutedClass}>Chưa có kỷ niệm nào</p>
+                    <p className={`text-sm mt-1 ${faintClass}`}>Hãy là người đầu tiên chia sẻ!</p>
                 </div>
             ) : (
                 <div className="space-y-3">
                     {letters.map((letter) => (
                         <div
                             key={letter.id}
-                            className={`bg-white/80 backdrop-blur-sm rounded-xl border ${
-                                isLocked(letter) ? "border-gray-200 opacity-75" : "border-violet-100"
-                            } overflow-hidden shadow-sm`}
+                            className={`backdrop-blur-sm rounded-xl border overflow-hidden ${
+                                isLocked(letter) ? lockedBorderClass : cardClass
+                            }`}
                         >
                             {isLocked(letter) ? (
                                 <div className="p-4 text-center">
-                                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-violet-100 mb-3">
-                                        <Lock className="w-6 h-6 text-violet-500" />
+                                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 ${lockBadgeClass}`}>
+                                        <Lock className={`w-6 h-6 ${smileClass}`} />
                                     </div>
-                                    <p className="text-sm text-gray-500 mb-1">Kỷ niệm này sẽ được mở khóa vào</p>
-                                    <p className="text-sm font-medium text-violet-600 flex items-center justify-center gap-1">
+                                    <p className={`text-sm mb-1 ${mutedClass}`}>Kỷ niệm này sẽ được mở khóa vào</p>
+                                    <p className={`text-sm font-medium flex items-center justify-center gap-1 ${accentClass}`}>
                                         <Calendar className="w-4 h-4" />
                                         {letter.unlock_date && formatDate(letter.unlock_date)}
                                     </p>
@@ -276,17 +323,17 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                     <div className="p-4">
                                         <div className="flex items-start justify-between mb-2">
                                             <div>
-                                                <h4 className="font-medium text-violet-900">{letter.sender || "Ẩn danh"}</h4>
-                                                <p className="text-xs text-gray-400">{formatDate(letter.created_at)}</p>
+                                                <h4 className={`font-medium ${headingClass}`}>{letter.sender || "Ẩn danh"}</h4>
+                                                <p className={`text-xs ${faintClass}`}>{formatDate(letter.created_at)}</p>
                                             </div>
                                             <button
                                                 onClick={() => setDeleteConfirm({ id: letter.id, type: "letter" })}
-                                                className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                                                className={`p-1 rounded-lg transition-colors ${trashBtnClass}`}
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
-                                        <p className="text-gray-700 text-sm whitespace-pre-wrap">{letter.content}</p>
+                                        <p className={`text-sm whitespace-pre-wrap ${bodyClass}`}>{letter.content}</p>
                                         {letter.video_url && (
                                             <div className="mt-3 rounded-lg overflow-hidden">
                                                 <video src={letter.video_url} controls className="w-full max-h-64" />
@@ -300,10 +347,10 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                     </div>
 
                                     {letter.replies.length > 0 && (
-                                        <div className="border-t border-violet-50 bg-violet-50/30">
+                                        <div className={`border-t ${replyStripClass}`}>
                                             <button
                                                 onClick={() => toggleExpand(letter.id)}
-                                                className="w-full flex items-center justify-between px-4 py-2 text-sm text-violet-600 hover:bg-violet-50/50 transition-colors"
+                                                className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${accentClass} ${subtleHoverClass}`}
                                             >
                                                 <span className="flex items-center gap-1">
                                                     <MessageCircle className="w-4 h-4" />
@@ -320,21 +367,21 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                                     {letter.replies.map((reply) => (
                                                         <div
                                                             key={reply.id}
-                                                            className="bg-white/80 rounded-lg p-3 border border-violet-100"
+                                                            className={`rounded-lg p-3 border ${replyCardClass}`}
                                                         >
                                                             <div className="flex items-start justify-between mb-1">
                                                                 <div>
-                                                                    <span className="font-medium text-violet-900 text-sm">{"Phản hồi"}</span>
-                                                                    <span className="text-xs text-gray-400 ml-2">{formatDate(reply.created_at)}</span>
+                                                                    <span className={`font-medium text-sm ${headingClass}`}>{"Phản hồi"}</span>
+                                                                    <span className={`text-xs ml-2 ${faintClass}`}>{formatDate(reply.created_at)}</span>
                                                                 </div>
                                                                 <button
                                                                     onClick={() => setDeleteConfirm({ id: reply.id, type: "reply" })}
-                                                                    className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                                                                    className={`p-1 rounded-lg transition-colors ${trashBtnClass}`}
                                                                 >
                                                                     <Trash2 className="w-3 h-3" />
                                                                 </button>
                                                             </div>
-                                                            <p className="text-gray-700 text-sm whitespace-pre-wrap">{reply.content}</p>
+                                                            <p className={`text-sm whitespace-pre-wrap ${bodyClass}`}>{reply.content}</p>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -343,7 +390,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                     )}
 
                                     {replyingTo === letter.id ? (
-                                        <div className="border-t border-violet-100 bg-violet-50/50 p-3">
+                                        <div className={`border-t p-3 ${replyFormClass}`}>
                                             <form onSubmit={(e) => handleReply(e, letter.id)} className="space-y-2">
                                                 <input
                                                     type="text"
@@ -351,7 +398,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                                     value={replyName}
                                                     onChange={(e) => setReplyName(e.target.value)}
                                                     maxLength={50}
-                                                    className="w-full px-3 py-1.5 rounded-lg border border-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-300 text-sm bg-white/80"
+                                                    className={`w-full px-3 py-1.5 rounded-lg border focus:outline-none focus:ring-2 text-sm ${fieldClass}`}
                                                     required
                                                 />
                                                 <textarea
@@ -360,7 +407,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                                     onChange={(e) => setReplyContent(e.target.value)}
                                                     maxLength={1000}
                                                     rows={2}
-                                                    className="w-full px-3 py-1.5 rounded-lg border border-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-300 text-sm resize-none bg-white/80"
+                                                    className={`w-full px-3 py-1.5 rounded-lg border focus:outline-none focus:ring-2 text-sm resize-none ${fieldClass}`}
                                                     required
                                                 />
                                                 <div className="flex gap-2">
@@ -394,7 +441,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                                     <button
                                                         type="submit"
                                                         disabled={isSubmitting}
-                                                        className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-violet-400 text-white text-sm font-medium hover:bg-violet-500 transition-colors disabled:opacity-50"
+                                                        className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${replySubmitClass}`}
                                                     >
                                                         {isSubmitting ? (
                                                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -411,7 +458,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                                             setReplyingTo(null);
                                                             setShowReplyVideoRecorder(false);
                                                         }}
-                                                        className="px-3 py-1.5 rounded-lg border border-violet-200 text-violet-600 text-sm hover:bg-violet-50 transition-colors"
+                                                        className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${ghostBtnClass}`}
                                                     >
                                                         Hủy
                                                     </button>
@@ -421,7 +468,7 @@ export function FriendshipLetterBox({ slug, initialLetters, onPopupOpenChange }:
                                     ) : (
                                         <button
                                             onClick={() => setReplyingTo(letter.id)}
-                                            className="w-full flex items-center justify-center gap-1 py-2 border-t border-violet-100 text-violet-600 text-sm hover:bg-violet-50/50 transition-colors"
+                                            className={`w-full flex items-center justify-center gap-1 py-2 border-t text-sm transition-colors ${dividerClass} ${accentClass} ${subtleHoverClass}`}
                                         >
                                             <Zap className="w-4 h-4" />
                                             Phản hồi

@@ -9,6 +9,8 @@ import { FriendshipLetterBox } from "./FriendshipLetterBox";
 import { FriendshipGameSection } from "./FriendshipGameSection";
 import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
 import { normalizeGameTemplate } from "@/components/templates/game-registry";
+import { useThemeToggle } from "@/components/theme/useThemeToggle";
+import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -134,11 +136,11 @@ function ConfettiBurst({ className }: { className?: string }) {
 }
 
 // Typing indicator (three animated dots)
-function TypingDots() {
+function TypingDots({ isDark = false }: { isDark?: boolean }) {
     return (
         <div className="flex items-center gap-1 px-3 py-2">
             {[0, 1, 2].map(i => (
-                <span key={i} className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-typing-bounce"
+                <span key={i} className={`w-1.5 h-1.5 rounded-full animate-typing-bounce ${isDark ? "bg-violet-300" : "bg-violet-400"}`}
                     style={{ animationDelay: `${i * 0.15}s` } as React.CSSProperties} />
             ))}
         </div>
@@ -146,11 +148,11 @@ function TypingDots() {
 }
 
 // Reaction emoji badge
-function ReactionBadge({ emoji, count, className }: { emoji: string; count: number; className?: string }) {
+function ReactionBadge({ emoji, count, className, isDark = false }: { emoji: string; count: number; className?: string; isDark?: boolean }) {
     return (
-        <div className={`inline-flex items-center gap-1 bg-white rounded-full px-1.5 py-0.5 shadow-md border border-gray-100 text-xs ${className}`}>
+        <div className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 shadow-md border text-xs ${isDark ? "bg-[#2d2140] border-violet-800/60" : "bg-white border-gray-100"} ${className}`}>
             <span className="text-sm">{emoji}</span>
-            <span className="text-gray-600 font-medium">{count}</span>
+            <span className={`font-medium ${isDark ? "text-violet-100/80" : "text-gray-600"}`}>{count}</span>
         </div>
     );
 }
@@ -161,6 +163,14 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
     const chatEndRef = useRef<HTMLDivElement>(null);
     const profileData = data.profile_data as Record<string, string> | null;
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
+
+    // Night/Light state. Declared before every helper that reads `isDark`
+    // (see the TDZ gotcha in AGENTS.md). The toggle is mounted in the header row.
+    const { isDark, toggle } = useThemeToggle({
+        slug,
+        darkBg: "#140f1c",
+        lightBg: data.config?.background_color || "#f5f3ff",
+    });
 
     const groupName = profileData?.group_name || "Nhóm bạn";
     const motto = profileData?.motto;
@@ -202,10 +212,38 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
         { type: "star" as const, className: "w-3 h-3 -bottom-1 right-6 rotate-45", anim: "animate-sticker-wiggle" },
     ];
 
+    /* ---------- Night palette (neon-lit group chat) ---------- */
+    const pageShellClass = isDark ? "bg-[#140f1c]" : "bg-violet-50";
+    const headerClass = isDark
+        ? "bg-gradient-to-r from-violet-800 to-pink-800"
+        : "bg-gradient-to-r from-violet-600 to-pink-500";
+    const surfaceClass = isDark ? "bg-[#1b1428] border-violet-900/60" : "bg-white border-violet-100";
+    // Incoming bubbles / photo-booth strips share this "paper" surface.
+    const bubbleClass = isDark ? "bg-[#241a33]" : "bg-white";
+    const headingClass = isDark ? "text-violet-100" : "text-violet-900";
+    const bodyClass = isDark ? "text-violet-100/75" : "text-gray-600";
+    const strongClass = isDark ? "text-violet-50" : "text-gray-800";
+    const mutedClass = isDark ? "text-violet-200/50" : "text-gray-500";
+    const timeClass = isDark ? "text-violet-200/40" : "text-gray-400";
+    const pillClass = isDark ? "bg-violet-900/60 text-violet-100" : "bg-violet-100 text-violet-700";
+    const stampClass = isDark ? "text-violet-300" : "text-violet-500";
+    const doodleClass = isDark ? "text-violet-500/70" : "text-violet-300";
+    const tabIdleClass = isDark
+        ? "border-transparent text-violet-200/55 hover:text-violet-200"
+        : "border-transparent text-gray-500 hover:text-violet-400";
+    const tabActiveClass = isDark
+        ? "border-violet-400 text-violet-200"
+        : "border-violet-500 text-violet-600";
+    const inputFieldClass = isDark
+        ? "bg-[#241a33] text-violet-200/50"
+        : "bg-violet-50 text-gray-400";
+    // Small avatar/status rings punch out of whatever surface sits behind them.
+    const ringColor = isDark ? "#241a33" : "#ffffff";
+
     return (
-        <div className="h-screen flex flex-col bg-violet-50 relative overflow-hidden">
+        <div className={`h-screen flex flex-col relative overflow-hidden transition-colors duration-500 ${isDark ? "dark" : ""} ${pageShellClass}`}>
             {/* Floating background stickers */}
-            <div className="fixed inset-0 pointer-events-none z-0 opacity-30">
+            <div className={`fixed inset-0 pointer-events-none z-0 ${isDark ? "opacity-20" : "opacity-30"}`}>
                 <Sticker type="star" className="absolute top-[15%] left-[8%] w-8 h-8 rotate-12 animate-sticker-wiggle" />
                 <Sticker type="heart" className="absolute top-[60%] left-[5%] w-6 h-6 -rotate-12 animate-sticker-bounce" />
                 <Sticker type="smile" className="absolute top-[25%] right-[10%] w-10 h-10 rotate-6 animate-sticker-wiggle" />
@@ -214,9 +252,9 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
             </div>
 
             {/* Chat Header */}
-            <div className="bg-gradient-to-r from-violet-600 to-pink-500 text-white shadow-lg z-40 relative">
+            <div className={`text-white shadow-lg z-40 relative ${headerClass}`}>
                 {/* Friendship bracelet strip under header */}
-                <div className="absolute -bottom-1 left-0 right-0 h-3 opacity-90">
+                <div className={`absolute -bottom-1 left-0 right-0 h-3 ${isDark ? "opacity-70" : "opacity-90"}`}>
                     <FriendshipBracelet className="w-full h-full" />
                 </div>
 
@@ -228,7 +266,10 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center relative">
                                     <Users className="w-5 h-5" />
                                     {/* Online status dot */}
-                                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-violet-600 animate-online-pulse" />
+                                    <span
+                                        className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 animate-online-pulse"
+                                        style={{ borderColor: isDark ? "#5b21b6" : "#7c3aed" }}
+                                    />
                                 </div>
                                 {/* Sticker bomb */}
                                 {stickerPositions.map((s, i) => (
@@ -259,6 +300,12 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                             <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
                                 <Video className="w-5 h-5" />
                             </button>
+                            <ThemeToggleButton
+                                isDark={isDark}
+                                onToggle={toggle}
+                                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                                iconClassName="w-5 h-5"
+                            />
                             <Link
                                 href={`/${slug}/edit`}
                                 className="p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -271,22 +318,20 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
             </div>
 
             {/* Tab bar */}
-            <div className="bg-white border-b border-violet-100 shadow-sm z-30">
+            <div className={`border-b shadow-sm z-30 ${surfaceClass}`}>
                 <div className="max-w-2xl mx-auto flex">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium border-b-2 transition-colors relative ${
-                                activeTab === tab.id
-                                    ? "border-violet-500 text-violet-600"
-                                    : "border-transparent text-gray-500 hover:text-violet-400"
+                                activeTab === tab.id ? tabActiveClass : tabIdleClass
                             }`}
                         >
                             <tab.icon className="w-4 h-4" />
                             {tab.label}
                             {activeTab === tab.id && (
-                                <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-violet-500" />
+                                <span className={`absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isDark ? "bg-violet-400" : "bg-violet-500"}`} />
                             )}
                         </button>
                     ))}
@@ -300,7 +345,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                         <div className="p-4 space-y-4">
                             {/* Group intro message */}
                             <div className="flex justify-center">
-                                <div className="bg-violet-100 text-violet-700 text-xs px-4 py-2 rounded-full">
+                                <div className={`text-xs px-4 py-2 rounded-full ${pillClass}`}>
                                     {motto ? `"${motto}"` : `${groupName} đã bắt đầu trò chuyện`}
                                 </div>
                             </div>
@@ -309,11 +354,11 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                             {data.timelines.length > 0 && (
                                 <>
                                     <div className="flex justify-center items-center gap-2">
-                                        <DoodleArrow className="w-8 h-5 text-violet-300" flip />
-                                        <div className="bg-violet-100 text-violet-700 text-xs px-4 py-2 rounded-full font-medium">
+                                        <DoodleArrow className={`w-8 h-5 ${doodleClass}`} flip />
+                                        <div className={`text-xs px-4 py-2 rounded-full font-medium ${pillClass}`}>
                                             Kỷ niệm đáng nhớ
                                         </div>
-                                        <DoodleArrow className="w-8 h-5 text-violet-300" />
+                                        <DoodleArrow className={`w-8 h-5 ${doodleClass}`} />
                                     </div>
                                     {data.timelines.map((item, index) => {
                                         const isLeft = index % 2 === 0;
@@ -321,13 +366,16 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                             <div key={item.id} className={`flex gap-2 ${isLeft ? "" : "flex-row-reverse"}`}>
                                                 <div className={`w-8 h-8 rounded-full ${getAvatarColor(index)} flex items-center justify-center flex-shrink-0 relative`}>
                                                     <Smile className="w-4 h-4 text-white" />
-                                                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-white" />
+                                                    <span
+                                                        className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border"
+                                                        style={{ borderColor: ringColor }}
+                                                    />
                                                 </div>
                                                 <div className={`max-w-[75%] ${isLeft ? "" : "items-end"} relative`}>
                                                     <div className={`rounded-2xl overflow-hidden shadow-sm ${
                                                         isLeft
-                                                            ? "bg-white rounded-tl-sm"
-                                                            : "bg-gradient-to-r from-violet-500 to-pink-500 text-white rounded-tr-sm"
+                                                            ? `${bubbleClass} rounded-tl-sm`
+                                                            : `${isDark ? "bg-gradient-to-r from-violet-700 to-pink-700" : "bg-gradient-to-r from-violet-500 to-pink-500"} text-white rounded-tr-sm`
                                                     }`}>
                                                         {item.image_url && (
                                                             <Image
@@ -339,18 +387,18 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                                             />
                                                         )}
                                                         <div className="p-3">
-                                                            <div className={`text-xs mb-1 ${isLeft ? "text-violet-500" : "text-white/80"}`}>
+                                                            <div className={`text-xs mb-1 ${isLeft ? stampClass : "text-white/80"}`}>
                                                                 {new Date(item.date).toLocaleDateString("vi-VN", {
                                                                     day: "2-digit",
                                                                     month: "short",
                                                                     year: "numeric",
                                                                 })}
                                                             </div>
-                                                            <h3 className={`font-semibold ${isLeft ? "text-gray-800" : "text-white"}`}>
+                                                            <h3 className={`font-semibold ${isLeft ? strongClass : "text-white"}`}>
                                                                 {item.title}
                                                             </h3>
                                                             {item.description && (
-                                                                <p className={`text-sm mt-1 ${isLeft ? "text-gray-600" : "text-white/90"}`}>
+                                                                <p className={`text-sm mt-1 ${isLeft ? bodyClass : "text-white/90"}`}>
                                                                     {item.description}
                                                                 </p>
                                                             )}
@@ -358,10 +406,10 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                                     </div>
                                                     {/* Reaction badges on messages */}
                                                     <div className={`flex gap-1 mt-1 ${isLeft ? "" : "justify-end"}`}>
-                                                        <ReactionBadge emoji="❤️" count={index % 3 + 2} />
-                                                        <ReactionBadge emoji="😂" count={index % 2 + 1} />
+                                                        <ReactionBadge emoji="❤️" count={index % 3 + 2} isDark={isDark} />
+                                                        <ReactionBadge emoji="😂" count={index % 2 + 1} isDark={isDark} />
                                                     </div>
-                                                    <div className={`text-xs text-gray-400 mt-1 ${isLeft ? "" : "text-right"}`}>
+                                                    <div className={`text-xs mt-1 ${timeClass} ${isLeft ? "" : "text-right"}`}>
                                                         {new Date(item.date).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                                                     </div>
                                                 </div>
@@ -375,17 +423,20 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                             {data.galleries.length > 0 && (
                                 <>
                                     <div className="flex justify-center">
-                                        <div className="bg-violet-100 text-violet-700 text-xs px-4 py-2 rounded-full">
+                                        <div className={`text-xs px-4 py-2 rounded-full ${pillClass}`}>
                                             {data.galleries.length} ảnh đã được chia sẻ
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-violet-400 flex items-center justify-center flex-shrink-0 relative">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative ${isDark ? "bg-violet-500" : "bg-violet-400"}`}>
                                             <ImageIcon className="w-4 h-4 text-white" />
-                                            <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-white" />
+                                            <span
+                                                className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border"
+                                                style={{ borderColor: ringColor }}
+                                            />
                                         </div>
                                         <div className="max-w-[75%]">
-                                            <div className="bg-white rounded-2xl rounded-tl-sm p-2 shadow-sm">
+                                            <div className={`rounded-2xl rounded-tl-sm p-2 shadow-sm ${bubbleClass}`}>
                                                 <div className="grid grid-cols-3 gap-1">
                                                     {data.galleries.slice(0, 6).map((photo, index) => (
                                                         <div
@@ -403,7 +454,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                                     ))}
                                                 </div>
                                                 {data.galleries.length > 6 && (
-                                                    <p className="text-xs text-violet-500 text-center mt-2">
+                                                    <p className={`text-xs text-center mt-2 ${stampClass}`}>
                                                         +{data.galleries.length - 6} ảnh nữa
                                                     </p>
                                                 )}
@@ -415,10 +466,10 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
 
                             {/* Reaction message with confetti */}
                             <div className="flex justify-center relative">
-                                <div className="bg-white rounded-full px-4 py-2 shadow-sm flex items-center gap-2 relative">
+                                <div className={`rounded-full px-4 py-2 shadow-sm flex items-center gap-2 relative ${bubbleClass}`}>
                                     <ConfettiBurst className="absolute inset-0 w-full h-full animate-confetti-burst pointer-events-none" />
                                     <Heart className="w-4 h-4 text-pink-400 fill-pink-400 animate-heartbeat" />
-                                    <span className="text-sm text-gray-600 font-medium relative z-10">Mãi bên nhau nhé!</span>
+                                    <span className={`text-sm font-medium relative z-10 ${bodyClass}`}>Mãi bên nhau nhé!</span>
                                     <Star className="w-4 h-4 text-amber-400 fill-amber-400 animate-heartbeat" />
                                 </div>
                             </div>
@@ -427,12 +478,15 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                             <div className="flex gap-2">
                                 <div className={`w-8 h-8 rounded-full ${getAvatarColor(data.timelines.length)} flex items-center justify-center flex-shrink-0 relative`}>
                                     <Smile className="w-4 h-4 text-white" />
-                                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-white" />
+                                    <span
+                                        className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border"
+                                        style={{ borderColor: ringColor }}
+                                    />
                                 </div>
-                                <div className="bg-white rounded-2xl rounded-tl-sm shadow-sm">
-                                    <TypingDots />
+                                <div className={`rounded-2xl rounded-tl-sm shadow-sm ${bubbleClass}`}>
+                                    <TypingDots isDark={isDark} />
                                 </div>
-                                <span className="text-xs text-gray-400 self-center">đang nhập...</span>
+                                <span className={`text-xs self-center ${timeClass}`}>đang nhập...</span>
                             </div>
 
                             <div ref={chatEndRef} />
@@ -442,9 +496,9 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                     {activeTab === "gallery" && (
                         <div className="p-4">
                             <div className="text-center mb-4">
-                                <h2 className="text-xl font-bold text-violet-900">Khoảnh khắc vui vẻ</h2>
-                                <p className="text-sm text-gray-500">{data.galleries.length} ảnh</p>
-                                <p className="text-xs text-violet-400 mt-1">photo booth strip</p>
+                                <h2 className={`text-xl font-bold ${headingClass}`}>Khoảnh khắc vui vẻ</h2>
+                                <p className={`text-sm ${mutedClass}`}>{data.galleries.length} ảnh</p>
+                                <p className={`text-xs mt-1 ${isDark ? "text-violet-300/70" : "text-violet-400"}`}>photo booth strip</p>
                             </div>
                             {data.galleries.length > 0 ? (
                                 <div className="space-y-4">
@@ -454,7 +508,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                         return (
                                             <div
                                                 key={stripIdx}
-                                                className="bg-white p-3 shadow-lg"
+                                                className={`p-3 shadow-lg ${bubbleClass}`}
                                                 style={{ transform: `rotate(${stripIdx % 2 === 0 ? -1 : 1}deg)` } as React.CSSProperties}
                                             >
                                                 <div className="grid grid-cols-3 gap-1">
@@ -476,7 +530,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                                         );
                                                     })}
                                                 </div>
-                                                <p className="text-center text-xs text-gray-500 mt-2 font-mono">
+                                                <p className={`text-center text-xs mt-2 font-mono ${mutedClass}`}>
                                                     strip {stripIdx + 1} · {strip.length} photos
                                                 </p>
                                             </div>
@@ -484,7 +538,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                     })}
                                 </div>
                             ) : (
-                                <p className="text-center text-gray-400 italic py-8">Chưa có ảnh nào</p>
+                                <p className={`text-center italic py-8 ${timeClass}`}>Chưa có ảnh nào</p>
                             )}
                         </div>
                     )}
@@ -492,27 +546,27 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                     {activeTab === "guestbook" && (
                         <div className="p-4">
                             <div className="text-center mb-4 relative inline-block w-full">
-                                <h2 className="text-xl font-bold text-violet-900 inline-block relative">
+                                <h2 className={`text-xl font-bold inline-block relative ${headingClass}`}>
                                     Lưu bút
-                                    <DoodleArrow className="absolute -right-8 -top-2 w-6 h-5 text-violet-300" />
+                                    <DoodleArrow className={`absolute -right-8 -top-2 w-6 h-5 ${doodleClass}`} />
                                 </h2>
-                                <p className="text-sm text-gray-500">Chia sẻ kỷ niệm với nhóm</p>
+                                <p className={`text-sm ${mutedClass}`}>Chia sẻ kỷ niệm với nhóm</p>
                             </div>
-                            <FriendshipLetterBox slug={slug} initialLetters={data.letters} onPopupOpenChange={() => {}} />
+                            <FriendshipLetterBox slug={slug} initialLetters={data.letters} onPopupOpenChange={() => {}} isDark={isDark} />
                         </div>
                     )}
 
                     {activeTab === "quiz" && (
                         <div className="p-4">
                             <div className="text-center mb-4 relative">
-                                <h2 className="text-xl font-bold text-violet-900 inline-block">
+                                <h2 className={`text-xl font-bold inline-block ${headingClass}`}>
                                     Thử thách nhóm
                                 </h2>
                                 <Sticker type="star" className="absolute -right-6 -top-3 w-6 h-6 rotate-12 animate-sticker-bounce" />
-                                <p className="text-sm text-gray-500 mt-1">giải cùng nhau nào!</p>
+                                <p className={`text-sm mt-1 ${mutedClass}`}>giải cùng nhau nào!</p>
                             </div>
                             {gameTemplateId === "A" ? (
-                                <FriendshipGameSection />
+                                <FriendshipGameSection isDark={isDark} />
                             ) : (
                                 <TemplateVariantGame
                                     linkType={data.type}
@@ -520,6 +574,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                                     profileData={data.profile_data as Record<string, unknown> | null}
                                     photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))}
                                     timelines={data.timelines.map(t => ({ id: t.id, title: t.title, description: t.description }))}
+                                    isDark={isDark}
                                 />
                             )}
                         </div>
@@ -529,18 +584,18 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
 
             {/* Chat Input Bar (decorative) */}
             {activeTab === "chat" && (
-                <div className="bg-white border-t border-violet-100 p-3 z-30">
+                <div className={`border-t p-3 z-30 ${surfaceClass}`}>
                     <div className="max-w-2xl mx-auto flex items-center gap-2">
-                        <button className="p-2 rounded-full text-violet-400 hover:bg-violet-50 transition-colors">
+                        <button className={`p-2 rounded-full transition-colors ${isDark ? "text-violet-300 hover:bg-violet-900/40" : "text-violet-400 hover:bg-violet-50"}`}>
                             <Smile className="w-6 h-6" />
                         </button>
-                        <div className="flex-1 bg-violet-50 rounded-full px-4 py-2.5 text-sm text-gray-400 flex items-center gap-2">
+                        <div className={`flex-1 rounded-full px-4 py-2.5 text-sm flex items-center gap-2 ${inputFieldClass}`}>
                             <span>Nhập tin nhắn...</span>
                             <span className="ml-auto inline-flex">
-                                <span className="w-1 h-1 rounded-full bg-violet-300 animate-typing-bounce" />
+                                <span className={`w-1 h-1 rounded-full animate-typing-bounce ${isDark ? "bg-violet-400" : "bg-violet-300"}`} />
                             </span>
                         </div>
-                        <button className="p-2 rounded-full bg-gradient-to-r from-violet-500 to-pink-500 text-white shadow-md hover:shadow-lg transition-shadow hover:scale-105 active:scale-95">
+                        <button className={`p-2 rounded-full text-white shadow-md hover:shadow-lg transition-shadow hover:scale-105 active:scale-95 ${isDark ? "bg-gradient-to-r from-violet-600 to-pink-600" : "bg-gradient-to-r from-violet-500 to-pink-500"}`}>
                             <Send className="w-5 h-5" />
                         </button>
                     </div>
@@ -560,7 +615,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                     >
                         <ChevronLeft className="w-8 h-8" />
                     </button>
-                    <div className="max-w-4xl max-h-[80vh] relative bg-white p-3 pb-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                    <div className={`max-w-4xl max-h-[80vh] relative p-3 pb-8 shadow-2xl ${bubbleClass}`} onClick={(e) => e.stopPropagation()}>
                         <Image
                             src={data.galleries[lightboxIndex].image_url}
                             alt={data.galleries[lightboxIndex].caption || `Photo ${lightboxIndex + 1}`}
@@ -569,7 +624,7 @@ export function FriendshipTemplate({ data, slug }: FriendshipTemplateProps) {
                             className="max-h-[80vh] w-auto object-contain"
                         />
                         {data.galleries[lightboxIndex].caption && (
-                            <p className="text-gray-700 text-center mt-3 font-mono italic text-sm">{data.galleries[lightboxIndex].caption}</p>
+                            <p className={`text-center mt-3 font-mono italic text-sm ${isDark ? "text-violet-100/75" : "text-gray-700"}`}>{data.galleries[lightboxIndex].caption}</p>
                         )}
                     </div>
                     <button

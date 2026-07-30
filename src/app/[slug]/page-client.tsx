@@ -1,26 +1,35 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { Suspense, useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
-import { MusicPlayerRef, WelcomeOverlay } from "@/components/music";
-import { LoveTemplate } from "@/components/templates/love/LoveTemplate";
-import { LoveLockScreen } from "@/components/templates/love/LoveLockScreen";
-import { Love2Template } from "@/components/templates/love2/Love2Template";
-import { Love2LockScreen } from "@/components/templates/love2/Love2LockScreen";
-import { IdolTemplate } from "@/components/templates/idol/IdolTemplate";
-import { IdolLockScreen } from "@/components/templates/idol/IdolLockScreen";
-import { GradPersonalTemplate } from "@/components/templates/grad-personal/GradPersonalTemplate";
-import { GradPersonalLockScreen } from "@/components/templates/grad-personal/GradPersonalLockScreen";
-import { GradClassTemplate } from "@/components/templates/grad-class/GradClassTemplate";
-import { GradClassLockScreen } from "@/components/templates/grad-class/GradClassLockScreen";
-import { GradGroupTemplate } from "@/components/templates/grad-group/GradGroupTemplate";
-import { GradGroupLockScreen } from "@/components/templates/grad-group/GradGroupLockScreen";
-import { WeddingTemplate } from "@/components/templates/wedding/WeddingTemplate";
-import { WeddingLockScreen } from "@/components/templates/wedding/WeddingLockScreen";
-import { TravelTemplate } from "@/components/templates/travel/TravelTemplate";
-import { TravelLockScreen } from "@/components/templates/travel/TravelLockScreen";
-import { FriendshipTemplate } from "@/components/templates/friendship/FriendshipTemplate";
-import { FriendshipLockScreen } from "@/components/templates/friendship/FriendshipLockScreen";
+import { MusicPlayer, MusicPlayerRef, WelcomeOverlay } from "@/components/music";
+import { TemplateLoading } from "@/components/templates/TemplateLoading";
+
+// Templates and lock screens are code-split per LinkType: a visitor only ever needs
+// one of each, and statically importing all 19 modules (~6.5k lines) put every
+// template in the `/[slug]` bundle. SSR stays on (next/dynamic defaults to it), so
+// the initial HTML is unchanged — only the client chunks are split.
+const LoveTemplate = dynamic(() => import("@/components/templates/love/LoveTemplate").then((m) => m.LoveTemplate));
+const Love2Template = dynamic(() => import("@/components/templates/love2/Love2Template").then((m) => m.Love2Template));
+const IdolTemplate = dynamic(() => import("@/components/templates/idol/IdolTemplate").then((m) => m.IdolTemplate));
+const GradPersonalTemplate = dynamic(() => import("@/components/templates/grad-personal/GradPersonalTemplate").then((m) => m.GradPersonalTemplate));
+const GradClassTemplate = dynamic(() => import("@/components/templates/grad-class/GradClassTemplate").then((m) => m.GradClassTemplate));
+const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-group/GradGroupTemplate").then((m) => m.GradGroupTemplate));
+const WeddingTemplate = dynamic(() => import("@/components/templates/wedding/WeddingTemplate").then((m) => m.WeddingTemplate));
+const TravelTemplate = dynamic(() => import("@/components/templates/travel/TravelTemplate").then((m) => m.TravelTemplate));
+const FriendshipTemplate = dynamic(() => import("@/components/templates/friendship/FriendshipTemplate").then((m) => m.FriendshipTemplate));
+
+const LoveLockScreen = dynamic(() => import("@/components/templates/love/LoveLockScreen").then((m) => m.LoveLockScreen));
+const Love2LockScreen = dynamic(() => import("@/components/templates/love2/Love2LockScreen").then((m) => m.Love2LockScreen));
+const IdolLockScreen = dynamic(() => import("@/components/templates/idol/IdolLockScreen").then((m) => m.IdolLockScreen));
+const GradPersonalLockScreen = dynamic(() => import("@/components/templates/grad-personal/GradPersonalLockScreen").then((m) => m.GradPersonalLockScreen));
+const GradClassLockScreen = dynamic(() => import("@/components/templates/grad-class/GradClassLockScreen").then((m) => m.GradClassLockScreen));
+const GradGroupLockScreen = dynamic(() => import("@/components/templates/grad-group/GradGroupLockScreen").then((m) => m.GradGroupLockScreen));
+const WeddingLockScreen = dynamic(() => import("@/components/templates/wedding/WeddingLockScreen").then((m) => m.WeddingLockScreen));
+const TravelLockScreen = dynamic(() => import("@/components/templates/travel/TravelLockScreen").then((m) => m.TravelLockScreen));
+const FriendshipLockScreen = dynamic(() => import("@/components/templates/friendship/FriendshipLockScreen").then((m) => m.FriendshipLockScreen));
+
 import { getLinkData } from "@/app/actions/auth-actions";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
 import { Loader2 } from "lucide-react";
@@ -127,9 +136,15 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
         }
 
         return (
-            <ThemeWrapper config={lockScreenData.config} type={lockScreenData.type}>
+            <ThemeWrapper
+                config={lockScreenData.config}
+                type={lockScreenData.type}
+                subTheme={(lockScreenData.profile_data as { theme?: string } | null)?.theme ?? null}
+            >
                 <>
-                    {renderLockScreen(lockScreenData)}
+                    <Suspense fallback={<TemplateLoading linkType={lockScreenData.type} />}>
+                        {renderLockScreen(lockScreenData)}
+                    </Suspense>
                     {isUnlocking && <UnlockLoadingOverlay />}
                 </>
             </ThemeWrapper>
@@ -195,7 +210,11 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
             case "WEDDING":
                 return <WeddingTemplate data={linkData} slug={slug} />;
             case "TRAVEL":
-                return <TravelTemplate data={linkData} slug={slug} isAuthenticated={isAuthenticated} />;
+                // Travel is the only template that takes this prop: it gates an
+                // extra "Thêm hành trình" CTA inside the empty itinerary state.
+                // Pass the live `authenticated` state, not the initial server prop,
+                // so the CTA also appears after an in-session PIN unlock.
+                return <TravelTemplate data={linkData} slug={slug} isAuthenticated={authenticated} />;
             case "FRIENDSHIP":
                 return <FriendshipTemplate data={linkData} slug={slug} />;
             case "EVERY":
@@ -206,7 +225,11 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
     };
 
     return (
-        <ThemeWrapper config={linkData.config} type={linkData.type}>
+        <ThemeWrapper
+            config={linkData.config}
+            type={linkData.type}
+            subTheme={(linkData.profile_data as { theme?: string } | null)?.theme ?? null}
+        >
             <>
                 <WelcomeOverlay
                     title={getWelcomeTitle()}
@@ -216,16 +239,20 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                     onOpen={handleWelcomeOpen}
                 />
 
-                {renderTemplate()}
+                {/* The template chunk is fetched on demand. This boundary matters most
+                    right after a PIN unlock, when we switch from lock screen to template
+                    on the client and the chunk may not have arrived yet. */}
+                <Suspense fallback={<TemplateLoading linkType={linkData.type} />}>
+                    {renderTemplate()}
+                </Suspense>
 
-                {/* Music Player - temporarily disabled (YouTube/TikTok playback issue) */}
-                {/* {linkData.config?.music_url && (
+                {linkData.config?.music_url && (
                     <MusicPlayer
                         ref={musicPlayerRef}
                         src={linkData.config.music_url}
                         autoPlay={linkData.config.auto_play ?? false}
                     />
-                )} */}
+                )}
             </>
         </ThemeWrapper>
     );

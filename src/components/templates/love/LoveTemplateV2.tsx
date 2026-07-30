@@ -15,6 +15,7 @@ import { LoveGameSection } from "./LoveGameSection";
 import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
 import { normalizeGameTemplate } from "@/components/templates/game-registry";
 import { useThemeToggle } from "@/components/theme/useThemeToggle";
+import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -48,9 +49,8 @@ export function LoveTemplateV2({ data, slug }: LoveTemplateV2Props) {
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
 
     // Night/Light state. Declared before every helper that reads `isDark`
-    // (see the TDZ gotcha in AGENTS.md). No toggle button is mounted here —
-    // the mode is driven by localStorage / the `theme-change` event.
-    const { isDark } = useThemeToggle({
+    // (see the TDZ gotcha in AGENTS.md). The toggle sits next to the edit button.
+    const { isDark, toggle } = useThemeToggle({
         slug,
         darkBg: "#171018",
         lightBg: data.config?.background_color || "#fff1f2",
@@ -320,13 +320,21 @@ export function LoveTemplateV2({ data, slug }: LoveTemplateV2Props) {
 
             {/* Edit Button */}
             {!isPopupOpen && (
-                <Link
-                    href={`/${slug}/edit`}
-                    className={`fixed top-4 right-4 z-30 p-2.5 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all ${floatingBtnClass}`}
-                    title="Edit Page"
-                >
-                    <Settings className="w-5 h-5" />
-                </Link>
+                <>
+                    <ThemeToggleButton
+                        isDark={isDark}
+                        onToggle={toggle}
+                        className={`fixed top-4 right-16 z-30 p-2.5 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all ${floatingBtnClass}`}
+                        iconClassName="w-5 h-5"
+                    />
+                    <Link
+                        href={`/${slug}/edit`}
+                        className={`fixed top-4 right-4 z-30 p-2.5 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all ${floatingBtnClass}`}
+                        title="Edit Page"
+                    >
+                        <Settings className="w-5 h-5" />
+                    </Link>
+                </>
             )}
 
             {/* Book Container */}

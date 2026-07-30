@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Heart, Trophy, RotateCcw, Sparkles } from "lucide-react";
 
 interface Card {
@@ -203,6 +204,13 @@ export function LoveGameSection({ photos, isDark = false }: LoveGameSectionProps
                         key={card.id}
                         onClick={() => handleCardClick(card.id)}
                         disabled={card.isFlipped || card.isMatched || isChecking}
+                        aria-label={
+                            card.isMatched
+                                ? "Thẻ đã ghép đúng"
+                                : card.isFlipped
+                                ? "Thẻ đang mở"
+                                : "Thẻ úp, nhấn để mở"
+                        }
                         className={`aspect-square rounded-xl transition-all duration-300 transform ${
                             card.isMatched
                                 ? "scale-95 opacity-70"
@@ -243,10 +251,23 @@ export function LoveGameSection({ photos, isDark = false }: LoveGameSectionProps
                                     transform: "rotateY(180deg)",
                                 }}
                             >
-                                <img
+                                {/*
+                                  * Ảnh kỷ niệm từ Supabase Storage (Gallery.image_url →
+                                  * getPublicUrl), khớp remotePatterns nên next/image an toàn.
+                                  * Dùng `fill` vì kích thước gốc do người dùng upload nên không
+                                  * biết trước; thẻ chỉ là ô vuông trong grid 4 cột.
+                                  * Parent đã `absolute inset-0` nên `fill` không cần thêm wrapper —
+                                  * quan trọng vì thẻ nằm trong ngữ cảnh 3D (preserve-3d +
+                                  * backfaceVisibility), thêm div bọc sẽ phá hiệu ứng lật.
+                                  * alt="" có chủ đích: mô tả ảnh sẽ tiết lộ cặp cần tìm; nhãn
+                                  * trạng thái đã nằm ở aria-label của <button>.
+                                  */}
+                                <Image
                                     src={card.imageUrl}
                                     alt=""
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    sizes="(max-width: 672px) 25vw, 160px"
+                                    className="object-cover"
                                 />
                             </div>
                         </div>
