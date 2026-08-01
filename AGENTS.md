@@ -475,3 +475,14 @@ whole project — they are separate signals.
 - **Data Access:** Always utilize Prisma Client for querying the Supabase PostgreSQL database. Never write raw SQL unless explicitly asked.
 - **Styling Convention:** Combine Tailwind classes using `clsx` and `tailwind-merge` via your standard `cn()` utility.
 - **Output Style:** Provide concise, direct code solutions. **Do not write long theoretical explanations.** Focus purely on the implementation.
+
+## Deployment (Vercel)
+
+- Single Vercel project `love-memories` (team `soncodekhongbugs-projects`). There is no separate "test" project — test vs. production is just two different domain aliases pointing at two different deployments of the same project.
+- **Production**: branch `deploy` → domains `memorae.me`, `www.memorae.me`, `love-memories-rust.vercel.app`.
+- **Test**: domain `test.memorae.me` (Cloudflare-fronted). Points at whichever deployment was last aliased to it — not automatically tied to a branch.
+- Workflow to push to test without touching production:
+  1. Merge the work branch into (or create) a branch like `deploy-test`, push it — Vercel's git integration auto-builds a preview deployment for that branch (`love-memories-git-<branch>-soncodekhongbugs-projects.vercel.app`).
+  2. Find that deployment: `vercel ls love-memories`, confirm with `vercel inspect <url>` that `target: preview` (never `production`).
+  3. Point the test domain at it: `vercel alias set <deployment-url> test.memorae.me`.
+- **Never** run `vercel --prod`, `vercel promote`, or `vercel alias set ... memorae.me` / `www.memorae.me` unless explicitly asked to deploy to production. Always verify with `vercel alias ls` after any alias change that `memorae.me`/`www.memorae.me` still point at the same (untouched) deployment.
