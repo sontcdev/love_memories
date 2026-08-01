@@ -4,7 +4,7 @@
 // IdolTemplate.tsx đã được rollback về đúng phiên bản trên nhánh deploy, nên mọi
 // tính năng mới (game variant, night mode, hiệu ứng mới) sống ở file V2 này.
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
@@ -16,6 +16,7 @@ import { normalizeGameTemplate } from "@/components/templates/game-registry";
 import { VideoPlayer } from "@/components/media";
 import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
 import { useThemeToggle } from "@/components/theme/useThemeToggle";
+import { buildTemplateTokens } from "@/components/theme/template-tokens";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -105,6 +106,11 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
         defaultDark: isDarkBackground(data.config?.background_color),
     });
 
+    const { style: tokenStyle } = buildTemplateTokens({
+        accentColor: data.config?.accent_color,
+        fontFamily: data.config?.font_family,
+    });
+
     useEffect(() => {
         if (!debutDate) return;
         const calculateTimeLeft = () => {
@@ -183,7 +189,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
     ];
 
     return (
-        <div ref={stageRef} className="min-h-screen relative transition-colors duration-500 overflow-x-hidden" style={{ backgroundColor: 'var(--theme-bg, #fff0f5)' }}>
+        <div ref={stageRef} className="min-h-screen relative transition-colors duration-500 overflow-x-hidden" style={{ backgroundColor: 'var(--theme-bg, #fff0f5)', ...tokenStyle }}>
             <style jsx>{`
                 @keyframes spotlight-sweep {
                     0% { transform: translateX(-30%) scale(1); opacity: 0.3; }
@@ -203,8 +209,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                     50% { opacity: 1; }
                 }
                 @keyframes stage-glow {
-                    0%, 100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.2), 0 0 60px rgba(236, 72, 153, 0.1); }
-                    50% { box-shadow: 0 0 50px rgba(168, 85, 247, 0.35), 0 0 80px rgba(236, 72, 153, 0.2); }
+                    0%, 100% { opacity: 0.6; }
+                    50% { opacity: 1; }
                 }
                 @keyframes act-enter {
                     0% { opacity: 0; transform: translateY(30px) scale(0.95); }
@@ -239,49 +245,11 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                 .act-exiting { animation: act-exit 0.3s ease-in forwards; }
                 .cyber-grid {
                     background-size: 40px 40px;
-                    background-image: linear-gradient(to right, rgba(168, 85, 247, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
+                    background-image: linear-gradient(to right, color-mix(in oklch, var(--accent) 12%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklch, var(--accent) 12%, transparent) 1px, transparent 1px);
                 }
                 .cyber-grid-light {
                     background-size: 40px 40px;
-                    background-image: linear-gradient(to right, rgba(168, 85, 247, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(168, 85, 247, 0.02) 1px, transparent 1px);
-                }
-                @keyframes holoShimmer {
-                    0% { background-position: 0% center; filter: hue-rotate(0deg); }
-                    100% { background-position: 200% center; filter: hue-rotate(360deg); }
-                }
-                .holo-text {
-                    background: linear-gradient(110deg,
-                        #ff006e 0%, #ff8500 10%, #ffd60a 20%, #06ffa5 35%,
-                        #00b4d8 50%, #7209b7 65%, #f72585 80%, #ff006e 100%);
-                    background-size: 200% auto;
-                    -webkit-background-clip: text;
-                    background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    animation: holoShimmer 4s linear infinite;
-                    filter: drop-shadow(0 0 8px rgba(255, 0, 110, 0.4)) drop-shadow(0 0 16px rgba(114, 9, 183, 0.2));
-                }
-                @keyframes marqueeChase {
-                    0% { box-shadow: 0 0 8px rgba(255,255,255,0.8), 8px 0 0 rgba(255,255,255,0.3); }
-                    100% { box-shadow: 0 0 8px rgba(255,255,255,0.8), -8px 0 0 rgba(255,255,255,0.3); }
-                }
-                .marquee-ring {
-                    position: absolute;
-                    inset: -10px;
-                    border-radius: 9999px;
-                    pointer-events: none;
-                }
-                .marquee-bulb {
-                    position: absolute;
-                    width: 6px;
-                    height: 6px;
-                    border-radius: 50%;
-                    background: radial-gradient(circle at 30% 30%, #fef9c3, #fbbf24);
-                    box-shadow: 0 0 6px rgba(251, 191, 36, 0.9), 0 0 12px rgba(251, 191, 36, 0.5);
-                    animation: bulbBlink 1.5s ease-in-out infinite;
-                }
-                @keyframes bulbBlink {
-                    0%, 100% { opacity: 1; transform: scale(1); }
-                    50% { opacity: 0.4; transform: scale(0.8); }
+                    background-image: linear-gradient(to right, color-mix(in oklch, var(--accent) 6%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklch, var(--accent) 6%, transparent) 1px, transparent 1px);
                 }
                 @keyframes eqBar {
                     0%, 100% { transform: scaleY(0.3); }
@@ -309,44 +277,9 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                     transform-origin: top center;
                     animation: laserSweep 6s ease-in-out infinite;
                 }
-                @keyframes starBurst {
-                    0% { transform: rotate(0deg) scale(1); opacity: 0.6; }
-                    100% { transform: rotate(360deg) scale(1); opacity: 0.6; }
-                }
-                .star-burst {
-                    position: absolute;
-                    inset: -30px;
-                    pointer-events: none;
-                    animation: starBurst 30s linear infinite;
-                }
-                @keyframes holoBorderShift {
-                    0% { background-position: 0% 50%; }
-                    100% { background-position: 200% 50%; }
-                }
-                .holo-border {
-                    position: relative;
-                }
-                .holo-border::before {
-                    content: '';
-                    position: absolute;
-                    inset: -2px;
-                    border-radius: inherit;
-                    padding: 2px;
-                    background: linear-gradient(110deg, #ff006e, #ff8500, #ffd60a, #06ffa5, #00b4d8, #7209b7, #f72585, #ff006e);
-                    background-size: 200% 100%;
-                    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-                    -webkit-mask-composite: xor;
-                    mask-composite: exclude;
-                    animation: holoBorderShift 4s linear infinite;
-                    pointer-events: none;
-                }
                 @keyframes stageFloor {
                     0%, 100% { opacity: 0.4; }
                     50% { opacity: 0.7; }
-                }
-                .stage-floor {
-                    background: radial-gradient(ellipse at center top, rgba(168, 85, 247, 0.3) 0%, transparent 60%);
-                    animation: stageFloor 4s ease-in-out infinite;
                 }
                 .ticket-stub {
                     position: relative;
@@ -374,42 +307,38 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
             {/* Stage Background */}
             <div className={`fixed inset-0 z-0 pointer-events-none ${isDark ? 'cyber-grid' : 'cyber-grid-light'}`} />
 
-            {/* Laser Light Beams */}
+            {/* Laser Light Beams (trimmed to 2 — refined, not cluttered) */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-                <div className="laser-beam text-pink-500" style={{ left: '15%', animationDelay: '0s' }} />
-                <div className="laser-beam text-purple-500" style={{ left: '45%', animationDelay: '1.5s' }} />
-                <div className="laser-beam text-cyan-400" style={{ left: '75%', animationDelay: '3s' }} />
-                <div className="laser-beam text-pink-400" style={{ left: '30%', animationDelay: '4.5s', animationDuration: '7s' }} />
-                <div className="laser-beam text-purple-400" style={{ left: '60%', animationDelay: '2s', animationDuration: '7s' }} />
+                <div className="laser-beam" style={{ left: '20%', animationDelay: '0s', color: 'var(--accent)' }} />
+                <div className="laser-beam" style={{ left: '70%', animationDelay: '3s', color: 'var(--accent)' }} />
             </div>
 
-            {/* Moving Spotlights */}
+            {/* Moving Spotlight (single, accent-colored) */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-1/4 w-[500px] h-[800px] bg-gradient-to-b from-purple-500/15 via-purple-400/5 to-transparent rounded-full blur-3xl" style={{ animation: 'spotlight-sweep 18s ease-in-out infinite' }} />
-                <div className="absolute top-0 right-1/4 w-[400px] h-[700px] bg-gradient-to-b from-pink-500/12 via-pink-400/4 to-transparent rounded-full blur-3xl" style={{ animation: 'spotlight-sweep-2 22s ease-in-out infinite' }} />
-                <div className="absolute top-0 left-1/2 w-[300px] h-[600px] bg-gradient-to-b from-cyan-500/8 via-cyan-400/3 to-transparent rounded-full blur-3xl" style={{ animation: 'spotlight-sweep 15s ease-in-out infinite', animationDelay: '-7s' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[800px] rounded-full blur-3xl" style={{ animation: 'spotlight-sweep 18s ease-in-out infinite', background: 'radial-gradient(ellipse at top, color-mix(in oklch, var(--accent) 18%, transparent), transparent 70%)' }} />
             </div>
 
-            {/* Floating Particles */}
+            {/* Floating Particles (trimmed to 3) */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-                <div className="absolute text-purple-400/20 text-2xl animate-drift-1 bottom-0 left-[15%]">🎵</div>
-                <div className="absolute text-pink-400/20 text-3xl animate-drift-2 bottom-0 left-[35%]">🎶</div>
-                <div className="absolute text-cyan-400/20 text-xl animate-drift-3 bottom-0 left-[55%]">✨</div>
-                <div className="absolute text-yellow-400/20 text-2xl animate-drift-4 bottom-0 left-[75%]">⭐</div>
-                <div className="absolute text-purple-400/20 text-xl animate-drift-5 bottom-0 left-[90%]">🎵</div>
+                <div className="absolute text-2xl animate-drift-1 bottom-0 left-[20%] opacity-20">🎵</div>
+                <div className="absolute text-3xl animate-drift-2 bottom-0 left-[50%] opacity-20">✨</div>
+                <div className="absolute text-xl animate-drift-3 bottom-0 left-[80%] opacity-20">🎵</div>
             </div>
 
             {/* Stage Curtains */}
             <div className="fixed top-0 left-0 w-8 sm:w-16 h-full z-10 pointer-events-none">
-                <div className={`w-full h-full ${isDark ? "bg-gradient-to-r from-purple-950/80 via-purple-900/40 to-transparent" : "bg-gradient-to-r from-purple-200/60 via-purple-100/30 to-transparent"}`} style={{ animation: 'curtain-shimmer 4s ease-in-out infinite' }} />
+                <div className="w-full h-full" style={{ animation: 'curtain-shimmer 4s ease-in-out infinite', background: `linear-gradient(to right, color-mix(in oklch, var(--accent) ${isDark ? "35%" : "20%"}, transparent), transparent)` }} />
             </div>
             <div className="fixed top-0 right-0 w-8 sm:w-16 h-full z-10 pointer-events-none">
-                <div className={`w-full h-full ${isDark ? "bg-gradient-to-l from-purple-950/80 via-purple-900/40 to-transparent" : "bg-gradient-to-l from-purple-200/60 via-purple-100/30 to-transparent"}`} style={{ animation: 'curtain-shimmer 4s ease-in-out infinite', animationDelay: '2s' }} />
+                <div className="w-full h-full" style={{ animation: 'curtain-shimmer 4s ease-in-out infinite', animationDelay: '2s', background: `linear-gradient(to left, color-mix(in oklch, var(--accent) ${isDark ? "35%" : "20%"}, transparent), transparent)` }} />
             </div>
 
             {/* Top Bar */}
             <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-8 py-3">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${isDark ? "bg-purple-950/60 text-purple-300 border border-purple-500/30" : "bg-purple-100 text-purple-700"}`}>
+                <div
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${isDark ? "bg-slate-950/60" : "bg-white/70"}`}
+                    style={{ color: 'var(--accent)', borderColor: 'color-mix(in oklch, var(--accent) 35%, transparent)' }}
+                >
                     <Zap className="w-3.5 h-3.5 fill-current" />
                     LIVE CONCERT
                 </div>
@@ -417,9 +346,9 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                     <ThemeToggleButton
                         isDark={isDark}
                         onToggle={handleThemeToggle}
-                        className={`p-2.5 rounded-full shadow-lg transition-all hover:scale-110 ${isDark ? "bg-slate-900/90 text-yellow-400 border border-purple-500/30" : "bg-white/90 text-indigo-600 border border-gray-100"}`}
+                        className={`p-2.5 rounded-full shadow-lg transition-all hover:scale-110 ${isDark ? "bg-slate-900/90 text-yellow-400 border border-white/10" : "bg-white/90 text-indigo-600 border border-gray-100"}`}
                     />
-                    <Link href={`/${slug}/edit`} className={`p-2.5 rounded-full shadow-lg transition-all hover:scale-110 ${isDark ? "bg-slate-900/90 text-purple-400 border border-purple-500/30" : "bg-white/90 text-gray-600"}`}>
+                    <Link href={`/${slug}/edit`} className={`p-2.5 rounded-full shadow-lg transition-all hover:scale-110 ${isDark ? "bg-slate-900/90 text-gray-300 border border-white/10" : "bg-white/90 text-gray-600"}`}>
                         <Settings className="w-4 h-4" />
                     </Link>
                 </div>
@@ -427,7 +356,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
 
             {/* ACT NAVIGATION - Concert Setlist */}
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
-                <div className={`flex items-center gap-1 p-1.5 rounded-2xl border backdrop-blur-md ${isDark ? "bg-slate-950/80 border-purple-500/20" : "bg-white/80 border-purple-100/50 shadow-lg"}`}>
+                <div className={`flex items-center gap-1 p-1.5 rounded-2xl border backdrop-blur-md ${isDark ? "bg-slate-950/80 border-white/10" : "bg-white/80 border-gray-100 shadow-lg"}`}>
                     {acts.map((act) => {
                         const isActive = currentAct === act.id;
                         return (
@@ -436,11 +365,12 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                 onClick={() => switchAct(act.id)}
                                 className={`relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-bold transition-all duration-300 ${
                                     isActive
-                                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 scale-105"
+                                        ? "text-white shadow-lg scale-105"
                                         : isDark
-                                            ? "text-purple-300/60 hover:text-purple-200 hover:bg-slate-800/60"
-                                            : "text-gray-500 hover:text-purple-600 hover:bg-purple-50/50"
+                                            ? "text-gray-400 hover:text-gray-200 hover:bg-slate-800/60"
+                                            : "text-gray-500 hover:bg-gray-50"
                                 }`}
+                                style={isActive ? { backgroundColor: 'var(--accent)' } : undefined}
                             >
                                 {isActive && <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                                 <act.icon className="w-4 h-4" />
@@ -460,72 +390,57 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                     <div className="flex flex-col items-center justify-center min-h-[80vh] text-center space-y-8">
                         {/* Main Stage Spotlight on Idol */}
                         <div className="relative">
-                            <div className={`absolute inset-0 rounded-full blur-3xl ${isDark ? "bg-purple-500/20" : "bg-purple-300/30"}`} style={{ animation: 'stage-glow 3s ease-in-out infinite', width: '200%', height: '200%', top: '-50%', left: '-50%' }} />
-                            {/* Star burst SVG behind avatar */}
-                            <svg className="star-burst opacity-40" viewBox="0 0 200 200" fill="none">
-                                <g stroke={isDark ? "#f72585" : "#a855f7"} strokeWidth="1" opacity="0.5">
-                                    {Array.from({ length: 24 }).map((_, i) => {
-                                        const angle = (i * 15) * Math.PI / 180;
-                                        const x1 = 100 + Math.cos(angle) * 40;
-                                        const y1 = 100 + Math.sin(angle) * 40;
-                                        const x2 = 100 + Math.cos(angle) * 95;
-                                        const y2 = 100 + Math.sin(angle) * 95;
-                                        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />;
-                                    })}
-                                </g>
-                                <circle cx="100" cy="100" r="50" stroke={isDark ? "#f72585" : "#a855f7"} strokeWidth="0.5" strokeDasharray="2 4" opacity="0.4" fill="none" />
-                            </svg>
-                            <div className={`relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1 ${isDark ? "bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 shadow-[0_0_40px_rgba(168,85,247,0.5)]" : "bg-gradient-to-br from-purple-400 to-pink-400 border-4 border-white shadow-2xl"}`}>
+                            <div className="absolute inset-0 rounded-full blur-3xl" style={{ animation: 'stage-glow 3s ease-in-out infinite', width: '200%', height: '200%', top: '-50%', left: '-50%', background: 'color-mix(in oklch, var(--accent) 20%, transparent)' }} />
+                            <div
+                                className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1"
+                                style={{
+                                    border: `2px solid var(--accent)`,
+                                    boxShadow: `0 0 40px color-mix(in oklch, var(--accent) 55%, transparent)`,
+                                    background: isDark ? "rgba(255,255,255,0.03)" : "#fff",
+                                }}
+                            >
                                 {idolAvatar ? (
                                     <Image src={idolAvatar} alt={idolName} width={160} height={160} className="w-full h-full rounded-full object-cover" />
                                 ) : (
-                                    <div className={`w-full h-full rounded-full flex items-center justify-center text-4xl font-bold ${isDark ? "bg-slate-950 text-purple-400" : "bg-white text-purple-400"}`}>{idolName.charAt(0)}</div>
+                                    <div className={`w-full h-full rounded-full flex items-center justify-center text-4xl font-bold ${isDark ? "bg-slate-950" : "bg-white"}`} style={{ color: 'var(--accent)' }}>{idolName.charAt(0)}</div>
                                 )}
                             </div>
-                            {/* Marquee bulb ring */}
-                            <div className="marquee-ring">
-                                {Array.from({ length: 16 }).map((_, i) => {
-                                    const angle = (i * 22.5) * Math.PI / 180;
-                                    const radius = 76;
-                                    const x = 50 + Math.cos(angle) * radius;
-                                    const y = 50 + Math.sin(angle) * radius;
-                                    return (
-                                        <span
-                                            key={i}
-                                            className="marquee-bulb"
-                                            style={{
-                                                left: `${x}%`,
-                                                top: `${y}%`,
-                                                animationDelay: `${i * 0.1}s`,
-                                            }}
-                                        />
-                                    );
-                                })}
-                            </div>
                             {/* Stage floor reflection */}
-                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-32 h-4 rounded-full stage-floor blur-md" />
+                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-32 h-4 rounded-full blur-md" style={{ background: 'radial-gradient(ellipse at center top, color-mix(in oklch, var(--accent) 30%, transparent) 0%, transparent 60%)', animation: 'stageFloor 4s ease-in-out infinite' }} />
                             {/* Fan avatar overlap */}
                             <div className="absolute -bottom-2 -right-2">
-                                <div className={`w-12 h-12 rounded-full p-0.5 shadow-xl ${isDark ? "bg-gradient-to-br from-cyan-400 to-purple-500 shadow-[0_0_12px_rgba(6,182,212,0.6)]" : "bg-gradient-to-br from-cyan-300 to-purple-400 border-2 border-white"}`}>
+                                <div className={`w-12 h-12 rounded-full p-0.5 shadow-xl ${isDark ? "border border-white/10" : "border-2 border-white"}`} style={{ background: isDark ? "rgba(255,255,255,0.05)" : "#fff" }}>
                                     {fanAvatar ? (
                                         <Image src={fanAvatar} alt={fanName} width={48} height={48} className="w-full h-full rounded-full object-cover" />
                                     ) : (
-                                        <div className={`w-full h-full rounded-full flex items-center justify-center text-sm font-bold ${isDark ? "bg-slate-950 text-cyan-400" : "bg-white text-cyan-400"}`}>{fanName.charAt(0)}</div>
+                                        <div className={`w-full h-full rounded-full flex items-center justify-center text-sm font-bold ${isDark ? "bg-slate-950" : "bg-white"}`} style={{ color: 'var(--accent)' }}>{fanName.charAt(0)}</div>
                                     )}
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest ${isDark ? "bg-purple-950/60 text-purple-300 border border-purple-500/30" : "bg-purple-100 text-purple-700"}`}>
+                            <div
+                                className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border ${isDark ? "bg-slate-950/40" : "bg-white/60"}`}
+                                style={{ color: 'var(--accent)', borderColor: 'color-mix(in oklch, var(--accent) 40%, transparent)' }}
+                            >
                                 <Star className="w-3.5 h-3.5 fill-current" />
                                 Fandom: {fanName}
                             </div>
-                            <h1 className={`text-4xl sm:text-5xl font-black holo-text`}>{idolName}</h1>
-                            <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-dancing-script), cursive" }}>{title}</h2>
-                            {slogan && <p className={`italic text-sm max-w-md mx-auto ${isDark ? "text-purple-200/80" : "text-gray-500"}`}>&ldquo;{slogan}&rdquo;</p>}
+                            <h1
+                                className="text-4xl sm:text-5xl font-black"
+                                style={{
+                                    fontFamily: 'var(--font-display)',
+                                    color: 'var(--accent)',
+                                    textShadow: '0 0 24px color-mix(in oklch, var(--accent) 55%, transparent)',
+                                }}
+                            >
+                                {idolName}
+                            </h1>
+                            <h2 className={`text-2xl sm:text-3xl font-bold italic ${isDark ? "text-gray-200" : "text-gray-700"}`} style={{ fontFamily: 'var(--font-display)' }}>{title}</h2>
+                            {slogan && <p className={`italic text-sm max-w-md mx-auto ${isDark ? "text-gray-400" : "text-gray-500"}`}>&ldquo;{slogan}&rdquo;</p>}
                             {(debutDate || idolBirthday) && (
-                                <div className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] ${isDark ? "text-purple-200/70" : "text-gray-500"}`}>
+                                <div className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                                     {debutDate && <span>Debut: {formatVietnameseDate(debutDate)}</span>}
                                     {idolBirthday && <span>Sinh nhật: {formatVietnameseDate(idolBirthday)}</span>}
                                 </div>
@@ -540,6 +455,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                     className="eq-bar"
                                     style={{
                                         height: '100%',
+                                        background: 'var(--accent)',
                                         animationDelay: `${i * 0.08}s`,
                                         animationDuration: `${0.6 + (i % 3) * 0.2}s`,
                                     }}
@@ -550,28 +466,28 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                         {/* Stats Row */}
                         <div className="flex flex-wrap justify-center gap-4">
                             {daysSinceFan && (
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? "bg-slate-900/80 border border-purple-500/20" : "bg-white/80 border border-purple-100 shadow-sm"}`}>
-                                    <Calendar className={`w-4 h-4 ${isDark ? "text-purple-400" : "text-purple-500"}`} />
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? "bg-slate-900/80 border border-white/10" : "bg-white/80 border border-gray-100 shadow-sm"}`}>
+                                    <Calendar className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                                     <span className="text-sm font-bold">{daysSinceFan}</span>
-                                    <span className={`text-xs ${isDark ? "text-purple-300/70" : "text-gray-500"}`}>ngày là fan</span>
+                                    <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>ngày là fan</span>
                                 </div>
                             )}
-                            <button onClick={handleSendHeart} className={`relative flex items-center gap-2 px-4 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 ${isDark ? "bg-pink-950/40 border border-pink-500/20 text-pink-400" : "bg-pink-50 border border-pink-100 text-pink-500"}`}>
+                            <button onClick={handleSendHeart} className={`relative flex items-center gap-2 px-4 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 border ${isDark ? "bg-slate-900/60" : "bg-white/70"}`} style={{ color: 'var(--accent)', borderColor: 'color-mix(in oklch, var(--accent) 30%, transparent)' }}>
                                 <Star className="w-4 h-4 fill-current animate-pulse" />
                                 <span className="text-sm font-bold">{heartsCount.toLocaleString()}</span>
                                 {floatingHearts.map(heart => (
-                                    <span key={heart.id} className="absolute text-pink-500 text-sm pointer-events-none animate-floatUp" style={{ left: `${heart.x}px`, top: `${heart.y}px` }}>❤️</span>
+                                    <span key={heart.id} className="absolute text-sm pointer-events-none animate-floatUp" style={{ left: `${heart.x}px`, top: `${heart.y}px` }}>❤️</span>
                                 ))}
                             </button>
                         </div>
 
                         {/* Countdown */}
                         {countdown && nextAnniversary && (
-                            <div className={`holo-border w-full max-w-md p-4 rounded-2xl border ${isDark ? "bg-slate-900/80 border-cyan-500/25 backdrop-blur-md" : "bg-white/80 backdrop-blur-md border border-pink-100 shadow-md"}`}>
+                            <div className={`w-full max-w-md p-4 rounded-2xl border ${isDark ? "bg-slate-900/80 backdrop-blur-md" : "bg-white/80 backdrop-blur-md shadow-md"}`} style={{ borderColor: 'color-mix(in oklch, var(--accent) 30%, transparent)' }}>
                                 <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold tracking-wider uppercase mb-3">
-                                    <Sparkles className={`w-3.5 h-3.5 animate-pulse ${isDark ? "text-cyan-400" : "text-purple-500"}`} />
-                                    <span className={isDark ? "text-cyan-300" : "text-purple-600"}>Kỷ niệm Debut sắp tới</span>
-                                    <span className={`ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded ${isDark ? "bg-cyan-950/60 text-cyan-400 border border-cyan-500/30" : "bg-purple-100 text-purple-500"}`}>VIP</span>
+                                    <Sparkles className="w-3.5 h-3.5 animate-pulse" style={{ color: 'var(--accent)' }} />
+                                    <span style={{ color: 'var(--accent)' }}>Kỷ niệm Debut sắp tới</span>
+                                    <span className={`ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded border ${isDark ? "bg-slate-950/60" : "bg-white"}`} style={{ color: 'var(--accent)', borderColor: 'color-mix(in oklch, var(--accent) 30%, transparent)' }}>VIP</span>
                                 </div>
                                 <div className="flex gap-2 justify-center">
                                     {[
@@ -581,7 +497,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                         { label: "giây", value: countdown.seconds },
                                     ].map((item, idx) => (
                                         <div key={idx} className="flex flex-col items-center flex-1">
-                                            <div className={`text-lg font-black w-full py-1.5 rounded-xl text-center ${isDark ? "bg-slate-950/80 text-cyan-400 border border-cyan-500/20" : "bg-purple-50 text-purple-600"}`}>
+                                            <div className={`text-lg font-black w-full py-1.5 rounded-xl text-center border ${isDark ? "bg-slate-950/80" : "bg-white"}`} style={{ color: 'var(--accent)', borderColor: 'color-mix(in oklch, var(--accent) 20%, transparent)' }}>
                                                 {String(item.value).padStart(2, '0')}
                                             </div>
                                             <span className={`text-[9px] mt-0.5 uppercase font-semibold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{item.label}</span>
@@ -598,9 +514,13 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                 { label: "Cột mốc", value: data.timelines.length, act: "timeline" as StageAct },
                                 { label: "Thư từ fan", value: data.letters.length, act: "letters" as StageAct },
                             ].map((stat, idx) => (
-                                <button key={idx} onClick={() => switchAct(stat.act)} className={`p-3 rounded-xl border transition-all hover:scale-105 ${isDark ? "bg-slate-900/70 border-purple-500/20 hover:border-purple-500/40" : "bg-white/70 border border-white/30 hover:border-purple-300 shadow-sm"}`}>
+                                <button
+                                    key={idx}
+                                    onClick={() => switchAct(stat.act)}
+                                    className={`p-3 rounded-xl border transition-all hover:scale-105 ${isDark ? "bg-slate-900/70 border-white/10" : "bg-white/70 border-white/30 shadow-sm"}`}
+                                >
                                     <div className="text-lg font-bold">{stat.value}</div>
-                                    <div className={`text-[10px] ${isDark ? "text-purple-300/70" : "text-gray-500"}`}>{stat.label}</div>
+                                    <div className={`text-[10px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>{stat.label}</div>
                                 </button>
                             ))}
                         </div>
@@ -611,8 +531,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                 {currentAct === "gallery" && (
                     <div className="py-8 space-y-6">
                         <div className="text-center space-y-2">
-                            <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-purple-400" : "text-purple-500"}`}>Act II</span>
-                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`}>Những Khoảnh Khắc Đáng Nhớ</h2>
+                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Act II</span>
+                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`} style={{ fontFamily: 'var(--font-display)' }}>Những Khoảnh Khắc Đáng Nhớ</h2>
                         </div>
                         {data.galleries.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
@@ -627,12 +547,12 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                         <div
                                             key={item.id}
                                             onClick={() => openLightbox(index)}
-                                            className={`group p-2 pb-6 rounded-xl shadow-md hover:shadow-xl transition-all hover:scale-105 hover:rotate-0 duration-300 cursor-pointer border ${rotClasses[index % 6]} ${isDark ? "bg-slate-900/90 border-purple-500/20" : "bg-white border-gray-100"}`}
+                                            className={`group p-2 pb-6 rounded-xl shadow-md hover:shadow-xl transition-all hover:scale-105 hover:rotate-0 duration-300 cursor-pointer border ${rotClasses[index % 6]} ${isDark ? "bg-slate-900/90 border-white/10" : "bg-white border-gray-100"}`}
                                         >
                                             <div className="relative aspect-square rounded-lg overflow-hidden">
                                                 <Image src={item.image_url} alt={item.caption || "Memory"} fill className="object-cover transition-transform duration-300" />
                                             </div>
-                                            <p className={`text-xs font-mono font-medium truncate mt-2 text-center px-1 ${isDark ? "text-purple-300" : "text-gray-600"}`}>
+                                            <p className={`text-xs font-mono font-medium truncate mt-2 text-center px-1 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                                                 {item.caption || `Memory #${index + 1}`}
                                             </p>
                                         </div>
@@ -647,8 +567,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                 {currentAct === "timeline" && (
                     <div className="py-8 space-y-6">
                         <div className="text-center space-y-2">
-                            <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-purple-400" : "text-purple-500"}`}>Act III</span>
-                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`}>Hành Trình Sự Nghiệp</h2>
+                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Act III</span>
+                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`} style={{ fontFamily: 'var(--font-display)' }}>Hành Trình Sự Nghiệp</h2>
                         </div>
                         {data.timelines.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
@@ -657,48 +577,48 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                             </div>
                         ) : (
                             <div className="relative max-w-2xl mx-auto">
-                                <div className={`absolute left-6 top-0 bottom-0 w-0.5 ${isDark ? "bg-purple-900/50" : "bg-purple-200"}`} />
+                                <div className="absolute left-6 top-0 bottom-0 w-0.5" style={{ background: 'color-mix(in oklch, var(--accent) 25%, transparent)' }} />
                                 <div className="space-y-8">
                                     {data.timelines.map((event) => {
                                         const isAward = (event.title + " " + (event.description || "")).toLowerCase().match(/(giải|cúp|trophy|award|daesang|bonsang|win|thắng|first place|hạng 1|top 1|số 1)/);
                                         const isRelease = (event.title + " " + (event.description || "")).toLowerCase().match(/(album|single|mv|release|song|nhạc|bài hát|đĩa|debut)/);
-                                        let icon = <Star className="w-4 h-4 text-purple-500 fill-purple-300" />;
-                                        let dotBg = "from-purple-400 to-pink-400 border-white";
+                                        let icon = <Star className="w-4 h-4 fill-current" style={{ color: 'var(--accent)' }} />;
+                                        let dotStyle: CSSProperties = { background: 'var(--accent)', borderColor: '#fff' };
                                         let glowClass = "";
                                         if (isAward) {
                                             icon = <Trophy className="w-4 h-4 text-yellow-600 fill-yellow-200" />;
-                                            dotBg = "from-yellow-400 to-amber-500 border-yellow-200";
+                                            dotStyle = { background: 'linear-gradient(to bottom right, #facc15, #d97706)', borderColor: '#fef3c7' };
                                             glowClass = "shadow-[0_0_10px_rgba(245,158,11,0.6)]";
                                         } else if (isRelease) {
                                             icon = <Disc className="w-4 h-4 text-cyan-600 animate-spin-slower" />;
-                                            dotBg = "from-cyan-400 to-blue-500 border-cyan-200";
+                                            dotStyle = { background: 'linear-gradient(to bottom right, #22d3ee, #3b82f6)', borderColor: '#a5f3fc' };
                                             glowClass = "shadow-[0_0_10px_rgba(6,182,212,0.6)]";
                                         }
                                         return (
                                             <div key={event.id} className="relative pl-16">
-                                                <div className={`absolute left-2 w-9 h-9 rounded-full bg-gradient-to-br ${dotBg} border-2 shadow-md flex items-center justify-center z-10 ${glowClass}`}>
+                                                <div className={`absolute left-2 w-9 h-9 rounded-full border-2 shadow-md flex items-center justify-center z-10 ${glowClass}`} style={dotStyle}>
                                                     {icon}
                                                 </div>
-                                                <div className={`relative rounded-2xl shadow-md transition-all overflow-hidden ${isDark ? (isAward ? "bg-gradient-to-br from-slate-900 to-amber-950/20 border border-amber-500/20 text-white" : isRelease ? "bg-gradient-to-br from-slate-900 to-cyan-950/20 border border-cyan-500/20 text-white" : "bg-slate-900/90 border border-purple-500/15 text-white") : "bg-white border border-gray-100 text-gray-800"}`}>
+                                                <div className={`relative rounded-2xl shadow-md transition-all overflow-hidden border ${isDark ? (isAward ? "bg-gradient-to-br from-slate-900 to-amber-950/20 border-amber-500/20 text-white" : isRelease ? "bg-gradient-to-br from-slate-900 to-cyan-950/20 border-cyan-500/20 text-white" : "bg-slate-900/90 text-white") : "bg-white border-gray-100 text-gray-800"}`} style={!isDark || (!isAward && !isRelease) ? { borderColor: isDark ? 'color-mix(in oklch, var(--accent) 15%, transparent)' : undefined } : undefined}>
                                                     {/* Ticket header strip */}
-                                                    <div className={`flex items-center justify-between px-4 py-1.5 ${isDark ? "bg-purple-950/40" : "bg-purple-50"} border-b border-dashed ${isDark ? "border-purple-500/30" : "border-purple-200"}`}>
-                                                        <span className={`text-[9px] font-mono font-bold tracking-widest uppercase ${isDark ? "text-purple-300" : "text-purple-600"}`}>
+                                                    <div className={`flex items-center justify-between px-4 py-1.5 border-b border-dashed ${isDark ? "bg-slate-950/30" : "bg-gray-50"}`} style={{ borderColor: 'color-mix(in oklch, var(--accent) 25%, transparent)' }}>
+                                                        <span className="text-[9px] font-mono font-bold tracking-widest uppercase" style={{ color: 'var(--accent)' }}>
                                                             {isAward ? "AWARD" : isRelease ? "RELEASE" : "EVENT"}
                                                         </span>
-                                                        <span className={`text-[9px] font-mono ${isDark ? "text-purple-400/70" : "text-purple-400"}`}>
+                                                        <span className={`text-[9px] font-mono ${isDark ? "text-gray-400" : "text-gray-400"}`}>
                                                             #{String(event.id).slice(-6).toUpperCase()}
                                                         </span>
                                                     </div>
                                                     <div className="p-5">
-                                                        <div className={`text-xs font-semibold mb-1 flex items-center gap-1.5 ${isDark ? "text-purple-300" : "text-purple-400"}`}>
+                                                        <div className="text-xs font-semibold mb-1 flex items-center gap-1.5" style={{ color: 'var(--accent)' }}>
                                                             <Calendar className="w-3 h-3" />
                                                             {new Date(event.date).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" })}
                                                         </div>
                                                         <h3 className="text-lg font-bold mb-2">{event.title}</h3>
-                                                        {event.description && <p className={`text-sm leading-relaxed ${isDark ? "text-purple-200/80" : "text-gray-500"}`}>{event.description}</p>}
+                                                        {event.description && <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-500"}`}>{event.description}</p>}
                                                         {event.image_url && (
                                                             <div className="mt-4">
-                                                                <div className={`w-48 h-48 rounded-xl overflow-hidden border ${isDark ? "bg-slate-950 border-purple-500/20" : "bg-gray-50 border-gray-100"}`}>
+                                                                <div className={`w-48 h-48 rounded-xl overflow-hidden border ${isDark ? "bg-slate-950 border-white/10" : "bg-gray-50 border-gray-100"}`}>
                                                                     <Image src={event.image_url} alt={event.title} width={192} height={192} className="w-full h-full object-contain" />
                                                                 </div>
                                                             </div>
@@ -709,9 +629,9 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                                             </div>
                                                         )}
                                                         {event.audio_url && (
-                                                            <div className={`mt-4 p-3.5 rounded-xl border ${isDark ? "bg-purple-950/30 border-purple-500/20 text-white" : "bg-purple-50 border-purple-100"}`}>
+                                                            <div className={`mt-4 p-3.5 rounded-xl border ${isDark ? "text-white" : ""}`} style={{ background: isDark ? 'color-mix(in oklch, var(--accent) 10%, transparent)' : 'color-mix(in oklch, var(--accent) 6%, white)', borderColor: 'color-mix(in oklch, var(--accent) 25%, transparent)' }}>
                                                                 <div className="flex items-center gap-2 mb-2">
-                                                                    <Mic className={`w-4 h-4 ${isDark ? "text-pink-400" : "text-purple-500"}`} />
+                                                                    <Mic className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                                                                     <span className="text-sm font-semibold">Ghi âm sự kiện</span>
                                                                 </div>
                                                                 <audio src={event.audio_url} controls className="w-full h-10" />
@@ -719,11 +639,11 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                                         )}
                                                     </div>
                                                     {/* Ticket perforation bottom */}
-                                                    <div className={`ticket-perforation px-4 py-2 flex items-center justify-between ${isDark ? "border-purple-500/30 bg-purple-950/30" : "border-purple-200 bg-purple-50/50"}`}>
-                                                        <span className={`text-[9px] font-mono ${isDark ? "text-purple-400/70" : "text-purple-400"}`}>ADMIT ONE</span>
+                                                    <div className={`ticket-perforation px-4 py-2 flex items-center justify-between ${isDark ? "bg-slate-950/30" : "bg-gray-50"}`} style={{ borderColor: 'color-mix(in oklch, var(--accent) 25%, transparent)' }}>
+                                                        <span className="text-[9px] font-mono text-gray-400">ADMIT ONE</span>
                                                         <div className="flex items-center gap-1">
-                                                            <Star className={`w-2.5 h-2.5 ${isDark ? "text-pink-400" : "text-purple-400"} fill-current`} />
-                                                            <Star className={`w-2 h-2 ${isDark ? "text-purple-400" : "text-purple-300"} fill-current`} />
+                                                            <Star className="w-2.5 h-2.5 fill-current" style={{ color: 'var(--accent)' }} />
+                                                            <Star className="w-2 h-2 fill-current opacity-50" style={{ color: 'var(--accent)' }} />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -740,8 +660,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                 {currentAct === "game" && (
                     <div className="py-8 space-y-6">
                         <div className="text-center space-y-2">
-                            <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-purple-400" : "text-purple-500"}`}>Act IV</span>
-                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`}>Fandom Quiz</h2>
+                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Act IV</span>
+                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`} style={{ fontFamily: 'var(--font-display)' }}>Fandom Quiz</h2>
                         </div>
                         {gameTemplateId === "A" ? (
                             <IdolGameSection
@@ -769,8 +689,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                 {currentAct === "letters" && (
                     <div className="py-8 space-y-6">
                         <div className="text-center space-y-2">
-                            <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-purple-400" : "text-purple-500"}`}>Act V</span>
-                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`}>Gửi Idol</h2>
+                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Act V</span>
+                            <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`} style={{ fontFamily: 'var(--font-display)' }}>Gửi Idol</h2>
                         </div>
                         <IdolLetterBox slug={slug} initialLetters={data.letters} isDark={isDark} />
                     </div>
@@ -780,8 +700,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
             {/* Lightbox */}
             {lightboxIndex !== null && data.galleries[lightboxIndex] && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
-                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-slate-900 text-white border border-purple-500/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white flex-shrink-0">
+                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col border ${isDark ? "bg-slate-900 text-white border-white/10" : "bg-white text-gray-800 border-transparent"}`} onClick={(e) => e.stopPropagation()}>
+                        <div className="p-4 text-white flex-shrink-0" style={{ background: 'var(--accent)' }}>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium">{lightboxIndex + 1} / {data.galleries.length}</span>
                                 <button onClick={closeLightbox} className="hover:scale-110 transition-transform"><X className="w-5 h-5" /></button>
@@ -793,11 +713,11 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                             </div>
                         </div>
                         {data.galleries[lightboxIndex].caption && (
-                            <div className={`px-4 py-2 text-center text-sm ${isDark ? "text-purple-200" : "text-gray-600"}`}>{data.galleries[lightboxIndex].caption}</div>
+                            <div className={`px-4 py-2 text-center text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>{data.galleries[lightboxIndex].caption}</div>
                         )}
-                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-purple-500/20" : "border-gray-100"}`}>
-                            <button onClick={prevImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-purple-950/30 text-purple-400" : "bg-purple-50 text-purple-500"}`}><ChevronLeft className="w-5 h-5" /></button>
-                            <button onClick={nextImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-purple-950/30 text-purple-400" : "bg-purple-50 text-purple-500"}`}><ChevronRight className="w-5 h-5" /></button>
+                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                            <button onClick={prevImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-slate-950/40" : "bg-gray-50"}`} style={{ color: 'var(--accent)' }}><ChevronLeft className="w-5 h-5" /></button>
+                            <button onClick={nextImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-slate-950/40" : "bg-gray-50"}`} style={{ color: 'var(--accent)' }}><ChevronRight className="w-5 h-5" /></button>
                         </div>
                     </div>
                 </div>

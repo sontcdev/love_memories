@@ -190,21 +190,31 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-yellow-400 rounded-full blur-lg opacity-50 animate-pulse"></div>
-                        <div className="relative w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg border-2 border-yellow-300">
+                        <div
+                            className="absolute inset-0 rounded-full blur-lg opacity-50 animate-pulse"
+                            style={{ background: "var(--accent)" }}
+                        ></div>
+                        <div
+                            className="relative w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2"
+                            style={{ background: "var(--accent)", borderColor: "color-mix(in oklch, var(--accent) 60%, white 40%)" }}
+                        >
                             <Mail className="w-5 h-5 text-white" />
                         </div>
                     </div>
                     <div>
-                        <h2 className={`text-xl font-bold ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
+                        <h2
+                            className={`text-xl font-bold ${isDark ? "" : "text-gray-800"}`}
+                            style={{ color: isDark ? "var(--accent)" : undefined, fontFamily: "var(--font-display)" }}
+                        >
                             Fan Messages
                         </h2>
-                        <span className={`text-sm ${isDark ? "text-purple-300" : "text-gray-400"}`}>({letters.length})</span>
+                        <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-400"}`}>({letters.length})</span>
                     </div>
                 </div>
                 <button
                     onClick={() => setShowCreateForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-medium shadow-md hover:shadow-xl transition-all hover:scale-105 relative overflow-hidden group"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-white font-medium shadow-md hover:shadow-xl transition-all hover:scale-105 relative overflow-hidden group"
+                    style={{ background: "var(--accent)" }}
                 >
                     <Plus className="w-4 h-4 relative z-10" />
                     <span className="relative z-10">Send Message</span>
@@ -214,12 +224,15 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
 
             {showCreateForm && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className={`${isDark ? "bg-gradient-to-br from-purple-900 to-indigo-900 text-slate-100 border border-yellow-400/50" : "bg-white text-gray-900"} rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col`}>
-                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 text-white flex-shrink-0">
+                    <div
+                        className={`${isDark ? "bg-slate-900 text-slate-100 border" : "bg-white text-gray-900"} rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col`}
+                        style={isDark ? { borderColor: "color-mix(in oklch, var(--accent) 40%, transparent)" } : undefined}
+                    >
+                        <div className="p-4 text-white flex-shrink-0" style={{ background: "var(--accent)" }}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Star className="w-5 h-5 fill-current" />
-                                    <h3 className="text-lg font-semibold">Send Fan Message</h3>
+                                    <h3 className="text-lg font-semibold" style={{ fontFamily: "var(--font-display)" }}>Send Fan Message</h3>
                                 </div>
                                 <button onClick={() => setShowCreateForm(false)}>
                                     <X className="w-5 h-5" />
@@ -228,7 +241,7 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                         </div>
                         <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
-                                <label className={`block text-sm font-medium ${isDark ? "text-purple-200" : "text-gray-700"} mb-1`}>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1`}>
                                     From <span className="text-gray-400 text-xs ml-1">({newSender.length}/50)</span>
                                 </label>
                                 <input
@@ -237,11 +250,11 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                     onChange={(e) => setNewSender(e.target.value.slice(0, 50))}
                                     placeholder="Your fan name..."
                                     maxLength={50}
-                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-purple-500 bg-purple-900/50 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none mb-3`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none mb-3`}
                                 />
                             </div>
                             <div>
-                                <label className={`block text-sm font-medium ${isDark ? "text-purple-200" : "text-gray-700"} mb-1`}>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1`}>
                                     Title <span className="text-gray-400 text-xs">({newTitle.length}/50)</span>
                                 </label>
                                 <input
@@ -250,11 +263,11 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                     onChange={(e) => setNewTitle(e.target.value.slice(0, 50))}
                                     placeholder="Message title..."
                                     maxLength={50}
-                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-purple-500 bg-purple-900/50 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none`}
                                 />
                             </div>
                             <div>
-                                <label className={`block text-sm font-medium ${isDark ? "text-purple-200" : "text-gray-700"} mb-1`}>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1`}>
                                     Message <span className="text-gray-400 text-xs">({newContent.length}/1000)</span>
                                 </label>
                                 <textarea
@@ -263,13 +276,13 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                     placeholder="Write your message to the idol..."
                                     maxLength={1000}
                                     rows={6}
-                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-purple-500 bg-purple-900/50 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none resize-none`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none resize-none`}
                                 />
                             </div>
                             <VideoInput value={newVideoUrl} onChange={setNewVideoUrl} />
                             <VoiceRecorder slug={slug} onUploadComplete={setNewAudioUrl} />
                             <div>
-                                <label className={`block text-sm font-medium ${isDark ? "text-purple-200" : "text-gray-700"} mb-1 flex items-center gap-2`}>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 flex items-center gap-2`}>
                                     <Calendar className="w-4 h-4" />
                                     Unlock date (optional)
                                 </label>
@@ -278,21 +291,22 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                     value={newUnlockDate}
                                     onChange={(e) => setNewUnlockDate(e.target.value)}
                                     min={new Date().toISOString().split("T")[0]}
-                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-purple-500 bg-purple-900/50 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none`}
                                 />
                             </div>
                         </div>
-                        <div className={`p-4 border-t ${isDark ? "border-purple-700" : "border-gray-200"} flex justify-end gap-2 flex-shrink-0`}>
+                        <div className={`p-4 border-t ${isDark ? "border-white/10" : "border-gray-200"} flex justify-end gap-2 flex-shrink-0`}>
                             <button
                                 onClick={() => setShowCreateForm(false)}
-                                className={`px-4 py-2 rounded-lg ${isDark ? "bg-purple-800 text-purple-200 hover:bg-purple-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"} transition-colors`}
+                                className={`px-4 py-2 rounded-lg ${isDark ? "bg-white/10 text-gray-200 hover:bg-white/20" : "bg-gray-100 text-gray-700 hover:bg-gray-200"} transition-colors`}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleCreate}
                                 disabled={isCreating || !newTitle.trim() || !newContent.trim()}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-yellow-500 hover:to-orange-600 transition-all"
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                style={{ background: "var(--accent)" }}
                             >
                                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                 Send
@@ -312,19 +326,23 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                         <div
                             key={letter.id}
                             className={`relative group rounded-2xl overflow-hidden transition-all ${
-                                locked 
-                                    ? "bg-gradient-to-br from-gray-800 to-gray-900 opacity-70" 
-                                    : isDark 
-                                        ? "bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border border-yellow-400/30 shadow-lg hover:shadow-yellow-400/20" 
-                                        : "bg-white border-2 border-yellow-200 shadow-lg hover:shadow-xl"
+                                locked
+                                    ? "bg-gradient-to-br from-gray-800 to-gray-900 opacity-70"
+                                    : isDark
+                                        ? "bg-slate-900/80 border shadow-lg"
+                                        : "bg-white border-2 shadow-lg hover:shadow-xl"
                             }`}
+                            style={!locked ? { borderColor: "color-mix(in oklch, var(--accent) 30%, transparent)" } : undefined}
                         >
                             {locked && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-3 shadow-lg border-4 border-yellow-300">
+                                    <div
+                                        className="w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-lg border-4"
+                                        style={{ background: "var(--accent)", borderColor: "color-mix(in oklch, var(--accent) 60%, white 40%)" }}
+                                    >
                                         <Lock className="w-8 h-8 text-white" />
                                     </div>
-                                    <p className={`text-sm font-medium ${isDark ? "text-purple-300" : "text-gray-600"}`}>
+                                    <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                                         Opens on {formatUnlockDate(letter.unlock_date!)}
                                     </p>
                                 </div>
@@ -334,32 +352,38 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                 <div className="flex items-start justify-between gap-3 mb-3">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                            <h3 className={`font-bold text-lg ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
+                                            <Star className="w-4 h-4 fill-current" style={{ color: "var(--accent)" }} />
+                                            <h3
+                                                className={`font-bold text-lg ${isDark ? "" : "text-gray-800"}`}
+                                                style={{ color: isDark ? "var(--accent)" : undefined }}
+                                            >
                                                 {letter.title}
                                             </h3>
                                         </div>
                                         {letter.sender && (
-                                            <p className={`text-sm ${isDark ? "text-purple-300" : "text-gray-500"} italic`}>
+                                            <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"} italic`}>
                                                 From: {letter.sender}
                                             </p>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {letter.replies.length > 0 && (
-                                            <span className="flex items-center gap-1 px-2 py-1 bg-yellow-400/20 text-yellow-300 rounded-full text-xs font-medium">
+                                            <span
+                                                className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                                                style={{ background: "color-mix(in oklch, var(--accent) 20%, transparent)", color: "var(--accent)" }}
+                                            >
                                                 <MessageCircle className="w-3 h-3" />
                                                 {letter.replies.length}
                                             </span>
                                         )}
                                         <button
                                             onClick={() => setExpandedId(expanded ? null : letter.id)}
-                                            className={`p-1.5 rounded-lg ${isDark ? "hover:bg-purple-800" : "hover:bg-yellow-50"} transition-colors`}
+                                            className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"} transition-colors`}
                                         >
                                             {expanded ? (
-                                                <ChevronUp className={`w-5 h-5 ${isDark ? "text-purple-300" : "text-gray-500"}`} />
+                                                <ChevronUp className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                                             ) : (
-                                                <ChevronDown className={`w-5 h-5 ${isDark ? "text-purple-300" : "text-gray-500"}`} />
+                                                <ChevronDown className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                                             )}
                                         </button>
                                     </div>
@@ -367,7 +391,7 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
 
                                 {expanded && !locked && (
                                     <div className="space-y-4 mt-4">
-                                        <div className={`prose prose-sm max-w-none ${isDark ? "text-purple-100" : "text-gray-700"} whitespace-pre-wrap leading-relaxed`}>
+                                        <div className={`prose prose-sm max-w-none ${isDark ? "text-gray-200" : "text-gray-700"} whitespace-pre-wrap leading-relaxed`}>
                                             {letter.content}
                                         </div>
 
@@ -378,13 +402,16 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                         )}
 
                                         {letter.audio_url && (
-                                            <div className={`rounded-xl p-4 ${isDark ? "bg-purple-800" : "bg-yellow-50"}`}>
+                                            <div className={`rounded-xl p-4 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
                                                 <audio controls className="w-full" src={letter.audio_url} />
                                             </div>
                                         )}
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-yellow-400/30">
-                                            <span className={`text-xs ${isDark ? "text-purple-400" : "text-gray-400"}`}>
+                                        <div
+                                            className="flex items-center justify-between pt-2 border-t"
+                                            style={{ borderColor: "color-mix(in oklch, var(--accent) 25%, transparent)" }}
+                                        >
+                                            <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                                                 {new Date(letter.created_at).toLocaleDateString("vi-VN")}
                                             </span>
                                             <button
@@ -397,21 +424,24 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
 
                                         {letter.replies.length > 0 && (
                                             <div className="space-y-3 pt-3">
-                                                <h4 className={`text-sm font-semibold ${isDark ? "text-purple-200" : "text-gray-700"}`}>
+                                                <h4 className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                                                     Replies ({letter.replies.length})
                                                 </h4>
                                                 {letter.replies.map((reply) => (
                                                     <div
                                                         key={reply.id}
-                                                        className={`flex gap-3 ${isDark ? "bg-purple-800/50" : "bg-yellow-50"} rounded-xl p-3`}
+                                                        className={`flex gap-3 ${isDark ? "bg-white/5" : "bg-gray-50"} rounded-xl p-3`}
                                                     >
-                                                        <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-yellow-300">
+                                                        <div
+                                                            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border-2"
+                                                            style={{ background: "var(--accent)", borderColor: "color-mix(in oklch, var(--accent) 60%, white 40%)" }}
+                                                        >
                                                             <Star className="w-4 h-4 text-white fill-current" />
                                                         </div>
                                                         <div className="flex-1">
-                                                            <p className={`text-sm ${isDark ? "text-purple-100" : "text-gray-700"}`}>{reply.content}</p>
+                                                            <p className={`text-sm ${isDark ? "text-gray-200" : "text-gray-700"}`}>{reply.content}</p>
                                                             <div className="flex items-center justify-between mt-1">
-                                                                <span className={`text-xs ${isDark ? "text-purple-400" : "text-gray-400"}`}>
+                                                                <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                                                                     {new Date(reply.created_at).toLocaleDateString("vi-VN")}
                                                                 </span>
                                                                 <button
@@ -430,7 +460,8 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                         {!isReplying ? (
                                             <button
                                                 onClick={() => setReplyingTo(letter.id)}
-                                                className="w-full py-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-medium hover:from-yellow-500 hover:to-orange-600 transition-all"
+                                                className="w-full py-2 rounded-lg text-white font-medium transition-all"
+                                                style={{ background: "var(--accent)" }}
                                             >
                                                 <div className="flex items-center justify-center gap-2">
                                                     <MessageCircle className="w-4 h-4" />
@@ -445,10 +476,10 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                                     placeholder="Write a reply..."
                                                     maxLength={300}
                                                     rows={3}
-                                                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? "border-purple-500 bg-purple-900/50 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none resize-none text-sm`}
+                                                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none resize-none text-sm`}
                                                 />
                                                 <div className="flex items-center justify-between">
-                                                    <span className={`text-xs ${isDark ? "text-purple-400" : "text-gray-400"}`}>
+                                                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                                                         {replyContent.length}/300
                                                     </span>
                                                     <div className="flex gap-2">
@@ -457,14 +488,15 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                                                 setReplyingTo(null);
                                                                 setReplyContent("");
                                                             }}
-                                                            className={`px-3 py-1.5 rounded-lg ${isDark ? "bg-purple-800 text-purple-200" : "bg-gray-100 text-gray-700"} text-sm`}
+                                                            className={`px-3 py-1.5 rounded-lg ${isDark ? "bg-white/10 text-gray-200" : "bg-gray-100 text-gray-700"} text-sm`}
                                                         >
                                                             Cancel
                                                         </button>
                                                         <button
                                                             onClick={() => handleReply(letter.id)}
                                                             disabled={isSendingReply || !replyContent.trim()}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium disabled:opacity-50"
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-sm font-medium disabled:opacity-50"
+                                                            style={{ background: "var(--accent)" }}
                                                         >
                                                             {isSendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                                                             Send
@@ -481,8 +513,8 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                 })}
 
                 {letters.length === 0 && (
-                    <div className={`text-center py-12 ${isDark ? "text-purple-300" : "text-gray-400"}`}>
-                        <Star className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <div className={`text-center py-12 ${isDark ? "text-gray-400" : "text-gray-400"}`}>
+                        <Star className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: "var(--accent)" }} />
                         <p>No fan messages yet</p>
                         <p className="text-sm mt-1">Be the first to send a message!</p>
                     </div>
