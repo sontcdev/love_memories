@@ -11,10 +11,10 @@ import { TemplateLoading } from "@/components/templates/TemplateLoading";
 // template in the `/[slug]` bundle. SSR stays on (next/dynamic defaults to it), so
 // the initial HTML is unchanged — only the client chunks are split.
 const LoveTemplate = dynamic(() => import("@/components/templates/love/LoveTemplate").then((m) => m.LoveTemplate));
-const Love2Template = dynamic(() => import("@/components/templates/love2/Love2Template").then((m) => m.Love2Template));
-const IdolTemplate = dynamic(() => import("@/components/templates/idol/IdolTemplate").then((m) => m.IdolTemplate));
+const Love2Template = dynamic(() => import("@/components/templates/love2/Love2TemplateV2").then((m) => m.Love2TemplateV2));
+const IdolTemplate = dynamic(() => import("@/components/templates/idol/IdolTemplateV2").then((m) => m.IdolTemplateV2));
 const GradPersonalTemplate = dynamic(() => import("@/components/templates/grad-personal/GradPersonalTemplate").then((m) => m.GradPersonalTemplate));
-const GradClassTemplate = dynamic(() => import("@/components/templates/grad-class/GradClassTemplate").then((m) => m.GradClassTemplate));
+const GradClassTemplate = dynamic(() => import("@/components/templates/grad-class/GradClassTemplateV2").then((m) => m.GradClassTemplateV2));
 const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-group/GradGroupTemplate").then((m) => m.GradGroupTemplate));
 const WeddingTemplate = dynamic(() => import("@/components/templates/wedding/WeddingTemplate").then((m) => m.WeddingTemplate));
 const TravelTemplate = dynamic(() => import("@/components/templates/travel/TravelTemplate").then((m) => m.TravelTemplate));

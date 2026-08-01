@@ -153,20 +153,21 @@ export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, i
             <div className="space-y-6">
                 <div className="text-center">
                     <div className="relative inline-block">
-                        <div className="absolute inset-0 bg-yellow-400 rounded-full blur-2xl opacity-60 animate-pulse"></div>
-                        <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4 shadow-2xl border-4 border-yellow-300 animate-bounce">
+                        <div className="absolute inset-0 rounded-full blur-2xl opacity-60 animate-pulse" style={{ background: 'var(--accent)' }}></div>
+                        <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 shadow-2xl border-4 animate-bounce" style={{ background: 'var(--accent)', borderColor: 'color-mix(in oklch, var(--accent) 40%, white)' }}>
                             <Music className="w-10 h-10 text-white" />
                         </div>
                     </div>
-                    <h2 className={`text-2xl font-bold mb-2 ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
+                    <h2 className={`text-2xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>
                         Fan Quiz
                     </h2>
-                    <p className={`mb-6 ${isDark ? "text-purple-300" : "text-gray-600"}`}>
+                    <p className={`mb-6 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                         Kiểm tra độ hiểu fandom và câu chuyện idol.
                     </p>
                     <button
                         onClick={initializeGame}
-                        className="px-8 py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-lg shadow-lg hover:shadow-2xl hover:shadow-yellow-400/50 transition-all hover:scale-105 relative overflow-hidden group"
+                        className="px-8 py-3 rounded-xl text-white font-bold text-lg shadow-lg transition-all hover:scale-105 relative overflow-hidden group"
+                        style={{ background: 'var(--accent)' }}
                     >
                         <span className="relative z-10">Bắt đầu</span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
@@ -203,21 +204,21 @@ export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, i
                     </div>
                 )}
 
-                <div className={`relative text-center p-8 rounded-2xl ${isDark ? "bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border border-yellow-400/50" : "bg-gradient-to-br from-yellow-50 to-orange-50 border-4 border-yellow-200"}`}>
+                <div className={`relative text-center p-8 rounded-2xl border ${isDark ? "bg-slate-900/80" : "bg-white"}`} style={{ borderColor: 'color-mix(in oklch, var(--accent) 35%, transparent)' }}>
                     <div className="relative inline-block">
-                        <div className={`absolute inset-0 blur-2xl opacity-60 animate-pulse rounded-full ${isPerfect ? "bg-yellow-400" : "bg-orange-400"}`}></div>
-                        <Trophy className={`relative w-20 h-20 mx-auto mb-4 ${isPerfect ? "text-yellow-400 animate-bounce" : "text-orange-400"}`} />
+                        <div className="absolute inset-0 blur-2xl opacity-60 animate-pulse rounded-full" style={{ background: 'var(--accent)' }}></div>
+                        <Trophy className={`relative w-20 h-20 mx-auto mb-4 ${isPerfect ? "animate-bounce" : ""}`} style={{ color: 'var(--accent)' }} />
                     </div>
-                    <h3 className={`text-3xl font-bold mb-2 ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
+                    <h3 className={`text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>
                         {isPerfect ? "FAN CỨNG TUYỆT ĐỐI!" : "Hoàn thành quiz!"}
                     </h3>
-                    <p className={`text-xl mb-4 ${isDark ? "text-purple-200" : "text-gray-600"}`}>
+                    <p className={`text-xl mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                         Bạn đạt {score}/{questions.length} câu đúng
                     </p>
-                    <div className={`text-4xl font-bold mb-6 ${isPerfect ? "text-yellow-400" : "text-orange-400"}`}>
+                    <div className="text-4xl font-bold mb-6" style={{ color: 'var(--accent)' }}>
                         {percentage}%
                     </div>
-                    <p className={`mb-6 ${isDark ? "text-purple-300" : "text-gray-600"}`}>
+                    <p className={`mb-6 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                         {isPerfect
                             ? "Bạn đúng là fan cứng. ⭐"
                             : percentage >= 80
@@ -228,7 +229,8 @@ export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, i
                     </p>
                     <button
                         onClick={initializeGame}
-                        className="flex items-center gap-2 px-6 py-3 mx-auto rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg hover:shadow-2xl hover:shadow-yellow-400/50 transition-all hover:scale-105 relative overflow-hidden group"
+                        className="flex items-center gap-2 px-6 py-3 mx-auto rounded-xl text-white font-bold shadow-lg transition-all hover:scale-105 relative overflow-hidden group"
+                        style={{ background: 'var(--accent)' }}
                     >
                         <RotateCcw className="w-5 h-5 relative z-10" />
                         <span className="relative z-10">Chơi lại</span>
@@ -246,27 +248,27 @@ export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, i
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-yellow-400 rounded-full blur-lg opacity-50 animate-pulse"></div>
-                        <div className="relative w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg border-2 border-yellow-300">
+                        <div className="absolute inset-0 rounded-full blur-lg opacity-50 animate-pulse" style={{ background: 'var(--accent)' }}></div>
+                        <div className="relative w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2" style={{ background: 'var(--accent)', borderColor: 'color-mix(in oklch, var(--accent) 40%, white)' }}>
                             <Star className="w-5 h-5 text-white fill-current" />
                         </div>
                     </div>
                     <div>
-                        <h2 className={`text-xl font-bold ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
+                        <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
                             Fan Quiz
                         </h2>
-                        <span className={`text-sm ${isDark ? "text-purple-300" : "text-gray-400"}`}>
+                        <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-400"}`}>
                             Câu {currentQuestion + 1}/{questions.length}
                         </span>
                     </div>
                 </div>
-                <div className={`px-4 py-2 rounded-full ${isDark ? "bg-purple-800 text-yellow-300" : "bg-yellow-100 text-orange-600"} font-bold`}>
+                <div className="px-4 py-2 rounded-full font-bold" style={{ background: 'color-mix(in oklch, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                     Điểm: {score}
                 </div>
             </div>
 
-            <div className={`p-6 rounded-2xl ${isDark ? "bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border border-yellow-400/30" : "bg-white border-4 border-yellow-200 shadow-lg"}`}>
-                <h3 className={`text-xl font-bold mb-6 ${isDark ? "text-yellow-300" : "text-gray-800"}`}>
+            <div className={`p-6 rounded-2xl border ${isDark ? "bg-slate-900/80" : "bg-white shadow-lg"}`} style={{ borderColor: 'color-mix(in oklch, var(--accent) 25%, transparent)' }}>
+                <h3 className={`text-xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-800"}`}>
                     {question.question}
                 </h3>
 
@@ -281,17 +283,18 @@ export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, i
                                 key={index}
                                 onClick={() => handleAnswerSelect(index)}
                                 disabled={showResult}
-                                className={`w-full p-4 rounded-xl text-left font-medium transition-all ${
+                                className={`w-full p-4 rounded-xl text-left font-medium transition-all border-2 ${
                                     showAnswerStyle
                                         ? isCorrect
-                                            ? "bg-green-500 text-white border-2 border-green-400 scale-105"
-                                            : "bg-red-500 text-white border-2 border-red-400"
+                                            ? "bg-green-500 text-white border-green-400 scale-105"
+                                            : "bg-red-500 text-white border-red-400"
                                         : isSelected
-                                        ? "bg-yellow-400 text-white border-2 border-yellow-300"
+                                        ? "text-white"
                                         : isDark
-                                        ? "bg-purple-800/50 text-purple-100 border-2 border-purple-600 hover:bg-purple-700/50 hover:border-yellow-400/50"
-                                        : "bg-yellow-50 text-gray-700 border-2 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-400"
+                                        ? "bg-slate-800/50 text-gray-200 border-white/10"
+                                        : "bg-gray-50 text-gray-700 border-gray-200"
                                 } ${!showResult && !isSelected ? "hover:scale-102" : ""}`}
+                                style={!showAnswerStyle && isSelected ? { background: 'var(--accent)', borderColor: 'var(--accent)' } : undefined}
                             >
                                 <div className="flex items-center justify-between">
                                     <span>{option}</span>
@@ -311,13 +314,14 @@ export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, i
                         key={index}
                         className={`w-3 h-3 rounded-full transition-all ${
                             index === currentQuestion
-                                ? "bg-yellow-400 scale-125"
+                                ? "scale-125"
                                 : index < currentQuestion
                                 ? "bg-green-400"
                                 : isDark
-                                ? "bg-purple-700"
+                                ? "bg-slate-700"
                                 : "bg-gray-300"
                         }`}
+                        style={index === currentQuestion ? { background: 'var(--accent)' } : undefined}
                     />
                 ))}
             </div>
