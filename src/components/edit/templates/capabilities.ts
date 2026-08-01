@@ -81,6 +81,20 @@ export const TEMPLATE_EDIT_CAPABILITIES: Record<LinkType, TemplateEditCapability
         focus: "Motto và timeline vui quan trọng hơn thông tin trang trọng.",
         workflow: ["Đặt tên nhóm", "Viết motto/inside joke", "Thêm ảnh vui", "Tạo timeline các lần tụ họp"],
     },
+    BABY: {
+        eyebrow: "Baby diary",
+        title: "Nhật ký em bé",
+        description: "Tập trung vào hồ sơ bé, hành trình 12 tháng đầu đời và những khoảnh khắc đáng nhớ.",
+        focus: "Hành trình theo tháng và ảnh là trung tâm, không có quiz/game.",
+        workflow: ["Điền hồ sơ bé và bố mẹ", "Cập nhật hành trình theo từng tháng", "Thêm ảnh/timeline", "Viết lời nhắn cho con"],
+    },
+    FAMILY: {
+        eyebrow: "Family hearth",
+        title: "Tổ ấm gia đình",
+        description: "Tập trung vào tên gia đình, thành viên, ước mơ chung và những kỷ niệm gắn kết cả nhà.",
+        focus: "Members và goals là nội dung quan trọng nhất, cùng với trò bình chọn vui giữa các thành viên.",
+        workflow: ["Điền tên và slogan gia đình", "Thêm thành viên gia đình", "Thêm ước mơ/cột mốc", "Gắn ảnh/timeline kỷ niệm"],
+    },
 };
 
 export function getTemplateEditCapability(linkType: LinkType) {

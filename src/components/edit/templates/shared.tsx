@@ -9,6 +9,7 @@ import {
     Calendar,
     Image as ImageIcon,
     Mail,
+    MapPin,
     Moon,
     Settings,
     Sparkles,
@@ -45,6 +46,9 @@ const EditConfigForm = dynamic(() =>
 const EditIdolConfigForm = dynamic(() =>
     import("@/components/edit/EditIdolConfigFormV2").then((m) => m.EditIdolConfigFormV2)
 );
+const EditTravelTripManager = dynamic(() =>
+    import("@/components/edit/EditTravelTripManager").then((m) => m.EditTravelTripManager)
+);
 
 export type LinkWithRelations = PrismaLink & {
     config: LinkConfig | null;
@@ -58,7 +62,7 @@ export interface TemplateEditProps {
     linkData: LinkWithRelations;
 }
 
-export type EditTabId = "profile" | "features" | "gallery" | "timeline" | "letters" | "settings";
+export type EditTabId = "profile" | "features" | "gallery" | "timeline" | "letters" | "trip" | "settings";
 
 export interface EditTab {
     id: EditTabId;
@@ -103,6 +107,13 @@ export const EDIT_TABS: Record<EditTabId, EditTab> = {
         shortLabel: "Lưu bút",
         description: "Viết, mở khóa và quản lý những lời nhắn riêng",
         icon: Mail,
+    },
+    trip: {
+        id: "trip",
+        label: "Điểm đến & cột mốc",
+        shortLabel: "Hành trình",
+        description: "Quản lý các điểm đến và cột mốc trong chuyến đi",
+        icon: MapPin,
     },
     settings: {
         id: "settings",
@@ -308,6 +319,16 @@ function EditFormPanel({
 
     if (activeTab === "features") {
         return <TemplateFeaturePanel linkData={linkData} isDark={isDark} />;
+    }
+
+    if (activeTab === "trip") {
+        return (
+            <EditTravelTripManager
+                slug={slug}
+                initialData={linkData.profile_data as Record<string, unknown>}
+                isDark={isDark}
+            />
+        );
     }
 
     if (activeTab === "settings") {

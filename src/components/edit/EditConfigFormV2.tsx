@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Palette, Type, Music, Undo2, Redo2 } from "lucide-react";
+import { Save, Loader2, Palette, Type, Music, Undo2, Redo2, ChevronDown, Sparkles } from "lucide-react";
 import { GameTemplateSelector } from "./GameTemplateSelector";
 import { normalizeGameTemplate, type GameVariantId } from "@/components/templates/game-registry";
 import { useFormFeedback } from "./useFormFeedback";
@@ -81,6 +81,24 @@ const ACCENT_COLORS = [
 ];
 
 // ============================================================================
+// THEME PRESETS — bộ trọn gói (nền + nhấn + chữ + font cùng lúc)
+// ============================================================================
+
+const THEME_PRESETS: {
+    name: string;
+    background_color: string;
+    accent_color: string;
+    text_color: string;
+    font_family: string;
+}[] = [
+    { name: "Mặc định", background_color: "#ffffff", accent_color: "#ec4899", text_color: "#1f2937", font_family: "Inter" },
+    { name: "Ngọt ngào", background_color: "#fdf2f8", accent_color: "#f43f5e", text_color: "#831843", font_family: "Dancing Script" },
+    { name: "Tối giản", background_color: "#1f2937", accent_color: "#6366f1", text_color: "#f9fafb", font_family: "Poppins" },
+    { name: "Tươi mới", background_color: "#f0fdf4", accent_color: "#10b981", text_color: "#14532d", font_family: "Nunito" },
+    { name: "Sang trọng", background_color: "#faf5ff", accent_color: "#8b5cf6", text_color: "#3b0764", font_family: "Playfair Display" },
+];
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -142,6 +160,7 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess }: E
     const [gameTemplate, setGameTemplate] = useState<GameVariantId>(
         normalizeGameTemplate(initialConfig?.game_template)
     );
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     const {
         register,
@@ -170,6 +189,21 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess }: E
 
     const selectedColor = watch("background_color");
     const selectedAccentColor = watch("accent_color");
+    const selectedTextColor = watch("text_color");
+    const selectedFont = watch("font_family");
+
+    /**
+     * Áp 1 theme preset trọn gói: nền + nhấn + chữ + font cùng lúc.
+     *
+     * `shouldDirty: true` trên cả 4 field — xem ghi chú ở nút chọn màu nền: thiếu
+     * cờ này thì tự động lưu không thấy thay đổi.
+     */
+    const applyThemePreset = (preset: (typeof THEME_PRESETS)[number]) => {
+        setValue("background_color", preset.background_color, { shouldDirty: true, shouldValidate: true });
+        setValue("accent_color", preset.accent_color, { shouldDirty: true, shouldValidate: true });
+        setValue("text_color", preset.text_color, { shouldDirty: true, shouldValidate: true });
+        setValue("font_family", preset.font_family, { shouldDirty: true, shouldValidate: true });
+    };
 
     /**
      * ĐƯỜNG DUY NHẤT ghi cài đặt xuống server.
@@ -253,162 +287,250 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess }: E
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Background Color */}
+            {/* Theme Presets — set nền+nhấn+chữ+font cùng lúc */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <Palette className="w-5 h-5 text-purple-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Màu nền màn hình chờ</h3>
+                    <Sparkles className="w-5 h-5 text-amber-500" />
+                    <h3 className="text-lg font-semibold text-gray-800">Bộ giao diện có sẵn</h3>
                 </div>
-
-                {/* Preset Colors */}
-                <div className="flex flex-wrap gap-3 mb-4">
-                    {PRESET_COLORS.map((color) => (
+                <div className="flex flex-wrap gap-3">
+                    {THEME_PRESETS.map((preset) => (
                         <button
-                            key={color}
+                            key={preset.name}
                             type="button"
-                            onClick={() =>
-                                // `shouldDirty` là bắt buộc: mặc định `setValue` KHÔNG
-                                // đánh dấu form là đã sửa, nên chọn màu bằng ô mẫu sẽ
-                                // không kích hoạt tự động lưu và người dùng mất màu vừa
-                                // chọn nếu rời trang.
-                                setValue("background_color", color, {
-                                    shouldDirty: true,
-                                    shouldValidate: true,
-                                })
-                            }
-                            className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedColor === color
-                                ? "border-purple-500 ring-2 ring-purple-200 scale-110"
-                                : "border-gray-200 hover:border-gray-300"
-                                }`}
-                            style={{ backgroundColor: color }}
-                            title={color}
-                        />
+                            onClick={() => applyThemePreset(preset)}
+                            className="flex items-center gap-2 rounded-xl border-2 border-gray-200 px-3 py-2 transition-all hover:border-gray-300 hover:shadow-sm"
+                        >
+                            <span
+                                className="w-6 h-6 rounded-full border border-black/10"
+                                style={{ backgroundColor: preset.background_color }}
+                            />
+                            <span
+                                className="w-6 h-6 rounded-full border border-black/10"
+                                style={{ backgroundColor: preset.accent_color }}
+                            />
+                            <span className="text-sm font-medium text-gray-700">{preset.name}</span>
+                        </button>
                     ))}
                 </div>
-
-                {/* Custom Color Input */}
-                <div className="flex items-center gap-3">
-                    <input
-                        type="color"
-                        {...register("background_color")}
-                        className="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer"
-                    />
-                    <input
-                        {...register("background_color")}
-                        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all font-mono text-sm"
-                        placeholder="#ffffff"
-                    />
-                </div>
-                {errors.background_color && (
-                    <p className="mt-1 text-sm text-red-500">{errors.background_color.message}</p>
-                )}
-            </div>
-
-            {/* Accent Color */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <Palette className="w-5 h-5 text-pink-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Màu nhấn (Button)</h3>
-                </div>
-
-                {/* Preset Accent Colors */}
-                <div className="flex flex-wrap gap-3 mb-4">
-                    {ACCENT_COLORS.map((color) => (
-                        <button
-                            key={color}
-                            type="button"
-                            onClick={() =>
-                                // Xem ghi chú ở ô màu nền: thiếu `shouldDirty` thì tự
-                                // động lưu không bao giờ thấy thay đổi này.
-                                setValue("accent_color", color, {
-                                    shouldDirty: true,
-                                    shouldValidate: true,
-                                })
-                            }
-                            className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedAccentColor === color
-                                ? "border-gray-800 ring-2 ring-gray-300 scale-110"
-                                : "border-gray-200 hover:border-gray-300"
-                                }`}
-                            style={{ backgroundColor: color }}
-                            title={color}
-                        />
-                    ))}
-                </div>
-
-                {/* Custom Accent Color Input */}
-                <div className="flex items-center gap-3">
-                    <input
-                        type="color"
-                        {...register("accent_color")}
-                        className="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer"
-                    />
-                    <input
-                        {...register("accent_color")}
-                        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all font-mono text-sm"
-                        placeholder="#ec4899"
-                    />
-                </div>
-                {errors.accent_color && (
-                    <p className="mt-1 text-sm text-red-500">{errors.accent_color.message}</p>
-                )}
-            </div>
-
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <Type className="w-5 h-5 text-blue-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Phông chữ</h3>
-                </div>
-
-                <select
-                    {...register("font_family")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all bg-white"
-                >
-                    {FONT_OPTIONS.map((font) => (
-                        <option key={font.value} value={font.value}>
-                            {font.label}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Music URL */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <Music className="w-5 h-5 text-pink-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
-                </div>
-
-                <input
-                    {...register("music_url")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all"
-                    placeholder="https://youtube.com/watch?v=... hoặc .mp3 URL"
-                />
-                {errors.music_url && (
-                    <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
-                    Hỗ trợ YouTube và file audio trực tiếp (.mp3). Link TikTok cần người xem
-                    bấm play thủ công.
+                <p className="mt-2 text-xs text-gray-500">
+                    Chọn nhanh 1 bộ, sau đó vẫn có thể tùy chỉnh riêng từng phần bên dưới.
                 </p>
-
-                <label className="flex items-center gap-3 mt-4 cursor-pointer">
-                    <input
-                        type="checkbox"
-                        {...register("auto_play")}
-                        className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-300"
-                    />
-                    <span className="text-sm text-gray-600">
-                        Tự động phát nhạc khi tải trang
-                    </span>
-                </label>
             </div>
 
-            {/* Game Template Selector */}
-            <GameTemplateSelector
-                linkType={linkType}
-                value={gameTemplate}
-                onChange={setGameTemplate}
-            />
+            {/* Cơ bản: những cài đặt hay dùng nhất */}
+            <div className="space-y-8">
+                {/* Accent Color */}
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <Palette className="w-5 h-5 text-pink-500" />
+                        <h3 className="text-lg font-semibold text-gray-800">Màu nhấn (Button)</h3>
+                    </div>
+
+                    {/* Preset Accent Colors */}
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        {ACCENT_COLORS.map((color) => (
+                            <button
+                                key={color}
+                                type="button"
+                                onClick={() =>
+                                    // Xem ghi chú ở ô màu nền (mục Nâng cao): thiếu
+                                    // `shouldDirty` thì tự động lưu không bao giờ thấy
+                                    // thay đổi này.
+                                    setValue("accent_color", color, {
+                                        shouldDirty: true,
+                                        shouldValidate: true,
+                                    })
+                                }
+                                className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedAccentColor === color
+                                    ? "border-gray-800 ring-2 ring-gray-300 scale-110"
+                                    : "border-gray-200 hover:border-gray-300"
+                                    }`}
+                                style={{ backgroundColor: color }}
+                                title={color}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Custom Accent Color Input */}
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="color"
+                            {...register("accent_color")}
+                            className="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                        />
+                        <input
+                            {...register("accent_color")}
+                            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all font-mono text-sm"
+                            placeholder="#ec4899"
+                        />
+                    </div>
+                    {errors.accent_color && (
+                        <p className="mt-1 text-sm text-red-500">{errors.accent_color.message}</p>
+                    )}
+                </div>
+
+                {/* Music URL */}
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <Music className="w-5 h-5 text-pink-500" />
+                        <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
+                    </div>
+
+                    <input
+                        {...register("music_url")}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all"
+                        placeholder="https://youtube.com/watch?v=... hoặc .mp3 URL"
+                    />
+                    {errors.music_url && (
+                        <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                        Hỗ trợ YouTube và file audio trực tiếp (.mp3). Link TikTok cần người xem
+                        bấm play thủ công.
+                    </p>
+
+                    <label className="flex items-center gap-3 mt-4 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            {...register("auto_play")}
+                            className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-300"
+                        />
+                        <span className="text-sm text-gray-600">
+                            Tự động phát nhạc khi tải trang
+                        </span>
+                    </label>
+                </div>
+
+                {/* Game Template Selector */}
+                <GameTemplateSelector
+                    linkType={linkType}
+                    value={gameTemplate}
+                    onChange={setGameTemplate}
+                />
+            </div>
+
+            {/* Nâng cao: đóng mặc định — màu nền, font, màu chữ */}
+            <div className="border-t border-gray-200 pt-6">
+                <button
+                    type="button"
+                    onClick={() => setShowAdvanced((v) => !v)}
+                    className="flex w-full items-center justify-between text-left"
+                >
+                    <h3 className="text-lg font-semibold text-gray-800">Nâng cao</h3>
+                    <ChevronDown
+                        className={`w-5 h-5 text-gray-500 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                    />
+                </button>
+
+                {showAdvanced && (
+                    <div className="mt-6 space-y-8">
+                        {/* Background Color */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <Palette className="w-5 h-5 text-purple-500" />
+                                <h3 className="text-lg font-semibold text-gray-800">Màu nền màn hình chờ</h3>
+                            </div>
+
+                            {/* Preset Colors */}
+                            <div className="flex flex-wrap gap-3 mb-4">
+                                {PRESET_COLORS.map((color) => (
+                                    <button
+                                        key={color}
+                                        type="button"
+                                        onClick={() =>
+                                            // `shouldDirty` là bắt buộc: mặc định `setValue` KHÔNG
+                                            // đánh dấu form là đã sửa, nên chọn màu bằng ô mẫu sẽ
+                                            // không kích hoạt tự động lưu và người dùng mất màu vừa
+                                            // chọn nếu rời trang.
+                                            setValue("background_color", color, {
+                                                shouldDirty: true,
+                                                shouldValidate: true,
+                                            })
+                                        }
+                                        className={`w-10 h-10 rounded-xl border-2 transition-all ${selectedColor === color
+                                            ? "border-purple-500 ring-2 ring-purple-200 scale-110"
+                                            : "border-gray-200 hover:border-gray-300"
+                                            }`}
+                                        style={{ backgroundColor: color }}
+                                        title={color}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Custom Color Input */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="color"
+                                    {...register("background_color")}
+                                    className="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                                />
+                                <input
+                                    {...register("background_color")}
+                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none transition-all font-mono text-sm"
+                                    placeholder="#ffffff"
+                                />
+                            </div>
+                            {errors.background_color && (
+                                <p className="mt-1 text-sm text-red-500">{errors.background_color.message}</p>
+                            )}
+                        </div>
+
+                        {/* Font */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <Type className="w-5 h-5 text-blue-500" />
+                                <h3 className="text-lg font-semibold text-gray-800">Phông chữ</h3>
+                            </div>
+
+                            <select
+                                {...register("font_family")}
+                                value={selectedFont}
+                                onChange={(e) => setValue("font_family", e.target.value, { shouldDirty: true, shouldValidate: true })}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition-all bg-white"
+                            >
+                                {FONT_OPTIONS.map((font) => (
+                                    <option key={font.value} value={font.value}>
+                                        {font.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Text Color */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <Type className="w-5 h-5 text-gray-700" />
+                                <h3 className="text-lg font-semibold text-gray-800">Màu chữ</h3>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="color"
+                                    {...register("text_color")}
+                                    className="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                                />
+                                <input
+                                    {...register("text_color")}
+                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:border-gray-400 outline-none transition-all font-mono text-sm"
+                                    placeholder="#1f2937"
+                                />
+                            </div>
+                            {errors.text_color && (
+                                <p className="mt-1 text-sm text-red-500">{errors.text_color.message}</p>
+                            )}
+                            {selectedTextColor !== undefined && (
+                                <p
+                                    className="mt-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                                    style={{ color: selectedTextColor || undefined }}
+                                >
+                                    Xem trước màu chữ
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Trạng thái tự động lưu + hoàn tác, đặt ngay trên nút Lưu */}
             <FormSaveToolbar

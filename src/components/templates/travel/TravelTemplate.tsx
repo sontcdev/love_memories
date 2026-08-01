@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Calendar, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, MapPin, Compass, Plane, Camera, Navigation, Mountain, TreePine, Waves, Sun } from "lucide-react";
-import { TravelLetterBox } from "./TravelLetterBox";
+import { Settings, Sparkles, X, MapPin, Compass, Plane, Navigation, Mountain, TreePine, Waves, Sun } from "lucide-react";
 import { TravelGameSection } from "./TravelGameSection";
 import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
 import { normalizeGameTemplate } from "@/components/templates/game-registry";
 import { useThemeToggle } from "@/components/theme/useThemeToggle";
 import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
+import { TravelProfileData, TravelDestination } from "@/app/actions/profile-actions";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -29,7 +29,7 @@ interface TravelTemplateProps {
 
 interface MapStop {
     id: string;
-    type: "timeline" | "gallery" | "guestbook" | "quiz";
+    type: "home" | "destination" | "quiz";
     title: string;
     icon: typeof MapPin;
     position: { x: number; y: number };
@@ -221,8 +221,7 @@ function TreasureX({ className, isDark = false }: { className?: string; isDark?:
 
 export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplateProps) {
     const [activeStop, setActiveStop] = useState<string | null>(null);
-    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-    const profileData = data.profile_data as Record<string, string> | null;
+    const profileData = data.profile_data as TravelProfileData | null;
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
 
     // Night/Light state. Declared before every helper that reads `isDark`
@@ -246,9 +245,6 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
     const cardClass = isDark
         ? "bg-gradient-to-br from-sky-950/60 to-emerald-950/50 border-sky-800/40"
         : "bg-gradient-to-br from-sky-50 to-emerald-50 border-sky-100";
-    const chipClass = isDark
-        ? "bg-sky-950/60 border-sky-800/50 text-sky-200"
-        : "bg-sky-50 border-sky-100 text-sky-600";
     const iconBtnClass = isDark
         ? "text-slate-400 hover:bg-sky-900/40 hover:text-sky-200"
         : "text-gray-500 hover:bg-sky-50 hover:text-sky-600";
@@ -258,14 +254,13 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
     const pinLabelIdleClass = isDark
         ? "bg-[#101c26]/90 text-sky-200 group-hover:bg-sky-900/80"
         : "bg-white/90 text-sky-700 group-hover:bg-sky-100";
-    const printClass = isDark ? "bg-[#1b2733]" : "bg-white";
-    const printCaptionClass = isDark ? "text-slate-300" : "text-gray-600";
 
     const tripName = profileData?.trip_name || "Hành Trình";
-    const destination = profileData?.destination || profileData?.destinations;
+    const destinations: TravelDestination[] = profileData?.destinations || [];
+    const destinationNames = destinations.map(d => d.name).filter(Boolean).join(" · ");
     const startDate = profileData?.start_date;
     const endDate = profileData?.end_date;
-    const travelers = profileData?.travelers;
+    const ownerName = profileData?.owner_name;
 
     const getTripDuration = () => {
         if (!startDate || !endDate) return null;
@@ -279,18 +274,15 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
     const duration = getTripDuration();
 
     const stops: MapStop[] = [
-        { id: "home", type: "timeline", title: tripName, icon: Compass, position: { x: 50, y: 15 }, color: "from-sky-400 to-emerald-400" },
-        ...data.timelines.map((t, i) => ({
-            id: `timeline-${t.id}`,
-            type: "timeline" as const,
-            title: t.title,
-            icon: Calendar,
-            position: { x: 20 + (i % 3) * 30, y: 30 + Math.floor(i / 3) * 15 },
+        { id: "home", type: "home", title: tripName, icon: Compass, position: { x: 50, y: 15 }, color: "from-sky-400 to-emerald-400" },
+        ...destinations.map((d, i) => ({
+            id: `dest-${d.id}`,
+            type: "destination" as const,
+            title: d.name,
+            icon: MapPin,
+            position: { x: 20 + (i % 3) * 30, y: 35 + Math.floor(i / 3) * 20 },
             color: "from-blue-400 to-cyan-400",
         })),
-        { id: "gallery", type: "gallery", title: "Album ảnh", icon: Camera, position: { x: 75, y: 45 }, color: "from-emerald-400 to-teal-400" },
-        { id: "guestbook", type: "guestbook", title: "Lưu bút", icon: Mail, position: { x: 30, y: 70 }, color: "from-violet-400 to-purple-400" },
-        { id: "quiz", type: "quiz", title: "Thử thách", icon: Sparkles, position: { x: 70, y: 80 }, color: "from-amber-400 to-orange-400" },
     ];
 
     useEffect(() => {
@@ -310,7 +302,7 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
                     {/* Boarding pass header */}
                     <BoardingPassHeader
                         tripName={tripName}
-                        destination={destination}
+                        destination={destinationNames || undefined}
                         startDate={startDate}
                         endDate={endDate}
                         duration={duration}
@@ -319,86 +311,47 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
                     />
 
                     <div className="text-center mt-6 mb-4">
-                        {destination && (
-                            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${chipClass}`}>
-                                <MapPin className="w-4 h-4" />
-                                <span className="font-mono text-sm">{destination}</span>
-                                <span className={`text-xs ${mutedClass}`}>·</span>
-                                <span className={`font-mono text-xs ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                                    {`${(destination.length * 7 % 90).toFixed(2)}°N`}
-                                </span>
-                            </div>
-                        )}
-                        {travelers && <p className={`mt-3 font-mono text-sm ${bodyClass}`}>{travelers}</p>}
+                        {ownerName && <p className={`font-mono text-sm ${bodyClass}`}>Người tổ chức: {ownerName}</p>}
                     </div>
 
-                    {data.timelines.length > 0 && (
+                    {destinations.length > 0 ? (
                         <div className="mt-4">
                             <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 font-mono ${headingClass}`}>
                                 <Navigation className="w-5 h-5" />
-                                Itinerary
+                                Điểm đến
                             </h3>
-                            <div className="relative">
-                                {/* Timeline line */}
-                                <div className={`absolute left-6 top-0 bottom-0 w-0.5 ${isDark ? "bg-gradient-to-b from-sky-700 via-emerald-700 to-sky-700" : "bg-gradient-to-b from-sky-300 via-emerald-300 to-sky-300"}`} />
-
-                                <div className="space-y-6">
-                                    {data.timelines.map((item, index) => (
-                                        <div key={item.id} className="relative flex gap-4">
-                                            {/* Numbered waypoint badge */}
-                                            <div className="relative z-10 flex-shrink-0">
-                                                <div
-                                                    className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-emerald-400 flex items-center justify-center shadow-lg border-2 font-mono text-white font-bold text-sm"
-                                                    style={{ borderColor: isDark ? "#101c26" : "#ffffff" }}
-                                                >
-                                                    {(index + 1).toString().padStart(2, "0")}
-                                                </div>
-                                                {index < data.timelines.length - 1 && (
-                                                    <div className={`absolute top-12 left-1/2 -translate-x-1/2 w-0.5 h-full ${isDark ? "bg-sky-800" : "bg-sky-200"}`} />
-                                                )}
-                                            </div>
-
-                                            {/* Content card with passport stamp */}
-                                            <div className={`flex-1 rounded-xl p-4 border shadow-sm relative ${cardClass}`}>
-                                                {/* Passport stamp top-right */}
-                                                <div className="absolute -top-2 -right-2 rotate-12 opacity-80 pointer-events-none">
-                                                    <PassportStamp date={new Date(item.date).toISOString()} label="VISITED" className="w-20 h-12" isDark={isDark} />
-                                                </div>
-                                                <div className={`text-sm font-mono mb-1 ${accentClass}`}>
-                                                    {new Date(item.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
-                                                </div>
-                                                <h4 className={`text-lg font-bold mb-2 pr-16 ${headingClass}`}>{item.title}</h4>
-                                                {item.description && (
-                                                    <p className={`text-sm ${bodyClass}`}>{item.description}</p>
-                                                )}
-                                                {item.image_url && (
-                                                    <Image
-                                                        src={item.image_url}
-                                                        alt={item.title}
-                                                        width={400}
-                                                        height={250}
-                                                        className={`mt-3 rounded-lg object-cover w-full max-h-48 border-2 shadow-md ${isDark ? "border-sky-900/60" : "border-white"}`}
-                                                    />
-                                                )}
-                                            </div>
+                            <div className="grid gap-3">
+                                {destinations.map((d, index) => (
+                                    <button
+                                        key={d.id}
+                                        onClick={() => setActiveStop(`dest-${d.id}`)}
+                                        className={`flex items-center gap-4 rounded-xl p-4 border shadow-sm text-left transition-transform hover:scale-[1.01] ${cardClass}`}
+                                    >
+                                        <div
+                                            className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-emerald-400 flex items-center justify-center shadow-lg font-mono text-white font-bold text-sm flex-shrink-0"
+                                        >
+                                            {(index + 1).toString().padStart(2, "0")}
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className={`font-bold truncate ${headingClass}`}>{d.name}</h4>
+                                            {d.location_note && <p className={`text-sm truncate ${bodyClass}`}>{d.location_note}</p>}
+                                            <p className={`text-xs font-mono mt-0.5 ${mutedClass}`}>{d.milestones.length} cột mốc</p>
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    )}
-
-                    {data.timelines.length === 0 && (
+                    ) : (
                         <div className={`mt-6 text-center py-8 rounded-xl border ${isDark ? "bg-sky-950/50 border-sky-800/50" : "bg-sky-50 border-sky-100"}`}>
                             <Navigation className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-sky-700" : "text-sky-300"}`} />
-                            <p className={`italic ${accentClass}`}>Chưa có hành trình nào được thêm</p>
+                            <p className={`italic ${accentClass}`}>Chưa có điểm đến nào được thêm</p>
                             {isAuthenticated && (
                                 <Link
                                     href={`/${slug}/edit`}
                                     className={`inline-flex items-center gap-2 mt-3 px-4 py-2 text-white rounded-lg transition-colors font-mono text-sm ${isDark ? "bg-sky-700 hover:bg-sky-600" : "bg-sky-500 hover:bg-sky-600"}`}
                                 >
                                     <Settings className="w-4 h-4" />
-                                    Thêm hành trình
+                                    Thêm điểm đến
                                 </Link>
                             )}
                         </div>
@@ -407,67 +360,80 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
             );
         }
 
-        if (activeStop.startsWith("timeline-")) {
-            const timelineId = activeStop.replace("timeline-", "");
-            const item = data.timelines.find(t => t.id === timelineId);
-            if (!item) return null;
+        if (activeStop.startsWith("dest-")) {
+            const destId = activeStop.replace("dest-", "");
+            const dest = destinations.find(d => d.id === destId);
+            if (!dest) return null;
+            const milestones = [...dest.milestones].sort((a, b) => a.sort_order - b.sort_order);
             return (
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <PassportStamp date={new Date(item.date).toISOString()} label="VISITED" className="w-24 h-14 rotate-3" isDark={isDark} />
+                        <MapPin className={`w-6 h-6 flex-shrink-0 ${accentClass}`} />
                         <div>
-                            <div className={`text-sm font-mono ${accentClass}`}>
-                                {new Date(item.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
-                            </div>
-                            <h3 className={`text-2xl font-bold ${headingClass}`}>{item.title}</h3>
+                            <h3 className={`text-2xl font-bold ${headingClass}`}>{dest.name}</h3>
+                            {dest.location_note && <p className={`text-sm ${bodyClass}`}>{dest.location_note}</p>}
                         </div>
                     </div>
-                    {item.description && <p className={`mb-4 ${bodyClass}`}>{item.description}</p>}
-                    {item.image_url && (
-                        <Image src={item.image_url} alt={item.title} width={600} height={400} className={`rounded-xl object-cover w-full max-h-64 border-2 shadow-md ${isDark ? "border-sky-900/60" : "border-white"}`} />
+                    {dest.cover_image_url && (
+                        <Image
+                            src={dest.cover_image_url}
+                            alt={dest.name}
+                            width={600}
+                            height={350}
+                            className={`mt-3 rounded-xl object-cover w-full max-h-56 border-2 shadow-md ${isDark ? "border-sky-900/60" : "border-white"}`}
+                        />
                     )}
-                </div>
-            );
-        }
 
-        if (activeStop === "gallery") {
-            return (
-                <div>
-                    <h3 className={`text-2xl font-bold mb-1 text-center ${headingClass}`}>Khoảnh khắc đáng nhớ</h3>
-                    <p className={`text-center text-xs font-mono mb-4 ${mutedClass}`}>polaroids · taped to the map</p>
-                    {data.galleries.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {data.galleries.map((photo, index) => (
-                                <div
-                                    key={photo.id}
-                                    className={`relative cursor-pointer group p-2 pb-8 shadow-lg hover:shadow-xl transition-shadow ${printClass}`}
-                                    onClick={() => setLightboxIndex(index)}
-                                    style={{ transform: `rotate(${(index % 3) - 1}deg)` } as React.CSSProperties}
-                                >
-                                    {/* Tape strip on top */}
-                                    <div className={`absolute -top-2 left-1/2 -translate-x-1/2 w-12 h-4 rotate-1 border-l border-r ${isDark ? "bg-amber-700/40 border-amber-600/30" : "bg-amber-200/70 border-amber-300/50"}`} />
-                                    <div className="relative aspect-square overflow-hidden">
-                                        <Image src={photo.image_url} alt={photo.caption || `Photo ${index + 1}`} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                    {milestones.length > 0 ? (
+                        <div className="relative mt-6">
+                            <div className={`absolute left-6 top-0 bottom-0 w-0.5 ${isDark ? "bg-gradient-to-b from-sky-700 via-emerald-700 to-sky-700" : "bg-gradient-to-b from-sky-300 via-emerald-300 to-sky-300"}`} />
+                            <div className="space-y-6">
+                                {milestones.map((item, index) => (
+                                    <div key={item.id} className="relative flex gap-4">
+                                        <div className="relative z-10 flex-shrink-0">
+                                            <div
+                                                className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-emerald-400 flex items-center justify-center shadow-lg border-2 font-mono text-white font-bold text-sm"
+                                                style={{ borderColor: isDark ? "#101c26" : "#ffffff" }}
+                                            >
+                                                {(index + 1).toString().padStart(2, "0")}
+                                            </div>
+                                            {index < milestones.length - 1 && (
+                                                <div className={`absolute top-12 left-1/2 -translate-x-1/2 w-0.5 h-full ${isDark ? "bg-sky-800" : "bg-sky-200"}`} />
+                                            )}
+                                        </div>
+
+                                        <div className={`flex-1 rounded-xl p-4 border shadow-sm relative ${cardClass}`}>
+                                            {item.date && (
+                                                <div className="absolute -top-2 -right-2 rotate-12 opacity-80 pointer-events-none">
+                                                    <PassportStamp date={new Date(item.date).toISOString()} label="VISITED" className="w-20 h-12" isDark={isDark} />
+                                                </div>
+                                            )}
+                                            {item.date && (
+                                                <div className={`text-sm font-mono mb-1 ${accentClass}`}>
+                                                    {new Date(item.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
+                                                </div>
+                                            )}
+                                            <h4 className={`text-lg font-bold mb-2 pr-16 ${headingClass}`}>{item.title}</h4>
+                                            {item.description && (
+                                                <p className={`text-sm ${bodyClass}`}>{item.description}</p>
+                                            )}
+                                            {item.image_url && (
+                                                <Image
+                                                    src={item.image_url}
+                                                    alt={item.title}
+                                                    width={400}
+                                                    height={250}
+                                                    className={`mt-3 rounded-lg object-cover w-full max-h-48 border-2 shadow-md ${isDark ? "border-sky-900/60" : "border-white"}`}
+                                                />
+                                            )}
+                                        </div>
                                     </div>
-                                    {photo.caption && (
-                                        <p className={`text-center text-xs mt-2 font-mono italic truncate ${printCaptionClass}`}>{photo.caption}</p>
-                                    )}
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     ) : (
-                        <p className={`text-center italic ${mutedClass}`}>Chưa có ảnh nào</p>
+                        <p className={`mt-6 text-center italic ${mutedClass}`}>Chưa có cột mốc nào ở điểm đến này</p>
                     )}
-                </div>
-            );
-        }
-
-        if (activeStop === "guestbook") {
-            return (
-                <div>
-                    <h3 className={`text-2xl font-bold mb-4 text-center ${headingClass}`}>Lưu bút</h3>
-                    <p className={`text-center text-xs font-mono mb-4 ${mutedClass}`}>messages from fellow travelers</p>
-                    <TravelLetterBox slug={slug} initialLetters={data.letters} onPopupOpenChange={() => {}} isDark={isDark} />
                 </div>
             );
         }
@@ -543,6 +509,17 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
             <div className="fixed top-20 right-4 z-5 pointer-events-none opacity-40 hidden md:block">
                 <CompassRose className="w-32 h-32 animate-compass-rotate" isDark={isDark} />
             </div>
+
+            {/* Floating button to the challenge cards ("thẻ phiêu lưu") */}
+            <button
+                onClick={() => setActiveStop("quiz")}
+                className={`fixed bottom-6 right-4 z-40 flex items-center gap-2 rounded-full px-4 py-3 shadow-lg border font-mono text-sm transition-transform hover:scale-105 ${
+                    isDark ? "bg-amber-900/70 border-amber-700/60 text-amber-200" : "bg-amber-100 border-amber-200 text-amber-800"
+                }`}
+            >
+                <Sparkles className="w-4 h-4" />
+                Thử thách
+            </button>
 
             {/* Map View */}
             <div className="pt-14 min-h-screen relative">
@@ -682,44 +659,6 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
                         <div className="p-6 pb-8">
                             {renderStopContent()}
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Lightbox */}
-            {lightboxIndex !== null && data.galleries.length > 0 && (
-                <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" onClick={() => setLightboxIndex(null)}>
-                    <button onClick={() => setLightboxIndex(null)} className="absolute top-4 right-4 p-2 text-white/80 hover:text-white">
-                        <X className="w-6 h-6" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setLightboxIndex(Math.max(lightboxIndex - 1, 0)); }}
-                        disabled={lightboxIndex === 0}
-                        className="absolute left-4 p-2 text-white/80 hover:text-white disabled:opacity-30"
-                    >
-                        <ChevronLeft className="w-8 h-8" />
-                    </button>
-                    <div className={`max-w-4xl max-h-[80vh] relative p-3 pb-10 shadow-2xl ${printClass}`} style={{ transform: `rotate(${(lightboxIndex % 3) - 1}deg)` } as React.CSSProperties} onClick={(e) => e.stopPropagation()}>
-                        <Image
-                            src={data.galleries[lightboxIndex].image_url}
-                            alt={data.galleries[lightboxIndex].caption || `Photo ${lightboxIndex + 1}`}
-                            width={1200}
-                            height={800}
-                            className="max-h-[80vh] w-auto object-contain"
-                        />
-                        {data.galleries[lightboxIndex].caption && (
-                            <p className={`text-center mt-3 font-mono italic text-sm ${isDark ? "text-slate-300" : "text-gray-700"}`}>{data.galleries[lightboxIndex].caption}</p>
-                        )}
-                    </div>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setLightboxIndex(Math.min(lightboxIndex + 1, data.galleries.length - 1)); }}
-                        disabled={lightboxIndex === data.galleries.length - 1}
-                        className="absolute right-4 p-2 text-white/80 hover:text-white disabled:opacity-30"
-                    >
-                        <ChevronRight className="w-8 h-8" />
-                    </button>
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm font-mono">
-                        {lightboxIndex + 1} / {data.galleries.length}
                     </div>
                 </div>
             )}

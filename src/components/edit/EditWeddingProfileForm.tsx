@@ -10,6 +10,7 @@ import { useFormFeedback } from "./useFormFeedback";
 import { useFormAutoSave, type SaveStatus } from "./useAutoSave";
 import { SaveStatusIndicator } from "./SaveStatusIndicator";
 import { useUndoRedo } from "./useUndoRedo";
+import { SloganField } from "./SloganField";
 
 // Thông báo lỗi bằng tiếng Việt: với `mode: "onChange"` (xem bên dưới) người dùng
 // nhìn thấy các lỗi này ngay khi đang gõ, không còn chỉ khi bấm Lưu — nên mọi
@@ -23,6 +24,7 @@ const weddingProfileSchema = z.object({
     ceremony_time: z.string().max(30, "Tối đa 30 ký tự").optional(),
     reception_time: z.string().max(30, "Tối đa 30 ký tự").optional(),
     love_story: z.string().max(500, "Tối đa 500 ký tự").optional(),
+    slogan: z.string().max(120, "Tối đa 120 ký tự").optional(),
 });
 
 type WeddingFormData = z.infer<typeof weddingProfileSchema>;
@@ -114,6 +116,7 @@ export function EditWeddingProfileForm({
             ceremony_time: initialData?.ceremony_time || "",
             reception_time: initialData?.reception_time || "",
             love_story: initialData?.love_story || "",
+            slogan: initialData?.slogan || "",
         },
     });
 
@@ -277,6 +280,12 @@ export function EditWeddingProfileForm({
                 />
                 {errors.love_story && <p className="mt-1 text-sm text-red-500">{errors.love_story.message}</p>}
             </div>
+
+            <SloganField
+                registerProps={register("slogan")}
+                error={errors.slogan?.message}
+                focusRingClassName="focus:ring-amber-300 focus:border-amber-400"
+            />
 
             {/* Trạng thái tự động lưu + hoàn tác, đặt ngay trên nút Lưu */}
             <FormSaveToolbar

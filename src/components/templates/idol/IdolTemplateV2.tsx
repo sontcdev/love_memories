@@ -73,8 +73,17 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
     const idolAvatar = profileData?.idol_avatar;
     const fanAvatar = profileData?.fan_avatar;
     const debutDate = profileData?.debut_date;
+    const idolBirthday = profileData?.idol_birthday;
+    const fanSinceDate = profileData?.fan_since_date;
     const title = profileData?.title || `${idolName} Fan Page`;
     const slogan = profileData?.slogan;
+
+    const formatVietnameseDate = (isoDate?: string) => {
+        if (!isoDate) return null;
+        const d = new Date(isoDate);
+        if (Number.isNaN(d.getTime())) return null;
+        return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    };
 
     const [nextAnniversary, setNextAnniversary] = useState<Date | null>(null);
     const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
@@ -156,13 +165,14 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [lightboxIndex, nextImage, prevImage]);
 
-    const getDaysSinceDebut = () => {
-        if (!debutDate) return null;
-        const start = new Date(debutDate);
+    const getDaysSinceFan = () => {
+        const start_date = fanSinceDate || debutDate;
+        if (!start_date) return null;
+        const start = new Date(start_date);
         const today = new Date();
         return Math.ceil(Math.abs(today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     };
-    const daysSinceDebut = getDaysSinceDebut();
+    const daysSinceFan = getDaysSinceFan();
 
     const acts: { id: StageAct; label: string; icon: typeof Star; actNumber: string }[] = [
         { id: "intro", label: "Opening", icon: Mic, actNumber: "I" },
@@ -514,6 +524,12 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                             <h1 className={`text-4xl sm:text-5xl font-black holo-text`}>{idolName}</h1>
                             <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-dancing-script), cursive" }}>{title}</h2>
                             {slogan && <p className={`italic text-sm max-w-md mx-auto ${isDark ? "text-purple-200/80" : "text-gray-500"}`}>&ldquo;{slogan}&rdquo;</p>}
+                            {(debutDate || idolBirthday) && (
+                                <div className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] ${isDark ? "text-purple-200/70" : "text-gray-500"}`}>
+                                    {debutDate && <span>Debut: {formatVietnameseDate(debutDate)}</span>}
+                                    {idolBirthday && <span>Sinh nhật: {formatVietnameseDate(idolBirthday)}</span>}
+                                </div>
+                            )}
                         </div>
 
                         {/* Decorative Equalizer Bars */}
@@ -533,11 +549,11 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
 
                         {/* Stats Row */}
                         <div className="flex flex-wrap justify-center gap-4">
-                            {daysSinceDebut && (
+                            {daysSinceFan && (
                                 <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? "bg-slate-900/80 border border-purple-500/20" : "bg-white/80 border border-purple-100 shadow-sm"}`}>
                                     <Calendar className={`w-4 h-4 ${isDark ? "text-purple-400" : "text-purple-500"}`} />
-                                    <span className="text-sm font-bold">{daysSinceDebut}</span>
-                                    <span className={`text-xs ${isDark ? "text-purple-300/70" : "text-gray-500"}`}>ngày</span>
+                                    <span className="text-sm font-bold">{daysSinceFan}</span>
+                                    <span className={`text-xs ${isDark ? "text-purple-300/70" : "text-gray-500"}`}>ngày là fan</span>
                                 </div>
                             )}
                             <button onClick={handleSendHeart} className={`relative flex items-center gap-2 px-4 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 ${isDark ? "bg-pink-950/40 border border-pink-500/20 text-pink-400" : "bg-pink-50 border border-pink-100 text-pink-500"}`}>
@@ -728,7 +744,14 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                             <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`}>Fandom Quiz</h2>
                         </div>
                         {gameTemplateId === "A" ? (
-                            <IdolGameSection isDark={isDark} />
+                            <IdolGameSection
+                                isDark={isDark}
+                                idolName={idolName}
+                                fanName={fanName}
+                                debutDate={debutDate}
+                                idolBirthday={idolBirthday}
+                                fanSinceDate={fanSinceDate}
+                            />
                         ) : (
                             <TemplateVariantGame
                                 linkType={data.type}

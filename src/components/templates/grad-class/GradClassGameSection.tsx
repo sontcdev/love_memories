@@ -3,52 +3,57 @@
 import { useState } from "react";
 import { School, Trophy, RotateCcw, BookOpen, Check, X, Sparkles } from "lucide-react";
 
-interface GradClassGameSectionProps {
-    isDark?: boolean;
-}
-
 interface Question {
     id: number;
     question: string;
     options: string[];
-    correctAnswer: number;
+    correctIndex: number;
+}
+
+interface GradClassGameSectionProps {
+    isDark?: boolean;
+    customQuiz?: Omit<Question, "id">[];
 }
 
 const defaultQuestions: Question[] = [
     {
         id: 1,
-        question: "Điều làm nên tinh thần của một lớp học là gì?",
-        options: ["Đoàn kết", "Kỷ niệm chung", "Thầy cô và bạn bè", "Tất cả các ý trên"],
-        correctAnswer: 3,
+        question: "Tiết học nào cả lớp hay \"buồn ngủ tập thể\" nhất?",
+        options: ["Giờ Sử đọc chép", "Giờ Toán cuối chiều", "Giờ Sinh học chiếu phim", "Cả ba đều có nguy cơ ngang nhau"],
+        correctIndex: 3,
     },
     {
         id: 2,
-        question: "Kỷ yếu lớp nên ưu tiên nội dung nào?",
-        options: ["Ảnh tập thể", "Timeline sự kiện", "Lời nhắn", "Tất cả các ý trên"],
-        correctAnswer: 3,
+        question: "Chuyến dã ngoại/hội trại của lớp thường nhớ nhất vì điều gì?",
+        options: ["Đồ ăn tự nấu cháy khét", "Trò chơi tập thể tối lửa trại", "Cả lớp lạc đường một đoạn", "Tất cả các ý trên"],
+        correctIndex: 3,
     },
     {
         id: 3,
-        question: "Một lời nhắn giáo viên hay nên như thế nào?",
-        options: ["Chân thành và cổ vũ", "Quá dài và chung chung", "Không liên quan", "Chỉ có emoji"],
-        correctAnswer: 0,
+        question: "\"Nội quy bất thành văn\" phổ biến nhất của lớp là gì?",
+        options: ["Ai đi trễ mua trà sữa cả lớp", "Không được ăn vụng trong giờ học", "Trực nhật phải nhớ đổ rác", "Cấm nói xấu lớp trưởng"],
+        correctIndex: 0,
     },
     {
         id: 4,
-        question: "Mốc timeline nào hợp với template lớp?",
-        options: ["Ngày khai giảng", "Hội trại", "Lễ tốt nghiệp", "Tất cả các ý trên"],
-        correctAnswer: 3,
+        question: "Mốc thời gian nào không thể thiếu trong nhật ký lớp?",
+        options: ["Ngày khai giảng", "Ngày thi học kỳ", "Ngày chụp kỷ yếu", "Tất cả các ý trên"],
+        correctIndex: 3,
     },
     {
         id: 5,
-        question: "Danh hiệu vui trong lớp nên có tinh thần gì?",
-        options: ["Vui nhưng tôn trọng", "Châm chọc quá đà", "Gây khó chịu", "Không cần đồng ý"],
-        correctAnswer: 0,
+        question: "Biệt danh vui trong lớp nên mang tinh thần gì?",
+        options: ["Vui nhưng tôn trọng nhau", "Châm chọc quá đà", "Khiến bạn khó chịu", "Không cần ai đồng ý"],
+        correctIndex: 0,
     },
 ];
 
-export function GradClassGameSection({ isDark = false }: GradClassGameSectionProps) {
-    const [questions] = useState<Question[]>(defaultQuestions);
+export function GradClassGameSection({ isDark = false, customQuiz }: GradClassGameSectionProps) {
+    const [questions] = useState<Question[]>(
+        customQuiz && customQuiz.length > 0
+            ? customQuiz.map((q, i) => ({ ...q, id: i + 1 }))
+            : defaultQuestions
+    );
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [score, setScore] = useState(0);
@@ -73,7 +78,7 @@ export function GradClassGameSection({ isDark = false }: GradClassGameSectionPro
         setSelectedAnswer(answerIndex);
         setShowResult(true);
 
-        if (answerIndex === questions[currentQuestion].correctAnswer) {
+        if (answerIndex === questions[currentQuestion].correctIndex) {
             setScore(s => s + 1);
         }
 
@@ -214,7 +219,7 @@ export function GradClassGameSection({ isDark = false }: GradClassGameSectionPro
                 <div className="space-y-3">
                     {question.options.map((option, index) => {
                         const isSelected = selectedAnswer === index;
-                        const isCorrect = index === question.correctAnswer;
+                        const isCorrect = index === question.correctIndex;
                         const showAnswerStyle = showResult && (isSelected || isCorrect);
 
                         return (

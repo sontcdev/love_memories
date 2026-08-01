@@ -54,7 +54,7 @@ export function GradClassTemplateV2({ data, slug }: GradClassTemplateV2Props) {
         defaultDark: true,
     });
 
-    const className = (profileData?.class_name as string) || "Tập thể lớp";
+    const className = (profileData?.class_name as string) || "Chúng Mình";
     const schoolName = (profileData?.school_name as string) || "Trường học";
     const graduationYear = (profileData?.graduation_year as string) || "2026";
     const slogan = (profileData?.slogan as string) || "Sinh ra để cùng nhau tỏa sáng.";

@@ -26,6 +26,8 @@ enum LinkType {
   WEDDING
   TRAVEL
   FRIENDSHIP
+  BABY
+  FAMILY
 }
 
 enum GameLevel {

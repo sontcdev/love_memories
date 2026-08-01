@@ -19,6 +19,8 @@ const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-grou
 const WeddingTemplate = dynamic(() => import("@/components/templates/wedding/WeddingTemplate").then((m) => m.WeddingTemplate));
 const TravelTemplate = dynamic(() => import("@/components/templates/travel/TravelTemplate").then((m) => m.TravelTemplate));
 const FriendshipTemplate = dynamic(() => import("@/components/templates/friendship/FriendshipTemplate").then((m) => m.FriendshipTemplate));
+const BabyTemplate = dynamic(() => import("@/components/templates/baby/BabyTemplate").then((m) => m.BabyTemplate));
+const FamilyTemplate = dynamic(() => import("@/components/templates/family/FamilyTemplate").then((m) => m.FamilyTemplate));
 
 const LoveLockScreen = dynamic(() => import("@/components/templates/love/LoveLockScreen").then((m) => m.LoveLockScreen));
 const Love2LockScreen = dynamic(() => import("@/components/templates/love2/Love2LockScreen").then((m) => m.Love2LockScreen));
@@ -29,6 +31,8 @@ const GradGroupLockScreen = dynamic(() => import("@/components/templates/grad-gr
 const WeddingLockScreen = dynamic(() => import("@/components/templates/wedding/WeddingLockScreen").then((m) => m.WeddingLockScreen));
 const TravelLockScreen = dynamic(() => import("@/components/templates/travel/TravelLockScreen").then((m) => m.TravelLockScreen));
 const FriendshipLockScreen = dynamic(() => import("@/components/templates/friendship/FriendshipLockScreen").then((m) => m.FriendshipLockScreen));
+const BabyLockScreen = dynamic(() => import("@/components/templates/baby/BabyLockScreen").then((m) => m.BabyLockScreen));
+const FamilyLockScreen = dynamic(() => import("@/components/templates/family/FamilyLockScreen").then((m) => m.FamilyLockScreen));
 
 import { getLinkData } from "@/app/actions/auth-actions";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
@@ -116,6 +120,10 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return <TravelLockScreen {...props} />;
             case "FRIENDSHIP":
                 return <FriendshipLockScreen {...props} />;
+            case "BABY":
+                return <BabyLockScreen {...props} />;
+            case "FAMILY":
+                return <FamilyLockScreen {...props} />;
             case "EVERY":
             case "LOVE":
             default:
@@ -188,6 +196,10 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return profileData?.trip_name || "Our Journey";
             case "FRIENDSHIP":
                 return profileData?.group_name || "Best Friends";
+            case "BABY":
+                return profileData?.baby_name || "Em bé của chúng ta";
+            case "FAMILY":
+                return profileData?.family_name || "Gia đình mình";
             default:
                 return "Welcome";
         }
@@ -217,6 +229,10 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return <TravelTemplate data={linkData} slug={slug} isAuthenticated={authenticated} />;
             case "FRIENDSHIP":
                 return <FriendshipTemplate data={linkData} slug={slug} />;
+            case "BABY":
+                return <BabyTemplate data={linkData} slug={slug} />;
+            case "FAMILY":
+                return <FamilyTemplate data={linkData} slug={slug} />;
             case "EVERY":
                 return <LoveTemplate data={linkData} slug={slug} />;
             default:

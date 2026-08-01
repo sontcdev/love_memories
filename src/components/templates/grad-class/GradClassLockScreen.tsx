@@ -9,7 +9,7 @@ import {
 
 export function GradClassLockScreen({ slug, onSuccess, linkData }: TemplateLockScreenProps) {
     const profile = linkData?.profile_data as Record<string, unknown> | null;
-    const className = typeof profile?.class_name === "string" ? profile.class_name : "Tập thể lớp";
+    const className = typeof profile?.class_name === "string" ? profile.class_name : "Chúng Mình";
 
     return (
         <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#101713] px-3 py-5 text-stone-100 sm:p-6">

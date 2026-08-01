@@ -26,6 +26,8 @@ const idolProfileSchema = z.object({
     idol_name: z.string().min(1, "Bắt buộc").max(50, "Tối đa 50 ký tự"),
     fan_name: z.string().min(1, "Bắt buộc").max(50, "Tối đa 50 ký tự"),
     debut_date: z.string().optional(),
+    idol_birthday: z.string().optional(),
+    fan_since_date: z.string().optional(),
     title: z.string().max(100, "Tối đa 100 ký tự").optional(),
     slogan: z.string().max(200, "Tối đa 200 ký tự").optional(),
 });
@@ -130,6 +132,8 @@ export function EditIdolProfileFormV2({
             idol_name: initialData?.idol_name || "",
             fan_name: initialData?.fan_name || "",
             debut_date: initialData?.debut_date || "",
+            idol_birthday: initialData?.idol_birthday || "",
+            fan_since_date: initialData?.fan_since_date || "",
             title: initialData?.title || "",
             slogan: initialData?.slogan || "",
         },
@@ -467,11 +471,45 @@ export function EditIdolProfileFormV2({
                     type="date"
                     style={{ colorScheme: isDark ? "dark" : "light" }}
                     className={`w-full px-4 py-2 rounded-lg border outline-none transition-all appearance-none ${
-                        isDark 
-                            ? "bg-slate-950/60 border-purple-500/30 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
+                        isDark
+                            ? "bg-slate-950/60 border-purple-500/30 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]"
                             : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
                     }`}
                 />
+            </div>
+
+            {/* Idol Birthday + Fan Since Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className={`block text-sm font-medium mb-1 ${isDark ? "text-purple-200/90" : "text-gray-700"}`}>
+                        Ngày sinh Idol
+                    </label>
+                    <input
+                        {...register("idol_birthday")}
+                        type="date"
+                        style={{ colorScheme: isDark ? "dark" : "light" }}
+                        className={`w-full px-4 py-2 rounded-lg border outline-none transition-all appearance-none ${
+                            isDark
+                                ? "bg-slate-950/60 border-purple-500/30 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]"
+                                : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
+                        }`}
+                    />
+                </div>
+                <div>
+                    <label className={`block text-sm font-medium mb-1 ${isDark ? "text-purple-200/90" : "text-gray-700"}`}>
+                        Ngày bắt đầu trở thành fan
+                    </label>
+                    <input
+                        {...register("fan_since_date")}
+                        type="date"
+                        style={{ colorScheme: isDark ? "dark" : "light" }}
+                        className={`w-full px-4 py-2 rounded-lg border outline-none transition-all appearance-none ${
+                            isDark
+                                ? "bg-slate-950/60 border-purple-500/30 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]"
+                                : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-300 focus:border-purple-400"
+                        }`}
+                    />
+                </div>
             </div>
 
             {/* Title */}

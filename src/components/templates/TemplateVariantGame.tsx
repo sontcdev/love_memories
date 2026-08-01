@@ -162,6 +162,25 @@ const TEMPLATE_CONFIGS: Record<LinkType, Record<GameVariantId, GameConfig>> = {
             "Tạo một mật khẩu vui cho hội bạn.",
         ]),
     },
+    // BABY has no game/quiz (GAME_REGISTRY.BABY is []), so this entry is never
+    // rendered — it only exists to satisfy the Record<LinkType, ...> type.
+    BABY: {
+        A: baseConfig("", "", "BABY", "from-amber-400 to-orange-500"),
+        B: baseConfig("", "", "BABY", "from-amber-400 to-orange-500"),
+        C: baseConfig("", "", "BABY", "from-amber-400 to-orange-500"),
+    },
+    FAMILY: {
+        A: baseConfig("Bình chọn thành viên", "Vote theo câu hỏi vui cho cả nhà", "FAMILY", "from-orange-500 to-amber-500"),
+        B: quizConfig("Trivia gia đình", "Câu đố vui về những kỷ niệm của cả nhà", "TRIVIA", "from-orange-400 to-red-500", [
+            ["Một gia đình gắn kết cần điều gì nhất?", ["Dành thời gian cho nhau", "Luôn đồng ý với nhau", "Ở riêng mỗi người một phòng", "Không cần nói chuyện"], 0],
+            ["Kỷ niệm gia đình nên tập trung vào gì?", ["Thành viên và những khoảnh khắc chung", "Chỉ background đẹp", "Chỉ hiệu ứng", "Không cần câu chuyện"], 0],
+        ]),
+        C: promptConfig("Xếp hình gia đình", "Một nhiệm vụ cho ảnh cả nhà", "PUZZLE", "from-amber-400 to-orange-600", [
+            "Chọn ảnh gia đình đáng nhớ nhất và nói lý do.",
+            "Mỗi người đặt một caption cho cùng một bức ảnh gia đình.",
+            "Đặt tên cho tổ ấm của mình bằng 5 từ.",
+        ]),
+    },
 };
 
 function baseConfig(title: string, subtitle: string, badge: string, accent: string): GameConfig {

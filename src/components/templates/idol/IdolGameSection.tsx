@@ -5,6 +5,11 @@ import { Star, Trophy, RotateCcw, Music, Check, X } from "lucide-react";
 
 interface IdolGameSectionProps {
     isDark?: boolean;
+    idolName?: string;
+    fanName?: string;
+    debutDate?: string;
+    idolBirthday?: string;
+    fanSinceDate?: string;
 }
 
 interface Question {
@@ -14,41 +19,95 @@ interface Question {
     correctAnswer: number;
 }
 
-const defaultQuestions: Question[] = [
-    {
-        id: 1,
-        question: "Một fanpage idol nên thể hiện điều gì rõ nhất?",
-        options: ["Visual sân khấu", "Tình cảm fandom", "Dấu mốc sự nghiệp", "Tất cả các ý trên"],
-        correctAnswer: 3,
-    },
-    {
-        id: 2,
+function formatVi(isoDate?: string): string | null {
+    if (!isoDate) return null;
+    const d = new Date(isoDate);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+/** Trộn thứ tự và trả về 3 phương án nhiễu cộng với đáp án đúng, đáp án đúng ở vị trí ngẫu nhiên. */
+function buildOptions(correct: string, decoys: string[]): { options: string[]; correctAnswer: number } {
+    const correctIndex = Math.floor(Math.random() * (decoys.length + 1));
+    const options = [...decoys];
+    options.splice(correctIndex, 0, correct);
+    return { options, correctAnswer: correctIndex };
+}
+
+/**
+ * Quiz "Kỷ niệm cá nhân hoá" — thay cho fan quiz chung chung cũ.
+ * Câu hỏi dùng chính dữ liệu người dùng đã nhập (ngày debut, ngày sinh idol,
+ * ngày thành fan) nên mỗi trang Idol có bộ câu hỏi khác nhau.
+ */
+function buildPersonalizedQuestions({
+    idolName = "Idol",
+    fanName = "Fan",
+    debutDate,
+    idolBirthday,
+    fanSinceDate,
+}: {
+    idolName?: string;
+    fanName?: string;
+    debutDate?: string;
+    idolBirthday?: string;
+    fanSinceDate?: string;
+}): Question[] {
+    const questions: Question[] = [];
+
+    const debutFormatted = formatVi(debutDate);
+    if (debutFormatted) {
+        const { options, correctAnswer } = buildOptions(debutFormatted, ["01/01/2020", "15/06/2021", "20/09/2022"]);
+        questions.push({
+            id: 1,
+            question: `${idolName} debut vào ngày nào?`,
+            options,
+            correctAnswer,
+        });
+    }
+
+    const birthdayFormatted = formatVi(idolBirthday);
+    if (birthdayFormatted) {
+        const { options, correctAnswer } = buildOptions(birthdayFormatted, ["10/03", "22/07", "05/11"].map((d) => `${d}/${new Date().getFullYear() - 20}`));
+        questions.push({
+            id: 2,
+            question: `Ngày sinh của ${idolName} là ngày nào?`,
+            options,
+            correctAnswer,
+        });
+    }
+
+    const fanSinceFormatted = formatVi(fanSinceDate);
+    if (fanSinceFormatted) {
+        const { options, correctAnswer } = buildOptions(fanSinceFormatted, ["01/01/2023", "14/02/2024", "30/04/2024"]);
+        questions.push({
+            id: 3,
+            question: `${fanName} trở thành fan của ${idolName} từ ngày nào?`,
+            options,
+            correctAnswer,
+        });
+    }
+
+    questions.push({
+        id: 4,
+        question: `Fandom của ${idolName} có tên gọi là gì?`,
+        options: [fanName, "Người hâm mộ ẩn danh", "Khán giả", "Chưa rõ"],
+        correctAnswer: 0,
+    });
+
+    questions.push({
+        id: 5,
         question: "Cách support idol văn minh nhất là gì?",
         options: ["Stream nhạc", "Lan tỏa năng lượng tích cực", "Tôn trọng idol và fan khác", "Tất cả các ý trên"],
         correctAnswer: 3,
-    },
-    {
-        id: 3,
-        question: "Timeline idol nên ưu tiên mốc nào?",
-        options: ["Debut/comeback", "Award", "Concert", "Tất cả các ý trên"],
-        correctAnswer: 3,
-    },
-    {
-        id: 4,
-        question: "Một fanchant tốt nên như thế nào?",
-        options: ["Ngắn, dễ nhớ, đúng vibe idol", "Thật dài", "Khó đọc", "Không liên quan"],
-        correctAnswer: 0,
-    },
-    {
-        id: 5,
-        question: "Ảnh nào nên đặt nổi bật trong template Idol?",
-        options: ["Ảnh sân khấu/visual rõ nhất", "Ảnh mờ", "Ảnh không liên quan", "Ảnh lỗi"],
-        correctAnswer: 0,
-    },
-];
+    });
 
-export function IdolGameSection({ isDark = true }: IdolGameSectionProps) {
-    const [questions] = useState<Question[]>(defaultQuestions);
+    return questions;
+}
+
+export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, idolBirthday, fanSinceDate }: IdolGameSectionProps) {
+    const [questions] = useState<Question[]>(() =>
+        buildPersonalizedQuestions({ idolName, fanName, debutDate, idolBirthday, fanSinceDate })
+    );
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [score, setScore] = useState(0);

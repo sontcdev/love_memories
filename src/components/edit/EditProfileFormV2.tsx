@@ -9,13 +9,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
-import { updateLinkProfile, LoveProfileData, IdolProfileData, WeddingProfileData, TravelProfileData, FriendshipProfileData, EveryProfileData } from "@/app/actions/profile-actions";
+import { updateLinkProfile, LoveProfileData, IdolProfileData, WeddingProfileData, TravelProfileData, FriendshipProfileData, EveryProfileData, BabyProfileData } from "@/app/actions/profile-actions";
 import { Save, Loader2, Heart, Camera, LayoutGrid, Undo2, Redo2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useFormFeedback } from "./useFormFeedback";
 import { useFormAutoSave, type SaveStatus } from "./useAutoSave";
 import { SaveStatusIndicator } from "./SaveStatusIndicator";
 import { useUndoRedo } from "./useUndoRedo";
+import { SloganField } from "./SloganField";
 
 // A page is exactly one LinkType, so only one of these can ever render. Loading
 // all six was the single biggest contributor to the /[slug]/edit bundle.
@@ -37,6 +38,9 @@ const EditTravelProfileForm = dynamic(() =>
 const EditFriendshipProfileForm = dynamic(() =>
     import("./EditFriendshipProfileForm").then((m) => m.EditFriendshipProfileForm)
 );
+const EditBabyProfileForm = dynamic(() =>
+    import("./EditBabyProfileForm").then((m) => m.EditBabyProfileForm)
+);
 
 
 // ============================================================================
@@ -51,6 +55,7 @@ const loveProfileSchema = z.object({
     anniversary_date: z.string().optional(),
     title: z.string().max(100).optional(),
     short_note: z.string().max(200).optional(),
+    slogan: z.string().max(120, "Tối đa 120 ký tự").optional(),
 });
 
 type LoveFormData = z.infer<typeof loveProfileSchema>;
@@ -60,6 +65,7 @@ const everyProfileSchema = z.object({
     owner_name: z.string().max(50).optional(),
     title: z.string().max(100).optional(),
     short_note: z.string().max(200).optional(),
+    slogan: z.string().max(120, "Tối đa 120 ký tự").optional(),
 });
 
 type EveryFormData = z.infer<typeof everyProfileSchema>;
@@ -170,6 +176,18 @@ export function EditProfileFormV2({ slug, linkType, initialData, isDark = false,
             <EditFriendshipProfileForm
                 slug={slug}
                 initialData={initialData as FriendshipProfileData}
+                isSubmitting={isSubmitting}
+                setIsSubmitting={setIsSubmitting}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "BABY") {
+        return (
+            <EditBabyProfileForm
+                slug={slug}
+                initialData={initialData as BabyProfileData}
                 isSubmitting={isSubmitting}
                 setIsSubmitting={setIsSubmitting}
                 onSuccess={onSuccess}
@@ -295,6 +313,7 @@ function LoveProfileForm({
             anniversary_date: initialData?.anniversary_date || "",
             title: initialData?.title || "",
             short_note: initialData?.short_note || "",
+            slogan: initialData?.slogan || "",
         },
     });
 
@@ -632,6 +651,12 @@ function LoveProfileForm({
                 )}
             </div>
 
+            <SloganField
+                registerProps={register("slogan")}
+                error={errors.slogan?.message}
+                focusRingClassName="focus:ring-rose-300 focus:border-rose-400"
+            />
+
             {/* Trạng thái tự động lưu + hoàn tác, đặt ngay trên nút Lưu */}
             <FormSaveToolbar
                 status={autoSave.status}
@@ -691,6 +716,7 @@ function EveryProfileForm({
             owner_name: initialData?.owner_name || "",
             title: initialData?.title || "",
             short_note: initialData?.short_note || "",
+            slogan: initialData?.slogan || "",
         },
     });
 
@@ -775,6 +801,12 @@ function EveryProfileForm({
                 />
                 {errors.short_note && <p className="mt-1 text-sm text-red-500">{errors.short_note.message}</p>}
             </div>
+
+            <SloganField
+                registerProps={register("slogan")}
+                error={errors.slogan?.message}
+                focusRingClassName="focus:ring-teal-300 focus:border-teal-400"
+            />
 
             <FormSaveToolbar
                 status={autoSave.status}

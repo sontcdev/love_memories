@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { LinkType } from "@prisma/client";
-import { Gem, GraduationCap, Heart, MapPin, Smile, Star, Users } from "lucide-react";
+import { Baby, Gem, GraduationCap, Heart, Home, MapPin, Smile, Star, Users } from "lucide-react";
 
 /**
  * Nhãn + màu + biểu tượng cho từng `LinkType`.
@@ -22,6 +22,8 @@ export const LINK_TYPE_ORDER: LinkType[] = [
     "WEDDING",
     "TRAVEL",
     "FRIENDSHIP",
+    "BABY",
+    "FAMILY",
 ];
 
 export const LINK_TYPE_LABELS: Record<LinkType, string> = {
@@ -35,6 +37,8 @@ export const LINK_TYPE_LABELS: Record<LinkType, string> = {
     WEDDING: "Đám cưới",
     TRAVEL: "Du lịch",
     FRIENDSHIP: "Tình bạn",
+    BABY: "Em bé",
+    FAMILY: "Gia đình",
 };
 
 export function getTypeIcon(type: LinkType, className = "w-4 h-4"): ReactNode {
@@ -59,6 +63,10 @@ export function getTypeIcon(type: LinkType, className = "w-4 h-4"): ReactNode {
             return <MapPin className={`${className} text-teal-400`} />;
         case "FRIENDSHIP":
             return <Smile className={`${className} text-purple-400`} />;
+        case "BABY":
+            return <Baby className={`${className} text-amber-400`} />;
+        case "FAMILY":
+            return <Home className={`${className} text-orange-500`} />;
     }
 }
 
@@ -84,5 +92,9 @@ export function getTypeBadgeColor(type: LinkType): string {
             return "bg-teal-500/10 text-teal-400 border-teal-500/30";
         case "FRIENDSHIP":
             return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+        case "BABY":
+            return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+        case "FAMILY":
+            return "bg-orange-500/10 text-orange-500 border-orange-500/30";
     }
 }

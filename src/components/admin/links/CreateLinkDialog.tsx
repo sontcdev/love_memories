@@ -35,12 +35,11 @@ const CREATABLE_TYPES = [
     "LOVE",
     "LOVE2",
     "IDOL",
-    "GRAD_PERSONAL",
     "GRAD_CLASS",
     "GRAD_GROUP",
-    "WEDDING",
     "TRAVEL",
-    "FRIENDSHIP",
+    "BABY",
+    "FAMILY",
 ] as const;
 
 /**

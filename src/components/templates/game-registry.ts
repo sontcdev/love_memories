@@ -35,7 +35,7 @@ export const GAME_REGISTRY: Record<LinkType, GameVariant[]> = {
         { id: "C", label: "Bingo khoảnh khắc", description: "Đánh dấu những điều đã cùng trải qua", status: "ready" },
     ],
     IDOL: [
-        { id: "A", label: "Fan Quiz", description: "5 câu hỏi về thần tượng — bạn là fan cứng đến đâu?", status: "ready" },
+        { id: "A", label: "Quiz kỷ niệm cá nhân hoá", description: "Câu hỏi dựa trên ngày debut, sinh nhật idol và ngày bạn thành fan", status: "ready" },
         { id: "B", label: "Danh sách biểu diễn", description: "Sắp xếp bài hát theo đúng thứ tự concert", status: "ready" },
         { id: "C", label: "Fan chant", description: "Gõ nhịp cổ vũ theo điệu nhạc", status: "ready" },
     ],
@@ -68,6 +68,12 @@ export const GAME_REGISTRY: Record<LinkType, GameVariant[]> = {
         { id: "A", label: "Thẻ bạn bè", description: "Bốc thẻ thử thách nhóm bạn", status: "ready" },
         { id: "B", label: "Ai có khả năng nhất", description: "Bầu chọn 'ai có khả năng nhất...'", status: "ready" },
         { id: "C", label: "Câu nói nội bộ", description: "Điền vào chỗ trống câu nói nội bộ", status: "ready" },
+    ],
+    BABY: [],
+    FAMILY: [
+        { id: "A", label: "Bình chọn thành viên", description: "Bình chọn cho thành viên gia đình theo câu hỏi", status: "ready" },
+        { id: "B", label: "Trivia gia đình", description: "Câu đố vui về những kỷ niệm của cả nhà", status: "ready" },
+        { id: "C", label: "Xếp hình gia đình", description: "Xếp ảnh gia đình cùng nhau", status: "ready" },
     ],
 };
 

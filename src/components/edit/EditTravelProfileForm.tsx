@@ -10,16 +10,17 @@ import { useFormFeedback } from "./useFormFeedback";
 import { useFormAutoSave, type SaveStatus } from "./useAutoSave";
 import { SaveStatusIndicator } from "./SaveStatusIndicator";
 import { useUndoRedo } from "./useUndoRedo";
+import { SloganField } from "./SloganField";
 
 // Thông báo lỗi bằng tiếng Việt: với `mode: "onChange"` (xem bên dưới) các lỗi này
 // hiện ngay khi người dùng đang gõ, nên không được để lọt thông báo mặc định
 // (tiếng Anh) của zod.
 const travelProfileSchema = z.object({
     trip_name: z.string().min(1, "Bắt buộc").max(50, "Tối đa 50 ký tự"),
-    destination: z.string().max(100, "Tối đa 100 ký tự").optional(),
     start_date: z.string().optional(),
     end_date: z.string().optional(),
-    travelers: z.string().max(100, "Tối đa 100 ký tự").optional(),
+    owner_name: z.string().max(100, "Tối đa 100 ký tự").optional(),
+    slogan: z.string().max(120, "Tối đa 120 ký tự").optional(),
 });
 
 type TravelFormData = z.infer<typeof travelProfileSchema>;
@@ -99,10 +100,10 @@ export function EditTravelProfileForm({
         mode: "onChange",
         defaultValues: {
             trip_name: initialData?.trip_name || "",
-            destination: initialData?.destination || initialData?.destinations || "",
             start_date: initialData?.start_date || "",
             end_date: initialData?.end_date || "",
-            travelers: initialData?.travelers || "",
+            owner_name: initialData?.owner_name || "",
+            slogan: initialData?.slogan || "",
         },
     });
 
@@ -175,18 +176,6 @@ export function EditTravelProfileForm({
                 )}
             </div>
 
-            {/* Destinations */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Điểm đến
-                </label>
-                <input
-                    {...register("destination")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-300 focus:border-sky-400 outline-none transition-all"
-                    placeholder="Đà Lạt, Phú Quốc, Nhật Bản..."
-                />
-            </div>
-
             {/* Date Range */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -211,17 +200,23 @@ export function EditTravelProfileForm({
                 </div>
             </div>
 
-            {/* Travelers */}
+            {/* Owner */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Người đồng hành
+                    Người tổ chức
                 </label>
                 <input
-                    {...register("travelers")}
+                    {...register("owner_name")}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-300 focus:border-sky-400 outline-none transition-all"
                     placeholder="Gia đình, bạn bè, người yêu..."
                 />
             </div>
+
+            <SloganField
+                registerProps={register("slogan")}
+                error={errors.slogan?.message}
+                focusRingClassName="focus:ring-sky-300 focus:border-sky-400"
+            />
 
             {/* Trạng thái tự động lưu + hoàn tác, đặt ngay trên nút Lưu */}
             <FormSaveToolbar

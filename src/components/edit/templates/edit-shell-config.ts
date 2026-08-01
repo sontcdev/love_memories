@@ -1,10 +1,12 @@
 import type { LinkType } from "@prisma/client";
 import {
     Award,
+    Baby,
     BookOpen,
     Compass,
     Gem,
     Heart,
+    Home,
     Image as ImageIcon,
     LayoutGrid,
     Map,
@@ -484,7 +486,7 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
     },
 
     TRAVEL: {
-        tabs: ["timeline", "profile", "gallery", "letters", "features", "settings"],
+        tabs: ["profile", "trip", "settings"],
         supportsThemeMode: true,
         contentIsDark: ({ isDark }) => isDark,
         // Night palette matches TravelTemplate's darkBg (#0a1017).
@@ -590,6 +592,94 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
             eyebrowClass: `${MAIN_EYEBROW} text-pink-500`,
             titleClass: "text-lg font-black",
             descriptionClass: ({ isDark }) => `text-sm ${isDark ? "text-violet-200/70" : "text-violet-700"}`,
+        },
+    },
+
+    BABY: {
+        tabs: ["profile", "gallery", "timeline", "letters", "settings"],
+        page: "min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-white py-6 text-amber-950",
+        card: "mx-auto max-w-6xl overflow-hidden rounded-[2rem] border-2 border-amber-200 bg-white/95 shadow-[0_24px_60px_rgba(217,119,6,0.16)] backdrop-blur",
+        grid: GRID_18,
+        header: {
+            root: "sticky top-0 z-20 border-b-2 border-amber-100 bg-white/90 backdrop-blur",
+            inner: HEADER_INNER,
+            backLink: "rounded-full p-2 text-amber-600 transition hover:bg-amber-50",
+            eyebrow: "Baby diary",
+            eyebrowClass: `${EYEBROW} text-amber-500`,
+            title: "Nhật ký em bé",
+            titleClass: "text-xl font-bold text-amber-800",
+            viewLink: "text-sm font-semibold text-amber-600 hover:text-amber-800",
+        },
+        aside: {
+            root: "border-amber-100 bg-gradient-to-b from-amber-50 to-orange-50 p-4 md:border-r-2 md:p-6",
+            card: "mb-6 rounded-[1.5rem] border border-amber-100 bg-white/75 p-4 shadow-sm",
+            icon: Baby,
+            iconWrap: "mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600",
+            iconClass: "h-6 w-6",
+            heading: "Hành trình đầu đời",
+            headingClass: "font-serif text-2xl font-bold text-amber-800",
+            blurb: "Ưu tiên hồ sơ bé, hành trình 12 tháng và những khoảnh khắc đầu đời.",
+            blurbClass: "mt-2 text-sm leading-relaxed text-amber-600",
+            nav: NAV,
+            tab: ({ active }) =>
+                `${tabBase("rounded-2xl")} ${active
+                    ? "bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-lg shadow-amber-200"
+                    : "text-amber-700 hover:bg-white/80"
+                }`,
+        },
+        main: {
+            root: "bg-white/80 p-4 sm:p-6 md:p-8",
+            section: "mb-6 rounded-[2rem] border border-amber-100 bg-gradient-to-r from-white to-amber-50/80 p-5 shadow-sm",
+            icon: BookOpen,
+            iconClass: "h-5 w-5 text-amber-500",
+            eyebrow: "Đang chỉnh",
+            eyebrowClass: `${MAIN_EYEBROW} text-amber-500`,
+            titleClass: "text-lg font-bold text-amber-900",
+            descriptionClass: "text-sm text-amber-600",
+        },
+    },
+
+    FAMILY: {
+        tabs: ["profile", "features", "gallery", "timeline", "letters", "settings"],
+        page: "min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-white py-6 text-orange-950",
+        card: "mx-auto max-w-6xl overflow-hidden rounded-[2rem] border-2 border-orange-200 bg-white/95 shadow-[0_24px_60px_rgba(234,88,12,0.16)] backdrop-blur",
+        grid: GRID_18,
+        header: {
+            root: "sticky top-0 z-20 border-b-2 border-orange-100 bg-white/90 backdrop-blur",
+            inner: HEADER_INNER,
+            backLink: "rounded-full p-2 text-orange-600 transition hover:bg-orange-50",
+            eyebrow: "Family desk",
+            eyebrowClass: `${EYEBROW} text-orange-500`,
+            title: "Hồ sơ gia đình",
+            titleClass: "text-xl font-bold text-orange-800",
+            viewLink: "text-sm font-semibold text-orange-600 hover:text-orange-800",
+        },
+        aside: {
+            root: "border-orange-100 bg-gradient-to-b from-orange-50 to-amber-50 p-4 md:border-r-2 md:p-6",
+            card: "mb-6 rounded-[1.5rem] border border-orange-100 bg-white/75 p-4 shadow-sm",
+            icon: Home,
+            iconWrap: "mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600",
+            iconClass: "h-6 w-6",
+            heading: "Tổ ấm là trung tâm",
+            headingClass: "font-serif text-2xl font-bold text-orange-800",
+            blurb: "Ưu tiên hồ sơ gia đình, thành viên, ước mơ chung và những kỷ niệm đáng nhớ.",
+            blurbClass: "mt-2 text-sm leading-relaxed text-orange-600",
+            nav: NAV,
+            tab: ({ active }) =>
+                `${tabBase("rounded-2xl")} ${active
+                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-200"
+                    : "text-orange-700 hover:bg-white/80"
+                }`,
+        },
+        main: {
+            root: "bg-white/80 p-4 sm:p-6 md:p-8",
+            section: "mb-6 rounded-[2rem] border border-orange-100 bg-gradient-to-r from-white to-orange-50/80 p-5 shadow-sm",
+            icon: Users,
+            iconClass: "h-5 w-5 text-orange-500",
+            eyebrow: "Đang chỉnh",
+            eyebrowClass: `${MAIN_EYEBROW} text-orange-500`,
+            titleClass: "text-lg font-bold text-orange-900",
+            descriptionClass: "text-sm text-orange-600",
         },
     },
 };

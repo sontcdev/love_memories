@@ -16,6 +16,7 @@ export { EditIdolProfileForm } from "./EditIdolProfileForm";
 export { EditIdolConfigForm } from "./EditIdolConfigForm";
 export { EditGradProfileForm } from "./EditGradProfileForm";
 export { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
+export { EditFamilyProfileForm } from "./EditFamilyProfileForm";
 export { GalleryManager } from "./GalleryManager";
 export { TimelineManager } from "./TimelineManager";
 export { CareerPathManager } from "./CareerPathManager";

@@ -13,6 +13,7 @@ export interface LoveProfileData {
     anniversary_date?: string;
     title?: string;
     short_note?: string;
+    slogan?: string;
 }
 
 export interface IdolProfileData {
@@ -21,6 +22,8 @@ export interface IdolProfileData {
     idol_avatar?: string;
     fan_avatar?: string;
     debut_date?: string;
+    idol_birthday?: string;
+    fan_since_date?: string;
     title?: string;
     slogan?: string;
 }
@@ -91,18 +94,31 @@ export interface GradGroupProfileData {
     }[];
 }
 
+export interface ClassMemberLite {
+    id: string;
+    name: string;
+    nickname?: string;
+    avatar?: string;
+}
+
 export interface GradClassProfileData {
     class_name?: string;
     school_name?: string;
     graduation_year?: string;
     slogan?: string;
     members_count?: number;
+    members?: ClassMemberLite[];
     homeroom_teacher_name?: string;
     homeroom_teacher_avatar?: string;
     homeroom_teacher_message?: string;
     class_officers_monitor?: string;
     class_officers_vice_monitor?: string;
     title?: string;
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
 }
 
 export interface WeddingProfileData {
@@ -117,6 +133,7 @@ export interface WeddingProfileData {
     title?: string;
     short_note?: string;
     love_story?: string;
+    slogan?: string;
     quiz?: {
         question: string;
         options: string[];
@@ -134,17 +151,34 @@ export interface WeddingProfileData {
     };
 }
 
+export interface TravelMilestone {
+    id: string;
+    title: string;
+    date?: string;
+    description?: string;
+    image_url?: string;
+    sort_order: number;
+}
+
+export interface TravelDestination {
+    id: string;
+    name: string;
+    location_note?: string;
+    cover_image_url?: string;
+    milestones: TravelMilestone[]; // max 10 per destination
+    sort_order: number;
+}
+
 export interface TravelProfileData {
     trip_name?: string;
-    destination?: string;
     start_date?: string;
     end_date?: string;
     owner_name?: string;
-    destinations?: string;
-    travelers?: string;
     title?: string;
     short_note?: string;
+    slogan?: string;
     owner_avatar?: string;
+    destinations?: TravelDestination[];
     trip_stats?: {
         days?: number;
         countries?: number;
@@ -152,11 +186,6 @@ export interface TravelProfileData {
         photos?: number;
         memories?: number;
     };
-    quiz?: {
-        question: string;
-        options: string[];
-        correctIndex: number;
-    }[];
 }
 
 export interface FriendshipMember {
@@ -206,9 +235,69 @@ export interface EveryProfileData {
     owner_name?: string;
     title?: string;
     short_note?: string;
+    slogan?: string;
 }
 
-export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData | WeddingProfileData | TravelProfileData | FriendshipProfileData | EveryProfileData;
+export interface FamilyMember {
+    id: string;
+    name: string;
+    role?: string;
+    avatar?: string;
+    quote?: string;
+    birthday?: string;
+}
+
+export interface FamilyProfileData {
+    family_name?: string;
+    family_avatar?: string;
+    established_year?: string;
+    slogan?: string;
+    title?: string;
+    theme?: "home" | "album" | "hearth";
+    members?: FamilyMember[];
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    quiz_badges?: {
+        perfect_title?: string;
+        perfect_desc?: string;
+        good_title?: string;
+        good_desc?: string;
+        average_title?: string;
+        average_desc?: string;
+        low_title?: string;
+        low_desc?: string;
+    };
+    goals?: {
+        id: string;
+        title: string;
+        description: string;
+        status: "todo" | "done";
+    }[];
+}
+
+export interface BabyMonthEntry {
+    month: number;
+    image_url?: string;
+    weight_kg?: number;
+    note?: string;
+}
+
+export interface BabyProfileData {
+    baby_name?: string;
+    home_name?: string;
+    father_name?: string;
+    mother_name?: string;
+    birth_date?: string;
+    birth_weight_kg?: number;
+    title?: string;
+    slogan?: string;
+    journey?: BabyMonthEntry[];
+}
+
+export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData | WeddingProfileData | TravelProfileData | FriendshipProfileData | EveryProfileData | BabyProfileData | FamilyProfileData;
 
 export interface LinkConfigData {
     background_color?: string;
@@ -237,6 +326,13 @@ export async function updateLinkProfile(
 
         if (!link) {
             return { success: false, error: "Không tìm thấy liên kết" };
+        }
+
+        // GRAD_CLASS members list: cap at 60 rows before writing, to keep the
+        // profile_data JSON blob and the edit/public pages responsive.
+        const incomingMembers = (data as { members?: unknown }).members;
+        if (Array.isArray(incomingMembers) && incomingMembers.length > 60) {
+            return { success: false, error: "Tối đa 60 thành viên" };
         }
 
         const currentData = (link.profile_data as Record<string, unknown>) || {};

@@ -33,7 +33,7 @@ type LetterWithReplies = Letter & { replies: LetterReply[] };
 interface LetterBoxProps {
     slug: string;
     initialLetters: LetterWithReplies[];
-    theme?: "love" | "every" | "idol" | "wedding" | "travel" | "friendship";
+    theme?: "love" | "every" | "idol" | "wedding" | "travel" | "friendship" | "baby";
     isDark?: boolean;
     onPopupOpenChange?: (isOpen: boolean) => void;
 }
@@ -126,6 +126,13 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
             bg: "bg-purple-50",
             border: "border-purple-200",
             text: "text-purple-600",
+        },
+        baby: {
+            primary: "from-amber-300 to-orange-400",
+            secondary: "amber",
+            bg: "bg-amber-50",
+            border: "border-amber-200",
+            text: "text-amber-600",
         },
     };
 
@@ -238,7 +245,7 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
                 <div className="flex items-center gap-2">
                     <Mail className={`w-6 h-6 ${colors.text}`} />
                     <h2 className={`text-xl font-bold ${isDark ? "text-slate-100" : "text-gray-800"}`}>
-                        {theme === "wedding" ? "Sổ Lưu Bút" : theme === "travel" ? "Postcards" : theme === "friendship" ? "Lời Nhắn" : "Thư Tình"}
+                        {theme === "wedding" ? "Sổ Lưu Bút" : theme === "travel" ? "Postcards" : theme === "friendship" ? "Lời Nhắn" : theme === "baby" ? "Nhật Ký Cho Con" : "Thư Tình"}
                     </h2>
                     <span className={`text-sm ${isDark ? "text-slate-400" : "text-gray-400"}`}>({letters.length})</span>
                 </div>

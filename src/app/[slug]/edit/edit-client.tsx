@@ -8,6 +8,7 @@ import { EditConfigForm } from "@/components/edit/EditConfigForm";
 import { EditIdolConfigForm } from "@/components/edit/EditIdolConfigForm";
 import { GalleryManager } from "@/components/edit/GalleryManager";
 import { TimelineManager } from "@/components/edit/TimelineManager";
+import { EditGradClassMembersPanel } from "@/components/edit/EditGradClassMembersPanel";
 import {
     User,
     Image as ImageIcon,
@@ -19,7 +20,8 @@ import {
     Moon,
     Copy,
     Check,
-    QrCode
+    QrCode,
+    Users
 } from "lucide-react";
 import QRCode from "react-qr-code";
 
@@ -35,7 +37,7 @@ interface EditPageClientProps {
     linkData: LinkWithRelations;
 }
 
-type TabId = "profile" | "gallery" | "timeline" | "settings";
+type TabId = "profile" | "gallery" | "timeline" | "members" | "settings";
 
 const TABS: { id: TabId; label: string; icon: typeof User; description: string }[] = [
     { id: "profile", label: "Thông tin chung", icon: User, description: "Cập nhật thông tin hồ sơ" },
@@ -44,10 +46,25 @@ const TABS: { id: TabId; label: string; icon: typeof User; description: string }
     { id: "settings", label: "Cài đặt", icon: Settings, description: "Tùy chỉnh màu sắc và nhạc" },
 ];
 
+// GRAD_CLASS-only tab: inserted after "timeline" without mutating the shared
+// TABS array, since that array is used as-is by every other LinkType routed
+// through this edit shell.
+const MEMBERS_TAB: { id: TabId; label: string; icon: typeof User; description: string } = {
+    id: "members",
+    label: "Thành viên lớp",
+    icon: Users,
+    description: "Danh sách sĩ số cả lớp",
+};
+
 export function EditPageClient({ slug, linkData }: EditPageClientProps) {
     const [activeTab, setActiveTab] = useState<TabId>("profile");
     const isIdol = linkData.type === "IDOL";
     const isGrad = linkData.type === "GRAD_PERSONAL" || linkData.type === "GRAD_CLASS" || linkData.type === "GRAD_GROUP";
+
+    const isGradClass = linkData.type === "GRAD_CLASS";
+    const tabs = isGradClass
+        ? [...TABS.slice(0, 3), MEMBERS_TAB, ...TABS.slice(3)]
+        : TABS;
 
     let gradTheme = "emerald";
     if (linkData.type === "GRAD_CLASS") {
@@ -342,7 +359,7 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                         {/* Left Column (Sidebar Panel) */}
                         <aside className={sidebarClass}>
                             <nav className="grid grid-cols-2 md:flex md:flex-col gap-2">
-                                {TABS.map((tab) => {
+                                {tabs.map((tab) => {
                                     const isActive = activeTab === tab.id;
                                     let tabBtnClass = `flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl text-left transition-all ${
                                         isActive
@@ -492,6 +509,14 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                 <TimelineManager
                                     slug={slug}
                                     initialTimeline={linkData.timelines}
+                                    isDark={isDark}
+                                />
+                            )}
+
+                            {activeTab === "members" && isGradClass && (
+                                <EditGradClassMembersPanel
+                                    slug={slug}
+                                    initialData={linkData.profile_data as Record<string, unknown>}
                                     isDark={isDark}
                                 />
                             )}
