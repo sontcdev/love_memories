@@ -483,6 +483,38 @@ whole project — they are separate signals.
 - Never run `vercel --prod`, `vercel promote`, or `vercel alias set ... memorae.me` /
   `www.memorae.me` unless explicitly asked to deploy to production.
 
+### Test environment variables (`Preview` + `deploy-test` branch scope)
+
+- `deploy-test` has its **own** `DATABASE_URL`/`DIRECT_URL`, scoped to
+  `Preview` + git branch `deploy-test`, matching `.env.development` (project
+  `llgblesxzhhmbfvfcfzr`) — it does **not** fall back to the generic
+  `Development, Preview, Production` catch-all value. Do not delete these
+  scoped vars to "fix" an apparently-empty Dashboard value; see next point.
+- Vercel marks these as **Sensitive**, not Encrypted: once saved, the value can
+  never be read again via Dashboard or `vercel env pull`/API — both show empty
+  or `"[SENSITIVE]"` by design. That is not evidence of a misconfiguration.
+  To actually verify what a live deployment is connected to, don't trust the
+  Dashboard — query the runtime directly (see below).
+- To replace a branch-scoped var: `vercel env rm <NAME> preview deploy-test --yes`
+  then `printf '%s' "$VALUE" | vercel env add <NAME> preview deploy-test --yes`
+  (the bare `vercel env rm <NAME> preview` errors when multiple scopes share the
+  name — always pass the git branch explicitly).
+- Changing an env var does **not** rebuild existing deployments — run
+  `vercel redeploy <deployment-url> --target preview` (or push a new commit)
+  and re-alias per the workflow above.
+
+### Diagnosing "wrong DB" / "wrong credentials" on test
+
+When login or data looks wrong on `test.memorae.me` and env vars *look*
+correct, don't guess from Vercel config — prove it from the running code:
+add a temporary route handler that runs a raw query
+(`prisma.$queryRawUnsafe("SELECT current_database()")`) and/or calls the
+actual server action directly (e.g. `loginAdmin()` with a hardcoded
+`FormData`) and returns the result as JSON. Deploy it to `deploy-test`, curl
+it, then **delete the route** once the question is answered — it is a
+diagnostic aid, never a permanent endpoint (it would leak DB/session info
+publicly if left in place).
+
 ## Key Files
 
 - Templates: `src/components/templates/{love,love2,idol,grad-personal,grad-class,grad-group,wedding,travel,friendship}/`
@@ -504,14 +536,3 @@ whole project — they are separate signals.
 - **Data Access:** Always utilize Prisma Client for querying the Supabase PostgreSQL database. Never write raw SQL unless explicitly asked.
 - **Styling Convention:** Combine Tailwind classes using `clsx` and `tailwind-merge` via your standard `cn()` utility.
 - **Output Style:** Provide concise, direct code solutions. **Do not write long theoretical explanations.** Focus purely on the implementation.
-
-## Deployment (Vercel)
-
-- Single Vercel project `love-memories` (team `soncodekhongbugs-projects`). There is no separate "test" project — test vs. production is just two different domain aliases pointing at two different deployments of the same project.
-- **Production**: branch `deploy` → domains `memorae.me`, `www.memorae.me`, `love-memories-rust.vercel.app`.
-- **Test**: domain `test.memorae.me` (Cloudflare-fronted). Points at whichever deployment was last aliased to it — not automatically tied to a branch.
-- Workflow to push to test without touching production:
-  1. Merge the work branch into (or create) a branch like `deploy-test`, push it — Vercel's git integration auto-builds a preview deployment for that branch (`love-memories-git-<branch>-soncodekhongbugs-projects.vercel.app`).
-  2. Find that deployment: `vercel ls love-memories`, confirm with `vercel inspect <url>` that `target: preview` (never `production`).
-  3. Point the test domain at it: `vercel alias set <deployment-url> test.memorae.me`.
-- **Never** run `vercel --prod`, `vercel promote`, or `vercel alias set ... memorae.me` / `www.memorae.me` unless explicitly asked to deploy to production. Always verify with `vercel alias ls` after any alias change that `memorae.me`/`www.memorae.me` still point at the same (untouched) deployment.
