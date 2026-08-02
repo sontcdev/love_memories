@@ -454,6 +454,35 @@ Then, where relevant:
 Note `npm run build` does not run the tests, and `npm test` does not typecheck the
 whole project — they are separate signals.
 
+## Deployment (Vercel)
+
+- Single Vercel project `love-memories` (team `soncodekhongbugs-projects`). There is no
+  separate "test" project — test vs. production is just two different domain aliases
+  pointing at two different deployments of the same project.
+- Production: branch `deploy` → domains `memorae.me`, `www.memorae.me`,
+  `love-memories-rust.vercel.app`. Never touch these without an explicit request.
+- Test: domain `test.memorae.me` (Cloudflare-fronted). Points at whichever deployment was
+  last aliased to it — not automatically tied to a branch, so the alias step below is
+  mandatory every time, even if you already aliased it earlier in the same session.
+- **Every code change destined for test MUST go through `deploy-test`, and pushes MUST
+  target that branch only** — never push a feature branch directly and alias it to
+  `test.memorae.me`, and never leave the alias pointed at an older commit after new work
+  is merged in.
+  1. Merge the work branch into (or create) `deploy-test`, push it — Vercel's git
+     integration auto-builds a preview deployment for that branch.
+  2. Find that deployment: `vercel ls love-memories`, confirm with
+     `vercel inspect <url>` that `target: preview` and the alias listed is
+     `love-memories-git-deploy-test-...` (i.e. it was actually built from `deploy-test`,
+     not a stale feature-branch build).
+  3. Point the test domain at it: `vercel alias set <deployment-url> test.memorae.me`.
+     Do this after **every** merge into `deploy-test`, even if `test.memorae.me` was
+     already aliased to a previous `deploy-test` build — the alias does not move on its
+     own when a new commit lands on the branch.
+  4. Verify with `vercel alias ls` that `memorae.me`/`www.memorae.me` still point at their
+     unchanged production deployment.
+- Never run `vercel --prod`, `vercel promote`, or `vercel alias set ... memorae.me` /
+  `www.memorae.me` unless explicitly asked to deploy to production.
+
 ## Key Files
 
 - Templates: `src/components/templates/{love,love2,idol,grad-personal,grad-class,grad-group,wedding,travel,friendship}/`
