@@ -228,34 +228,6 @@ export function EditConfigForm({ slug, initialConfig, onSuccess }: EditConfigFor
                 </select>
             </div>
 
-            {/* Music URL - temporarily disabled */}
-            {/* <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <Music className="w-5 h-5 text-pink-500" />
-                    <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
-                </div>
-
-                <input
-                    {...register("music_url")}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all"
-                    placeholder="https://example.com/music.mp3"
-                />
-                {errors.music_url && (
-                    <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
-                )}
-
-                <label className="flex items-center gap-3 mt-4 cursor-pointer">
-                    <input
-                        type="checkbox"
-                        {...register("auto_play")}
-                        className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-300"
-                    />
-                    <span className="text-sm text-gray-600">
-                        Tự động phát nhạc khi tải trang
-                    </span>
-                </label>
-            </div> */}
-
             {/* Message */}
             {message && (
                 <div

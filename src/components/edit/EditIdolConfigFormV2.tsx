@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Palette, Type, Music } from "lucide-react";
+import { Save, Loader2, Palette, Type } from "lucide-react";
 import { GameTemplateSelector } from "./GameTemplateSelector";
 import { normalizeGameTemplate, type GameVariantId } from "@/components/templates/game-registry";
 import { useFormFeedback } from "./useFormFeedback";
@@ -266,46 +266,6 @@ export function EditIdolConfigFormV2({ slug, linkType = "IDOL", initialConfig, o
                         </option>
                     ))}
                 </select>
-            </div>
-
-            {/* Music URL */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <Music className="w-5 h-5 text-pink-500" />
-                    <h3 className={`text-lg font-semibold ${isDark ? "text-purple-100" : "text-gray-800"}`}>Nhạc nền</h3>
-                </div>
-
-                <input
-                    {...register("music_url")}
-                    className={`w-full px-4 py-2 rounded-lg border outline-none transition-all ${
-                        isDark 
-                            ? "bg-slate-950/60 border-purple-500/30 text-white placeholder-purple-300/30 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]" 
-                            : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                    }`}
-                    placeholder="https://youtube.com/... hoặc .mp3 URL"
-                />
-                {errors.music_url && (
-                    <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
-                )}
-                <p className={`mt-1 text-xs ${isDark ? "text-purple-200/60" : "text-gray-500"}`}>
-                    Hỗ trợ YouTube và file audio trực tiếp (.mp3). Link TikTok cần người xem
-                    bấm play thủ công.
-                </p>
-
-                <label className="flex items-center gap-3 mt-4 cursor-pointer">
-                    <input
-                        type="checkbox"
-                        {...register("auto_play")}
-                        className={`w-5 h-5 rounded transition-colors ${
-                            isDark
-                                ? "border-purple-500/30 bg-slate-950/60 text-purple-500 focus:ring-purple-500/50"
-                                : "border-gray-300 text-pink-500 focus:ring-pink-300"
-                        }`}
-                    />
-                    <span className={`text-sm ${isDark ? "text-purple-200/80" : "text-gray-600"}`}>
-                        Tự động phát nhạc khi tải trang
-                    </span>
-                </label>
             </div>
 
             {/* Game Template Selector */}

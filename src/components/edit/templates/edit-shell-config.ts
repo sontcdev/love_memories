@@ -430,7 +430,7 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
     },
 
     WEDDING: {
-        tabs: ["profile", "features", "timeline", "gallery", "letters", "settings"],
+        tabs: ["profile", "features", "timeline", "gallery", "letters", "music", "settings"],
         supportsThemeMode: true,
         contentIsDark: ({ isDark }) => isDark,
         // Night palette matches WeddingTemplate's darkBg (#14100a).
@@ -486,7 +486,7 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
     },
 
     TRAVEL: {
-        tabs: ["profile", "trip", "settings"],
+        tabs: ["profile", "trip", "music", "settings"],
         supportsThemeMode: true,
         contentIsDark: ({ isDark }) => isDark,
         // Night palette matches TravelTemplate's darkBg (#0a1017).
@@ -541,7 +541,7 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
     },
 
     FRIENDSHIP: {
-        tabs: ["profile", "features", "gallery", "timeline", "letters", "settings"],
+        tabs: ["profile", "features", "gallery", "timeline", "letters", "music", "settings"],
         supportsThemeMode: true,
         contentIsDark: ({ isDark }) => isDark,
         // Night palette matches FriendshipTemplate's darkBg (#140f1c).

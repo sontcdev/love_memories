@@ -11,6 +11,7 @@ import {
     Mail,
     MapPin,
     Moon,
+    Music,
     Settings,
     Sparkles,
     Sun,
@@ -49,6 +50,9 @@ const EditIdolConfigForm = dynamic(() =>
 const EditTravelTripManager = dynamic(() =>
     import("@/components/edit/EditTravelTripManager").then((m) => m.EditTravelTripManager)
 );
+const EditMusicForm = dynamic(() =>
+    import("@/components/edit/EditMusicForm").then((m) => m.EditMusicForm)
+);
 
 export type LinkWithRelations = PrismaLink & {
     config: LinkConfig | null;
@@ -62,7 +66,7 @@ export interface TemplateEditProps {
     linkData: LinkWithRelations;
 }
 
-export type EditTabId = "profile" | "features" | "gallery" | "timeline" | "letters" | "trip" | "settings";
+export type EditTabId = "profile" | "features" | "gallery" | "timeline" | "letters" | "trip" | "music" | "settings";
 
 export interface EditTab {
     id: EditTabId;
@@ -115,11 +119,18 @@ export const EDIT_TABS: Record<EditTabId, EditTab> = {
         description: "Quản lý các điểm đến và cột mốc trong chuyến đi",
         icon: MapPin,
     },
+    music: {
+        id: "music",
+        label: "Nhạc nền",
+        shortLabel: "Nhạc",
+        description: "Thêm nhạc phát khi khách xem trang",
+        icon: Music,
+    },
     settings: {
         id: "settings",
         label: "Cài đặt",
         shortLabel: "Cài đặt",
-        description: "Tùy chỉnh màu sắc và nhạc",
+        description: "Tùy chỉnh màu sắc và phông chữ",
         icon: Settings,
     },
 };
@@ -326,6 +337,19 @@ function EditFormPanel({
             <EditTravelTripManager
                 slug={slug}
                 initialData={linkData.profile_data as Record<string, unknown>}
+                isDark={isDark}
+            />
+        );
+    }
+
+    if (activeTab === "music") {
+        return (
+            <EditMusicForm
+                slug={slug}
+                initialConfig={{
+                    music_url: linkData.config?.music_url ?? undefined,
+                    auto_play: linkData.config?.auto_play,
+                }}
                 isDark={isDark}
             />
         );

@@ -6,6 +6,7 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter } from "@pris
 import { EditProfileForm } from "@/components/edit/EditProfileForm";
 import { EditConfigForm } from "@/components/edit/EditConfigForm";
 import { EditIdolConfigForm } from "@/components/edit/EditIdolConfigForm";
+import { EditMusicForm } from "@/components/edit/EditMusicForm";
 import { GalleryManager } from "@/components/edit/GalleryManager";
 import { TimelineManager } from "@/components/edit/TimelineManager";
 import { EditGradClassMembersPanel } from "@/components/edit/EditGradClassMembersPanel";
@@ -21,7 +22,8 @@ import {
     Copy,
     Check,
     QrCode,
-    Users
+    Users,
+    Music
 } from "lucide-react";
 import QRCode from "react-qr-code";
 
@@ -37,13 +39,14 @@ interface EditPageClientProps {
     linkData: LinkWithRelations;
 }
 
-type TabId = "profile" | "gallery" | "timeline" | "members" | "settings";
+type TabId = "profile" | "gallery" | "timeline" | "members" | "settings" | "music";
 
 const TABS: { id: TabId; label: string; icon: typeof User; description: string }[] = [
     { id: "profile", label: "Thông tin chung", icon: User, description: "Cập nhật thông tin hồ sơ" },
     { id: "gallery", label: "Thư viện ảnh", icon: ImageIcon, description: "Quản lý ảnh của bạn" },
     { id: "timeline", label: "Dòng thời gian", icon: Calendar, description: "Chỉnh sửa câu chuyện" },
-    { id: "settings", label: "Cài đặt", icon: Settings, description: "Tùy chỉnh màu sắc và nhạc" },
+    { id: "music", label: "Nhạc nền", icon: Music, description: "Thêm nhạc phát khi khách xem trang" },
+    { id: "settings", label: "Cài đặt", icon: Settings, description: "Tùy chỉnh màu sắc và phông chữ" },
 ];
 
 // GRAD_CLASS-only tab: inserted after "timeline" without mutating the shared
@@ -517,6 +520,17 @@ export function EditPageClient({ slug, linkData }: EditPageClientProps) {
                                 <EditGradClassMembersPanel
                                     slug={slug}
                                     initialData={linkData.profile_data as Record<string, unknown>}
+                                    isDark={isDark}
+                                />
+                            )}
+
+                            {activeTab === "music" && (
+                                <EditMusicForm
+                                    slug={slug}
+                                    initialConfig={{
+                                        music_url: linkData.config?.music_url ?? undefined,
+                                        auto_play: linkData.config?.auto_play,
+                                    }}
                                     isDark={isDark}
                                 />
                             )}
