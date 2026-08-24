@@ -456,6 +456,10 @@ whole project — they are separate signals.
 
 ## Deployment (Vercel)
 
+- **CLI convention:** the Vercel CLI is not installed globally — run every `vercel …`
+  command in this section via `npx vercel …` (already authenticated as `soncodekhongbug`,
+  project linked in `.vercel/project.json`). The commands below are written without the
+  `npx` prefix for brevity; prepend it.
 - Single Vercel project `love-memories` (team `soncodekhongbugs-projects`). There is no
   separate "test" project — test vs. production is just two different domain aliases
   pointing at two different deployments of the same project.
