@@ -264,6 +264,7 @@ export function EditFormContent(props: {
     slug: string;
     linkData: LinkWithRelations;
     isDark: boolean;
+    showMusicInSettings?: boolean;
 }) {
     return (
         // Switching tabs now fetches a chunk. Without a boundary the panel area
@@ -299,11 +300,13 @@ function EditFormPanel({
     slug,
     linkData,
     isDark,
+    showMusicInSettings,
 }: {
     activeTab: EditTabId;
     slug: string;
     linkData: LinkWithRelations;
     isDark: boolean;
+    showMusicInSettings?: boolean;
 }) {
     if (activeTab === "profile") {
         return (
@@ -379,7 +382,7 @@ function EditFormPanel({
             );
         }
 
-        return <EditConfigForm slug={slug} linkType={linkData.type as LinkType} initialConfig={initialConfig} />;
+        return <EditConfigForm slug={slug} linkType={linkData.type as LinkType} initialConfig={initialConfig} showMusic={showMusicInSettings} />;
     }
 
     return null;

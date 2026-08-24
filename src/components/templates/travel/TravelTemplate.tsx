@@ -513,7 +513,7 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
             {/* Floating button to the challenge cards ("thẻ phiêu lưu") */}
             <button
                 onClick={() => setActiveStop("quiz")}
-                className={`fixed bottom-6 right-4 z-40 flex items-center gap-2 rounded-full px-4 py-3 shadow-lg border font-mono text-sm transition-transform hover:scale-105 ${
+                className={`fixed bottom-6 left-4 z-40 flex items-center gap-2 rounded-full px-4 py-3 shadow-lg border font-mono text-sm transition-transform hover:scale-105 ${
                     isDark ? "bg-amber-900/70 border-amber-700/60 text-amber-200" : "bg-amber-100 border-amber-200 text-amber-800"
                 }`}
             >
@@ -539,51 +539,6 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
                         <Sun className={`w-10 h-10 ${isDark ? "text-amber-300" : "text-amber-400"}`} />
                     </div>
 
-                    {/* Flight path with animated airplane */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-                        {/* Dashed flight path */}
-                        {stops.slice(0, -1).map((stop, i) => {
-                            const next = stops[i + 1];
-                            return (
-                                <line
-                                    key={i}
-                                    x1={`${stop.position.x}%`}
-                                    y1={`${stop.position.y}%`}
-                                    x2={`${next.position.x}%`}
-                                    y2={`${next.position.y}%`}
-                                    stroke={isDark ? "rgba(125, 211, 252, 0.45)" : "rgba(56, 189, 248, 0.5)"}
-                                    strokeWidth="2"
-                                    strokeDasharray="8 4"
-                                />
-                            );
-                        })}
-
-                        {/* Animated airplane traveling along the path (uses SMIL animateMotion) */}
-                        {stops.length > 1 && (
-                            <g>
-                                <path
-                                    id="flightPath"
-                                    d={`M ${stops[0].position.x} ${stops[0].position.y} ${stops.slice(1).map(s => `L ${s.position.x} ${s.position.y}`).join(" ")}`}
-                                    fill="none"
-                                    stroke="none"
-                                />
-                                <g>
-                                    <circle r="3" fill={isDark ? "#7dd3fc" : "#0c4a6e"} opacity="0.4">
-                                        <animateMotion dur="12s" repeatCount="indefinite">
-                                            <mpath href="#flightPath" />
-                                        </animateMotion>
-                                    </circle>
-                                    <g>
-                                        <path d="M-6 0 L 4 -2 L 6 0 L 4 2 L -6 0 M 0 -3 L 2 -3 L 2 3 L 0 3 Z"
-                                            fill={isDark ? "#e0f2fe" : "#fff"} stroke={isDark ? "#0f2233" : "#0c4a6e"} strokeWidth="0.5" />
-                                        <animateMotion dur="12s" repeatCount="indefinite" rotate="auto">
-                                            <mpath href="#flightPath" />
-                                        </animateMotion>
-                                    </g>
-                                </g>
-                            </g>
-                        )}
-                    </svg>
                 </div>
 
                 {/* Map Pins */}

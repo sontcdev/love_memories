@@ -48,7 +48,9 @@ import {
 export function TemplateEditShell({ slug, linkData }: TemplateEditProps) {
     const linkType = linkData.type as LinkType;
     const config = EDIT_SHELL_CONFIG[linkType] ?? EDIT_SHELL_CONFIG.LOVE;
-    const tabs = tabsOf(config.tabs);
+    const tabs = tabsOf(config.tabs).map((tab) =>
+        config.tabLabelOverrides?.[tab.id] ? { ...tab, ...config.tabLabelOverrides[tab.id] } : tab
+    );
 
     const state = useTemplateEditState({
         slug,
@@ -132,19 +134,21 @@ export function TemplateEditShell({ slug, linkData }: TemplateEditProps) {
 
                     <div className={resolveSlot(config.grid, ctx)}>
                         <aside className={resolveSlot(config.aside.root, ctx)}>
-                            <div className={resolveSlot(config.aside.card, ctx)}>
-                                {asideIconWrap ? (
-                                    <div className={asideIconWrap}>
+                            {config.showInfoCard !== false && (
+                                <div className={resolveSlot(config.aside.card, ctx)}>
+                                    {asideIconWrap ? (
+                                        <div className={asideIconWrap}>
+                                            <AsideIcon className={resolveSlot(config.aside.iconClass, ctx)} />
+                                        </div>
+                                    ) : (
                                         <AsideIcon className={resolveSlot(config.aside.iconClass, ctx)} />
-                                    </div>
-                                ) : (
-                                    <AsideIcon className={resolveSlot(config.aside.iconClass, ctx)} />
-                                )}
-                                <h2 className={resolveSlot(config.aside.headingClass, ctx)}>
-                                    {config.aside.heading}
-                                </h2>
-                                <p className={resolveSlot(config.aside.blurbClass, ctx)}>{config.aside.blurb}</p>
-                            </div>
+                                    )}
+                                    <h2 className={resolveSlot(config.aside.headingClass, ctx)}>
+                                        {config.aside.heading}
+                                    </h2>
+                                    <p className={resolveSlot(config.aside.blurbClass, ctx)}>{config.aside.blurb}</p>
+                                </div>
+                            )}
 
                             <nav className={resolveSlot(config.aside.nav, ctx)}>
                                 {tabs.map((tab, index) => (
@@ -164,8 +168,12 @@ export function TemplateEditShell({ slug, linkData }: TemplateEditProps) {
 
                             {/* Chia sẻ + lịch sử nằm ở sidebar: chúng liên quan tới cả
                                 trang, không riêng tab nào đang mở. */}
-                            <ShareCard slug={slug} isDark={contentIsDark} className="mt-4" />
-                            <RevisionHistory slug={slug} isDark={contentIsDark} className="mt-3" />
+                            {config.showShare !== false && (
+                                <>
+                                    <ShareCard slug={slug} isDark={contentIsDark} className="mt-4" />
+                                    <RevisionHistory slug={slug} isDark={contentIsDark} className="mt-3" />
+                                </>
+                            )}
                         </aside>
 
                         <main className={resolveSlot(config.main.root, ctx)}>
@@ -205,6 +213,7 @@ export function TemplateEditShell({ slug, linkData }: TemplateEditProps) {
                                 slug={slug}
                                 linkData={linkData}
                                 isDark={contentIsDark}
+                                showMusicInSettings={!config.tabs.includes("music")}
                             />
                         </main>
                     </div>

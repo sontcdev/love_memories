@@ -21,6 +21,8 @@ interface GameTemplateSelectorProps {
 export function GameTemplateSelector({ linkType, value, onChange, isDark }: GameTemplateSelectorProps) {
     const variants = getGameVariants(linkType);
 
+    if (variants.length <= 1) return null;
+
     return (
         <div>
             <div className="flex items-center gap-2 mb-4">

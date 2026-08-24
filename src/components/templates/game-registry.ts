@@ -60,9 +60,7 @@ export const GAME_REGISTRY: Record<LinkType, GameVariant[]> = {
         { id: "C", label: "Điệu nhảy đầu tiên", description: "Nhớ thứ tự các bước nhảy", status: "ready" },
     ],
     TRAVEL: [
-        { id: "A", label: "Thẻ phiêu lưu", description: "Bốc thẻ thử thách du lịch", status: "ready" },
-        { id: "B", label: "Đoán địa điểm", description: "Nhận dạng địa điểm từ ảnh", status: "ready" },
-        { id: "C", label: "Đóng ba lô", description: "Trò chơi ghi nhớ danh sách đồ mang", status: "ready" },
+        { id: "A", label: "Random câu hỏi", description: "Bốc ngẫu nhiên câu hỏi về trải nghiệm của mọi người trong chuyến đi/kỷ niệm", status: "ready" },
     ],
     FRIENDSHIP: [
         { id: "A", label: "Thẻ bạn bè", description: "Bốc thẻ thử thách nhóm bạn", status: "ready" },

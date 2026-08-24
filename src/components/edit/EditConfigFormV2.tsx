@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LinkType } from "@prisma/client";
 import { updateLinkConfig, LinkConfigData } from "@/app/actions/profile-actions";
-import { Save, Loader2, Palette, Type, Undo2, Redo2, ChevronDown, Sparkles } from "lucide-react";
+import { Save, Loader2, Palette, Type, Undo2, Redo2, ChevronDown, Sparkles, Music } from "lucide-react";
 import { GameTemplateSelector } from "./GameTemplateSelector";
 import { normalizeGameTemplate, type GameVariantId } from "@/components/templates/game-registry";
 import { useFormFeedback } from "./useFormFeedback";
@@ -107,6 +107,8 @@ interface EditConfigFormV2Props {
     linkType: LinkType;
     initialConfig: LinkConfigData | null;
     onSuccess?: () => void;
+    /** Show the background-music fields inline (for templates without a Music tab). */
+    showMusic?: boolean;
 }
 
 /**
@@ -154,7 +156,7 @@ function FormSaveToolbar({
     );
 }
 
-export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess }: EditConfigFormV2Props) {
+export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess, showMusic = false }: EditConfigFormV2Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const setMessage = useFormFeedback();
     const [gameTemplate, setGameTemplate] = useState<GameVariantId>(
@@ -376,6 +378,39 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess }: E
                     value={gameTemplate}
                     onChange={setGameTemplate}
                 />
+
+                {showMusic && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Music className="w-5 h-5 text-pink-500" />
+                            <h3 className="text-lg font-semibold text-gray-800">Nhạc nền</h3>
+                        </div>
+
+                        <input
+                            {...register("music_url")}
+                            className="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all"
+                            placeholder="https://youtube.com/watch?v=... hoặc .mp3 URL"
+                        />
+                        {errors.music_url && (
+                            <p className="mt-1 text-sm text-red-500">{errors.music_url.message}</p>
+                        )}
+                        <p className="mt-1 text-xs text-gray-500">
+                            Hỗ trợ YouTube và file audio trực tiếp (.mp3). Link TikTok cần người xem
+                            bấm play thủ công.
+                        </p>
+
+                        <label className="flex items-center gap-3 mt-4 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                {...register("auto_play")}
+                                className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-300"
+                            />
+                            <span className="text-sm text-gray-600">
+                                Tự động phát nhạc khi tải trang
+                            </span>
+                        </label>
+                    </div>
+                )}
             </div>
 
             {/* Nâng cao: đóng mặc định — màu nền, font, màu chữ */}

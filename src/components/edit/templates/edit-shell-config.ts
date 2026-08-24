@@ -19,7 +19,7 @@ import {
     Users,
     type LucideIcon,
 } from "lucide-react";
-import type { EditTabId } from "@/components/edit/templates/shared";
+import type { EditTab, EditTabId } from "@/components/edit/templates/shared";
 
 /**
  * Per-LinkType chrome for `TemplateEditShell`.
@@ -41,10 +41,16 @@ type Slot = string | ((ctx: EditShellContext) => string);
 
 export interface EditShellConfig {
     tabs: EditTabId[];
+    /** Per-tab label overrides applied on top of the shared `EDIT_TABS` copy. */
+    tabLabelOverrides?: Partial<Record<EditTabId, Partial<Pick<EditTab, "label" | "shortLabel" | "description">>>>;
     /** Enables the header's Night/Light button and night-aware chrome. */
     supportsThemeMode?: boolean;
     /** `isDark` handed to `EditFormContent` (some shells are permanently dark). */
     contentIsDark?: boolean | ((ctx: EditShellContext) => boolean);
+    /** Hide the sidebar intro card (heading + blurb). Defaults to shown. */
+    showInfoCard?: boolean;
+    /** Hide the sidebar share + revision-history block. Defaults to shown. */
+    showShare?: boolean;
 
     page: Slot;
     /** Optional fixed decorative layer rendered directly inside the page. */
@@ -486,9 +492,14 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
     },
 
     TRAVEL: {
-        tabs: ["profile", "trip", "music", "settings"],
+        tabs: ["profile", "trip", "settings"],
+        tabLabelOverrides: {
+            profile: { label: "Địa điểm", shortLabel: "Địa điểm", description: "Thông tin chung của địa điểm/chuyến đi" },
+        },
         supportsThemeMode: true,
         contentIsDark: ({ isDark }) => isDark,
+        showInfoCard: false,
+        showShare: false,
         // Night palette matches TravelTemplate's darkBg (#0a1017).
         page: ({ isDark }) =>
             `min-h-screen py-6 ${isDark ? "bg-[#0a1017] text-sky-50" : "bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-sky-950"}`,
@@ -528,7 +539,7 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
                 }`,
         },
         main: {
-            root: "bg-[linear-gradient(to_right,rgba(14,165,233,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(14,165,233,0.04)_1px,transparent_1px)] bg-[size:48px_48px] p-4 sm:p-6 md:p-8",
+            root: "min-w-0 bg-[linear-gradient(to_right,rgba(14,165,233,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(14,165,233,0.04)_1px,transparent_1px)] bg-[size:48px_48px] p-4 sm:p-6 md:p-8",
             section: ({ isDark }) =>
                 `mb-6 rounded-2xl border p-5 shadow-sm ${isDark ? "border-sky-900/60 bg-white/5" : "border-sky-100 bg-gradient-to-r from-white/90 to-emerald-50/80"}`,
             icon: Map,

@@ -35,10 +35,11 @@ describe("GAME_REGISTRY", () => {
         expect(Object.keys(GAME_REGISTRY).sort()).toEqual([...LINK_TYPES].sort());
     });
 
-    it.each(LINK_TYPES)("%s declares exactly the A/B/C variants in order", (linkType) => {
+    it.each(LINK_TYPES)("%s declares an in-order prefix of the A/B/C variants", (linkType) => {
         const variants = GAME_REGISTRY[linkType];
-        expect(variants).toHaveLength(3);
-        expect(variants.map((v) => v.id)).toEqual(VARIANT_IDS);
+        expect(variants.length).toBeGreaterThanOrEqual(1);
+        expect(variants.length).toBeLessThanOrEqual(VARIANT_IDS.length);
+        expect(variants.map((v) => v.id)).toEqual(VARIANT_IDS.slice(0, variants.length));
     });
 
     it.each(LINK_TYPES)("%s variants all carry a label and description", (linkType) => {
