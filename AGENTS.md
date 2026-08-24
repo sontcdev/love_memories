@@ -287,6 +287,25 @@ const { isDark, toggle } = useThemeToggle({ ... }); // ← before getThemeProps(
 const getThemeProps = () => ({ bgClass: isDark ? "dark" : "light" });
 ```
 
+### Responsive Design
+
+Every public template must look correct across the full device range — phone,
+tablet, and desktop browser — not just the mobile viewport most templates were
+first designed for.
+
+- Any full-viewport-width `fixed`/`absolute` panel (bottom sheets, slide-up
+  detail panels, modals) must wrap its content in a centered, max-width
+  container (`mx-auto max-w-3xl` or `max-w-4xl`, matching the template's own
+  top-bar width) so it doesn't stretch edge-to-edge on wide screens. See
+  `WeddingTemplate.tsx`'s `max-w-3xl` content wrapper and
+  `FriendshipTemplate.tsx`'s `max-w-2xl`/`max-w-4xl` panels for the existing
+  pattern; `TravelTemplate.tsx`'s destination detail sheet follows the same
+  rule.
+- Full-bleed sections (hero maps, backgrounds) are fine without a max-width —
+  only content meant to be read (text, cards, images) needs the constraint.
+- When adding a new panel or modal, check it at mobile (~390px), tablet
+  (~768px), and desktop (~1440px) widths before shipping.
+
 ## Edit Page
 
 The edit route is **split by generation**, mirroring the template rollback above.
