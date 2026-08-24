@@ -640,7 +640,7 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
             {/* Content Panel - slides up from bottom */}
             {activeStop && (
                 <div className="fixed inset-x-0 bottom-0 z-30 animate-slideUp">
-                    <div className={`rounded-t-3xl shadow-2xl border-t max-h-[70vh] overflow-y-auto ${panelClass}`}>
+                    <div className={`mx-auto max-w-3xl rounded-t-3xl shadow-2xl border-t max-h-[70vh] overflow-y-auto ${panelClass}`}>
                         {/* Handle bar with passport-stamp styled grip */}
                         <div className={`sticky top-0 pt-3 pb-2 border-b z-10 ${isDark ? "bg-[#101c26] border-sky-900/40" : "bg-white border-sky-50"}`}>
                             <div className={`w-12 h-1.5 rounded-full mx-auto ${isDark ? "bg-sky-800" : "bg-sky-200"}`} />
