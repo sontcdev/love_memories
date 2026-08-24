@@ -461,12 +461,17 @@ whole project — they are separate signals.
   pointing at two different deployments of the same project.
 - Production: branch `deploy` → domains `memorae.me`, `www.memorae.me`,
   `love-memories-rust.vercel.app`. Never touch these without an explicit request.
-- Test: domain `test.memorae.me` (Cloudflare-fronted). Points at whichever deployment was
-  last aliased to it — not automatically tied to a branch, so the alias step below is
-  mandatory every time, even if you already aliased it earlier in the same session.
+- Test: domain `test.memora.io.vn` (registrar Tino, subdomain trỏ về Vercel bằng CNAME
+  `cname.vercel-dns.com`; apex `memora.io.vn` intentionally stays at Tino and is NOT on
+  Vercel yet). Points at whichever deployment was last aliased to it — not automatically
+  tied to a branch, so the alias step below is mandatory every time, even if you already
+  aliased it earlier in the same session. (The old `test.memorae.me` alias has been
+  retired — do not re-create it.)
+- Planned: production will also move to `memora.io.vn` (apex + `www`) later. Until that
+  cut-over is explicitly requested, production stays on `memorae.me` / `www.memorae.me`.
 - **Every code change destined for test MUST go through `deploy-test`, and pushes MUST
-  target that branch only** — never push a feature branch directly and alias it to
-  `test.memorae.me`, and never leave the alias pointed at an older commit after new work
+  target that branch only** — never push a feature branch directly and alias it to the
+  test domain, and never leave the alias pointed at an older commit after new work
   is merged in.
   1. Merge the work branch into (or create) `deploy-test`, push it — Vercel's git
      integration auto-builds a preview deployment for that branch.
@@ -474,8 +479,9 @@ whole project — they are separate signals.
      `vercel inspect <url>` that `target: preview` and the alias listed is
      `love-memories-git-deploy-test-...` (i.e. it was actually built from `deploy-test`,
      not a stale feature-branch build).
-  3. Point the test domain at it: `vercel alias set <deployment-url> test.memorae.me`.
-     Do this after **every** merge into `deploy-test`, even if `test.memorae.me` was
+  3. Point the test domain at it:
+     `vercel alias set <deployment-url> test.memora.io.vn`.
+     Do this after **every** merge into `deploy-test`, even if `test.memora.io.vn` was
      already aliased to a previous `deploy-test` build — the alias does not move on its
      own when a new commit lands on the branch.
   4. Verify with `vercel alias ls` that `memorae.me`/`www.memorae.me` still point at their
@@ -505,7 +511,7 @@ whole project — they are separate signals.
 
 ### Diagnosing "wrong DB" / "wrong credentials" on test
 
-When login or data looks wrong on `test.memorae.me` and env vars *look*
+When login or data looks wrong on `test.memora.io.vn` and env vars *look*
 correct, don't guess from Vercel config — prove it from the running code:
 add a temporary route handler that runs a raw query
 (`prisma.$queryRawUnsafe("SELECT current_database()")`) and/or calls the
