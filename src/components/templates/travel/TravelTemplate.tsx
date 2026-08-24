@@ -364,9 +364,12 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
 
         if (activeStop.startsWith("dest-")) {
             const destId = activeStop.replace("dest-", "");
-            const dest = destinations.find(d => d.id === destId);
+            const destIndex = destinations.findIndex(d => d.id === destId);
+            const dest = destinations[destIndex];
             if (!dest) return null;
             const milestones = [...dest.milestones].sort((a, b) => a.sort_order - b.sort_order);
+            const prevDest = destIndex > 0 ? destinations[destIndex - 1] : null;
+            const nextDest = destIndex < destinations.length - 1 ? destinations[destIndex + 1] : null;
             return (
                 <div>
                     <div className="flex items-center gap-3 mb-2">
@@ -376,6 +379,27 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
                             {dest.location_note && <p className={`text-sm ${bodyClass}`}>{dest.location_note}</p>}
                         </div>
                     </div>
+                    {destinations.length > 1 && (
+                        <div className="flex items-center justify-between mt-4 mb-2">
+                            <button
+                                onClick={() => prevDest && setActiveStop(`dest-${prevDest.id}`)}
+                                disabled={!prevDest}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-mono transition-colors ${cardClass} disabled:opacity-30 disabled:cursor-not-allowed`}
+                            >
+                                ← {prevDest ? prevDest.name : "Trước"}
+                            </button>
+                            <span className={`text-xs font-mono ${mutedClass}`}>
+                                {destIndex + 1}/{destinations.length}
+                            </span>
+                            <button
+                                onClick={() => nextDest && setActiveStop(`dest-${nextDest.id}`)}
+                                disabled={!nextDest}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-mono transition-colors ${cardClass} disabled:opacity-30 disabled:cursor-not-allowed`}
+                            >
+                                {nextDest ? nextDest.name : "Sau"} →
+                            </button>
+                        </div>
+                    )}
                     {dest.cover_image_url && (
                         <Image
                             src={dest.cover_image_url}
@@ -640,7 +664,7 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
             {/* Content Panel - slides up from bottom */}
             {activeStop && (
                 <div className="fixed inset-x-0 bottom-0 z-30 animate-slideUp">
-                    <div className={`mx-auto max-w-3xl rounded-t-3xl shadow-2xl border-t max-h-[70vh] overflow-y-auto ${panelClass}`}>
+                    <div className={`relative mx-auto max-w-3xl rounded-t-3xl shadow-2xl border-t max-h-[70vh] overflow-y-auto ${panelClass}`}>
                         {/* Handle bar with passport-stamp styled grip */}
                         <div className={`sticky top-0 pt-3 pb-2 border-b z-10 ${isDark ? "bg-[#101c26] border-sky-900/40" : "bg-white border-sky-50"}`}>
                             <div className={`w-12 h-1.5 rounded-full mx-auto ${isDark ? "bg-sky-800" : "bg-sky-200"}`} />
