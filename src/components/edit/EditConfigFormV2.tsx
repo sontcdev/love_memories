@@ -109,6 +109,8 @@ interface EditConfigFormV2Props {
     onSuccess?: () => void;
     /** Show the background-music fields inline (for templates without a Music tab). */
     showMusic?: boolean;
+    /** Keep the legacy game variant controls for templates that still use them. */
+    showGameTemplate?: boolean;
 }
 
 /**
@@ -156,7 +158,14 @@ function FormSaveToolbar({
     );
 }
 
-export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess, showMusic = false }: EditConfigFormV2Props) {
+export function EditConfigFormV2({
+    slug,
+    linkType,
+    initialConfig,
+    onSuccess,
+    showMusic = false,
+    showGameTemplate = true,
+}: EditConfigFormV2Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const setMessage = useFormFeedback();
     const [gameTemplate, setGameTemplate] = useState<GameVariantId>(
@@ -215,17 +224,19 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess, sho
      * dụ quên kèm `game_template`) hay về cách chuyển "" thành `undefined`.
      */
     const persist = useCallback(
-        async (data: ConfigFormData) =>
-            updateLinkConfig(slug, {
+        async (data: ConfigFormData) => {
+            const config: LinkConfigData = {
                 background_color: data.background_color || undefined,
                 accent_color: data.accent_color || undefined,
                 text_color: data.text_color || undefined,
                 font_family: data.font_family || undefined,
                 music_url: data.music_url || undefined,
                 auto_play: data.auto_play,
-                game_template: gameTemplate,
-            }),
-        [slug, gameTemplate]
+            };
+            if (showGameTemplate) config.game_template = gameTemplate;
+            return updateLinkConfig(slug, config);
+        },
+        [gameTemplate, showGameTemplate, slug]
     );
 
     /**
@@ -236,7 +247,7 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess, sho
      * Mốc so sánh giữ trong ref để không đổi giữa các lần render.
      */
     const initialGameTemplate = useRef(gameTemplate);
-    const gameTemplateDirty = gameTemplate !== initialGameTemplate.current;
+    const gameTemplateDirty = showGameTemplate && gameTemplate !== initialGameTemplate.current;
 
     /**
      * Tự động lưu — BỔ SUNG cho nút Lưu, không thay thế.
@@ -250,7 +261,10 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess, sho
      * Tab cài đặt không có ô tải ảnh, nên không cần chặn theo trạng thái upload.
      */
     const autoSave = useFormAutoSave({
-        watch: () => ({ ...watch(), game_template: gameTemplate }),
+        watch: () => ({
+            ...watch(),
+            ...(showGameTemplate ? { game_template: gameTemplate } : {}),
+        }),
         isDirty: isDirty || gameTemplateDirty,
         isValid,
         save: persist,
@@ -372,12 +386,13 @@ export function EditConfigFormV2({ slug, linkType, initialConfig, onSuccess, sho
                     )}
                 </div>
 
-                {/* Game Template Selector */}
-                <GameTemplateSelector
-                    linkType={linkType}
-                    value={gameTemplate}
-                    onChange={setGameTemplate}
-                />
+                {showGameTemplate && (
+                    <GameTemplateSelector
+                        linkType={linkType}
+                        value={gameTemplate}
+                        onChange={setGameTemplate}
+                    />
+                )}
 
                 {showMusic && (
                     <div>

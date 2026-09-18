@@ -105,6 +105,7 @@ model Link {
   timelines Timeline[]
   letters   Letter[]
   quiz_votes QuizVote[]
+  travel_unspoken_answers TravelUnspokenAnswer[]
   revisions LinkRevision[]
 
   @@index([slug])
@@ -275,4 +276,23 @@ model QuizVote {
   @@index([link_id])
   @@index([link_id, question_index])
   @@map("quiz_votes")
+}
+
+// ============================================================================
+// TRAVEL UNSPOKEN ANSWER MODEL (Many-to-1 with Link)
+// ============================================================================
+
+model TravelUnspokenAnswer {
+  id              String   @id @default(cuid())
+  link_id         String
+  question_id     String   // Stable id from Link.profile_data.unspoken_questions
+  respondent_name String   @db.VarChar(50)
+  answer          String   @db.Text
+  created_at      DateTime @default(now())
+
+  // Relations
+  link Link @relation(fields: [link_id], references: [id], onDelete: Cascade)
+
+  @@index([link_id, question_id])
+  @@map("travel_unspoken_answers")
 }

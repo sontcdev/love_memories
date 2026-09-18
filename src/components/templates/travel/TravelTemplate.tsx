@@ -4,13 +4,12 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
-import { Settings, Sparkles, X, MapPin, Compass, Plane, Navigation, Mountain, TreePine, Waves, Sun } from "lucide-react";
+import { Settings, X, Mail, MapPin, Compass, Plane, Navigation, Mountain, TreePine, Waves, Sun } from "lucide-react";
 import { TravelGameSection } from "./TravelGameSection";
-import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
-import { normalizeGameTemplate } from "@/components/templates/game-registry";
 import { useThemeToggle } from "@/components/theme/useThemeToggle";
 import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
 import { TravelProfileData, TravelDestination } from "@/app/actions/profile-actions";
+import { getTravelUnspokenQuestions } from "@/lib/travel-unspoken";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -29,7 +28,7 @@ interface TravelTemplateProps {
 
 interface MapStop {
     id: string;
-    type: "home" | "destination" | "quiz";
+    type: "home" | "destination" | "unspoken";
     title: string;
     icon: typeof MapPin;
     position: { x: number; y: number };
@@ -207,22 +206,9 @@ function BoardingPassHeader({ tripName, destination, startDate, endDate, duratio
     );
 }
 
-// Treasure X marks the spot
-function TreasureX({ className, isDark = false }: { className?: string; isDark?: boolean }) {
-    const ink = isDark ? "#fca5a5" : "#7c2d12";
-    return (
-        <svg viewBox="0 0 60 60" className={className} aria-hidden>
-            <path d="M8 8 L 52 52 M 52 8 L 8 52" stroke={ink} strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-            <path d="M8 8 L 52 52 M 52 8 L 8 52" stroke="#fbbf24" strokeWidth="1" strokeLinecap="round" opacity="0.9" />
-            <circle cx="30" cy="30" r="3" fill="#fbbf24" stroke={ink} strokeWidth="0.5" />
-        </svg>
-    );
-}
-
 export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplateProps) {
     const [activeStop, setActiveStop] = useState<string | null>(null);
     const profileData = data.profile_data as TravelProfileData | null;
-    const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
 
     // Night/Light state. Declared before every helper that reads `isDark`
     // (see the TDZ gotcha in AGENTS.md). The toggle is mounted in the bottom bar.
@@ -257,6 +243,7 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
 
     const tripName = profileData?.trip_name || "Hành Trình";
     const destinations: TravelDestination[] = profileData?.destinations || [];
+    const unspokenQuestions = getTravelUnspokenQuestions(profileData);
     const destinationNames = destinations.map(d => d.name).filter(Boolean).join(" · ");
     const startDate = profileData?.start_date;
     const endDate = profileData?.end_date;
@@ -464,29 +451,9 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
             );
         }
 
-        if (activeStop === "quiz") {
+        if (activeStop === "unspoken") {
             return (
-                <div>
-                    <div className="text-center mb-4">
-                        <div className="inline-flex items-center justify-center relative">
-                            <h3 className={`text-2xl font-bold ${headingClass}`}>Thử thách</h3>
-                            <TreasureX className="absolute -right-8 -top-2 w-6 h-6" isDark={isDark} />
-                        </div>
-                        <p className={`text-xs font-mono mt-1 ${mutedClass}`}>X marks the spot</p>
-                    </div>
-                    {gameTemplateId === "A" ? (
-                        <TravelGameSection isDark={isDark} />
-                    ) : (
-                        <TemplateVariantGame
-                            linkType={data.type}
-                            variantId={gameTemplateId}
-                            profileData={data.profile_data as Record<string, unknown> | null}
-                            photos={data.galleries.map(g => ({ id: g.id, url: g.image_url, caption: g.caption }))}
-                            timelines={data.timelines.map(t => ({ id: t.id, title: t.title, description: t.description }))}
-                            isDark={isDark}
-                        />
-                    )}
-                </div>
+                <TravelGameSection slug={slug} questions={unspokenQuestions} isDark={isDark} />
             );
         }
 
@@ -536,15 +503,15 @@ export function TravelTemplate({ data, slug, isAuthenticated }: TravelTemplatePr
                 <CompassRose className="w-32 h-32 animate-compass-rotate" isDark={isDark} />
             </div>
 
-            {/* Floating button to the challenge cards ("thẻ phiêu lưu") */}
+            {/* Floating button for the Travel unspoken postcards */}
             <button
-                onClick={() => setActiveStop("quiz")}
+                onClick={() => setActiveStop("unspoken")}
                 className={`fixed bottom-6 left-4 z-40 flex items-center gap-2 rounded-full px-4 py-3 shadow-lg border font-mono text-sm transition-transform hover:scale-105 ${
                     isDark ? "bg-amber-900/70 border-amber-700/60 text-amber-200" : "bg-amber-100 border-amber-200 text-amber-800"
                 }`}
             >
-                <Sparkles className="w-4 h-4" />
-                Thử thách
+                <Mail className="w-4 h-4" />
+                Những điều chưa nói
             </button>
 
             {/* Map View */}

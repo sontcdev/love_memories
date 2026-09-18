@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { verifyAccess } from "@/lib/auth";
+import {
+    validateTravelUnspokenQuestions,
+    type TravelUnspokenQuestion,
+} from "@/lib/travel-unspoken";
 
 export interface LoveProfileData {
     boy_name?: string;
@@ -178,6 +182,7 @@ export interface TravelProfileData {
     short_note?: string;
     slogan?: string;
     owner_avatar?: string;
+    unspoken_questions?: TravelUnspokenQuestion[];
     destinations?: TravelDestination[];
     trip_stats?: {
         days?: number;
@@ -321,7 +326,7 @@ export async function updateLinkProfile(
 
         const link = await prisma.link.findUnique({
             where: { slug },
-            select: { id: true, profile_data: true },
+            select: { id: true, type: true, profile_data: true },
         });
 
         if (!link) {
@@ -333,6 +338,23 @@ export async function updateLinkProfile(
         const incomingMembers = (data as { members?: unknown }).members;
         if (Array.isArray(incomingMembers) && incomingMembers.length > 60) {
             return { success: false, error: "Tối đa 60 thành viên" };
+        }
+
+        const incomingQuestions = (data as { unspoken_questions?: unknown }).unspoken_questions;
+        if (incomingQuestions !== undefined) {
+            if (link.type !== "TRAVEL") {
+                return { success: false, error: "Cài đặt câu hỏi chỉ dành cho trang Travel" };
+            }
+
+            const validation = validateTravelUnspokenQuestions(incomingQuestions);
+            if (!validation.success || !validation.questions) {
+                return { success: false, error: validation.error || "Danh sách câu hỏi không hợp lệ" };
+            }
+
+            data = {
+                ...data,
+                unspoken_questions: validation.questions,
+            } as ProfileData;
         }
 
         const currentData = (link.profile_data as Record<string, unknown>) || {};

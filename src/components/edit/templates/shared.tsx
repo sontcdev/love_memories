@@ -50,6 +50,9 @@ const EditIdolConfigForm = dynamic(() =>
 const EditTravelTripManager = dynamic(() =>
     import("@/components/edit/EditTravelTripManager").then((m) => m.EditTravelTripManager)
 );
+const EditTravelQuestionManager = dynamic(() =>
+    import("@/components/edit/EditTravelQuestionManager").then((m) => m.EditTravelQuestionManager)
+);
 const EditMusicForm = dynamic(() =>
     import("@/components/edit/EditMusicForm").then((m) => m.EditMusicForm)
 );
@@ -367,7 +370,9 @@ function EditFormPanel({
                 font_family: linkData.config.font_family ?? undefined,
                 music_url: linkData.config.music_url ?? undefined,
                 auto_play: linkData.config.auto_play,
-                game_template: linkData.config.game_template ?? undefined,
+                ...(linkData.type === "TRAVEL"
+                    ? {}
+                    : { game_template: linkData.config.game_template ?? undefined }),
             }
             : null;
 
@@ -379,6 +384,25 @@ function EditFormPanel({
                     initialConfig={initialConfig}
                     isDark={isDark}
                 />
+            );
+        }
+
+        if (linkData.type === "TRAVEL") {
+            return (
+                <>
+                    <EditConfigForm
+                        slug={slug}
+                        linkType={linkData.type}
+                        initialConfig={initialConfig}
+                        showMusic={showMusicInSettings}
+                        showGameTemplate={false}
+                    />
+                    <EditTravelQuestionManager
+                        slug={slug}
+                        initialData={linkData.profile_data as Record<string, unknown>}
+                        isDark={isDark}
+                    />
+                </>
             );
         }
 
