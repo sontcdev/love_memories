@@ -39,6 +39,13 @@ export const TEMPLATE_EDIT_CAPABILITIES: Record<LinkType, TemplateEditCapability
         focus: "Visual neon, gallery sân khấu và timeline comeback/award.",
         workflow: ["Hoàn thiện idol/fan profile", "Thêm timeline comeback hoặc award", "Chọn game fan quiz", "Bật màu neon/night mode"],
     },
+    IDOL_NEW: {
+        eyebrow: "IDOL-NEW",
+        title: "Fan page Idol",
+        description: "Giao diện Idol nguyên bản từ deploy.",
+        focus: "Hồ sơ idol/fan, album, timeline và lời nhắn.",
+        workflow: ["Hoàn thiện hồ sơ idol/fan", "Thêm ảnh và timeline", "Cập nhật cài đặt"],
+    },
     GRAD_PERSONAL: {
         eyebrow: "Graduate desk",
         title: "Hồ sơ tốt nghiệp cá nhân",

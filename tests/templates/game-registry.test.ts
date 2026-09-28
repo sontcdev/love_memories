@@ -10,7 +10,7 @@ import {
 } from "@/components/templates/game-registry";
 
 /**
- * The 10 LinkType values from prisma/schema.prisma. Hard-coded rather than
+ * LinkType values from prisma/schema.prisma. Hard-coded rather than
  * imported from @prisma/client so this stays a pure unit test with no generated
  * client in the loop — and so adding an enum value without a registry entry
  * fails here instead of at runtime in a template.
@@ -20,12 +20,15 @@ const LINK_TYPES = [
     "LOVE2",
     "EVERY",
     "IDOL",
+    "IDOL_NEW",
     "GRAD_PERSONAL",
     "GRAD_CLASS",
     "GRAD_GROUP",
     "WEDDING",
     "TRAVEL",
     "FRIENDSHIP",
+    "BABY",
+    "FAMILY",
 ] as const;
 
 const VARIANT_IDS: GameVariantId[] = ["A", "B", "C"];
@@ -37,7 +40,7 @@ describe("GAME_REGISTRY", () => {
 
     it.each(LINK_TYPES)("%s declares an in-order prefix of the A/B/C variants", (linkType) => {
         const variants = GAME_REGISTRY[linkType];
-        expect(variants.length).toBeGreaterThanOrEqual(1);
+        expect(variants.length).toBeGreaterThanOrEqual(linkType === "BABY" ? 0 : 1);
         expect(variants.length).toBeLessThanOrEqual(VARIANT_IDS.length);
         expect(variants.map((v) => v.id)).toEqual(VARIANT_IDS.slice(0, variants.length));
     });
@@ -87,8 +90,8 @@ describe("getGameVariant()", () => {
         expect(getGameVariant("IDOL", bogus)).toBe(GAME_REGISTRY.IDOL[0]);
     });
 
-    it("never returns undefined for any link type / id pair", () => {
-        for (const linkType of LINK_TYPES) {
+    it("returns a variant for link types that provide games", () => {
+        for (const linkType of LINK_TYPES.filter((type) => type !== "BABY")) {
             for (const id of VARIANT_IDS) {
                 expect(getGameVariant(linkType, id)).toBeDefined();
             }

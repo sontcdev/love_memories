@@ -35,6 +35,7 @@ const CREATABLE_TYPES = [
     "LOVE",
     "LOVE2",
     "IDOL",
+    "IDOL_NEW",
     "GRAD_CLASS",
     "GRAD_GROUP",
     "TRAVEL",

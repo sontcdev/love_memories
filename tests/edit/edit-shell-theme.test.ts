@@ -18,6 +18,7 @@ const DARK: EditShellContext = { isDark: true, subTheme: "" };
 
 const THEMED: LinkType[] = [
     "IDOL",
+    "IDOL_NEW",
     "GRAD_PERSONAL",
     "GRAD_CLASS",
     "GRAD_GROUP",

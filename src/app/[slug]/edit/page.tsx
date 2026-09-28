@@ -10,7 +10,7 @@ interface PageProps {
 
 // Các LinkType chưa tồn tại trên nhánh `deploy`. Chỉ nhóm này dùng edit shell mới;
 // 7 type còn lại dùng `EditPageClient`, là code deploy nguyên bản.
-const V2_EDIT_TYPES: LinkType[] = ["WEDDING", "TRAVEL", "FRIENDSHIP"];
+const V2_EDIT_TYPES: LinkType[] = ["IDOL_NEW", "WEDDING", "TRAVEL", "FRIENDSHIP"];
 
 export default async function EditPage({ params }: PageProps) {
     const { slug } = await params;

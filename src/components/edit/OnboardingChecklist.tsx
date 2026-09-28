@@ -36,6 +36,7 @@ const PROFILE_LABEL: Partial<Record<LinkType, string>> = {
     LOVE2: "tên hai người và ngày kỷ niệm",
     EVERY: "tên và lời mở đầu",
     IDOL: "tên idol và tên fan",
+    IDOL_NEW: "tên idol và tên fan",
     GRAD_PERSONAL: "tên, lớp và trường",
     GRAD_CLASS: "tên lớp, khoá và giáo viên",
     GRAD_GROUP: "tên nhóm và danh sách thành viên",

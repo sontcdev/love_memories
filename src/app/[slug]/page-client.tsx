@@ -13,6 +13,7 @@ import { TemplateLoading } from "@/components/templates/TemplateLoading";
 const LoveTemplate = dynamic(() => import("@/components/templates/love/LoveTemplate").then((m) => m.LoveTemplate));
 const Love2Template = dynamic(() => import("@/components/templates/love2/Love2TemplateV2").then((m) => m.Love2TemplateV2));
 const IdolTemplate = dynamic(() => import("@/components/templates/idol/IdolTemplateV2").then((m) => m.IdolTemplateV2));
+const IdolNewTemplate = dynamic(() => import("@/components/templates/idol-new/IdolNewTemplate").then((m) => m.IdolTemplate));
 const GradPersonalTemplate = dynamic(() => import("@/components/templates/grad-personal/GradPersonalTemplate").then((m) => m.GradPersonalTemplate));
 const GradClassTemplate = dynamic(() => import("@/components/templates/grad-class/GradClassTemplateV2").then((m) => m.GradClassTemplateV2));
 const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-group/GradGroupTemplate").then((m) => m.GradGroupTemplate));
@@ -107,6 +108,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
             case "LOVE2":
                 return <Love2LockScreen {...props} />;
             case "IDOL":
+            case "IDOL_NEW":
                 return <IdolLockScreen {...props} />;
             case "GRAD_PERSONAL":
                 return <GradPersonalLockScreen {...props} />;
@@ -181,6 +183,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
             case "EVERY":
                 return profileData?.group_name || "Our Memories";
             case "IDOL":
+            case "IDOL_NEW":
                 return `For ${profileData?.idol_name || "My Idol"}`;
             case "GRAD_PERSONAL":
                 return profileData?.student_name || "Graduation Day";
@@ -213,6 +216,8 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return <Love2Template data={linkData} slug={slug} />;
             case "IDOL":
                 return <IdolTemplate data={linkData} slug={slug} />;
+            case "IDOL_NEW":
+                return <IdolNewTemplate data={linkData} slug={slug} />;
             case "GRAD_PERSONAL":
                 return <GradPersonalTemplate data={linkData} slug={slug} />;
             case "GRAD_CLASS":

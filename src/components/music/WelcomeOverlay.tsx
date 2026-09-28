@@ -209,7 +209,7 @@ export function WelcomeOverlay({
     }
 
     // 3. IDOL (Concert Fanpage - Redesigned)
-    if (type === "IDOL") {
+    if (type === "IDOL" || type === "IDOL_NEW") {
         return (
             <div className={`fixed inset-0 z-50 flex items-center justify-center bg-[#05030a] transition-all duration-700 ${isAnimatingOut ? "opacity-0 scale-95 pointer-events-none" : "opacity-100"}`}>
                 {/* Holographic lasers & concert grid */}

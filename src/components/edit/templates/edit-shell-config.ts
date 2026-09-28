@@ -107,7 +107,7 @@ const GRID_18 = "grid md:grid-cols-[18rem_1fr]";
 /** Reproduces the tab class order the per-file shells used. */
 const tabBase = (shape: string) => `flex items-center gap-2 ${shape} px-3 py-3 text-left transition`;
 
-export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
+const BASE_EDIT_SHELL_CONFIG: Record<Exclude<LinkType, "IDOL_NEW">, EditShellConfig> = {
     LOVE: {
         tabs: ["profile", "features", "timeline", "gallery", "letters", "settings"],
         page: "min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 py-6 text-rose-950",
@@ -693,6 +693,11 @@ export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
             descriptionClass: "text-sm text-orange-600",
         },
     },
+};
+
+export const EDIT_SHELL_CONFIG: Record<LinkType, EditShellConfig> = {
+    ...BASE_EDIT_SHELL_CONFIG,
+    IDOL_NEW: BASE_EDIT_SHELL_CONFIG.IDOL,
 };
 
 function gradGroupAccent({ subTheme }: EditShellContext): string {

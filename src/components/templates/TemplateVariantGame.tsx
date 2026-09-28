@@ -88,6 +88,11 @@ const TEMPLATE_CONFIGS: Record<LinkType, Record<GameVariantId, GameConfig>> = {
             "Viết slogan fandom dưới 10 từ.",
         ]),
     },
+    IDOL_NEW: {
+        A: baseConfig("Fan Quiz", "Trò chơi Idol nguyên bản", "IDOL", "from-yellow-400 to-purple-500"),
+        B: baseConfig("Fan Quiz", "Trò chơi Idol nguyên bản", "IDOL", "from-yellow-400 to-purple-500"),
+        C: baseConfig("Fan Quiz", "Trò chơi Idol nguyên bản", "IDOL", "from-yellow-400 to-purple-500"),
+    },
     GRAD_PERSONAL: {
         A: baseConfig("Quiz tốt nghiệp", "Nhìn lại hành trình học sinh", "GRAD", "from-emerald-400 to-teal-500"),
         B: quizConfig("Mục tiêu tương lai", "Chọn hướng đi phù hợp sau tốt nghiệp", "GOAL", "from-emerald-500 to-cyan-500", [

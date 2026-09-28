@@ -192,6 +192,7 @@ export function ThemeWrapper({ config, children, type, subTheme }: ThemeWrapperP
     const getDarkBgColor = () => {
         switch (type) {
             case "IDOL":
+            case "IDOL_NEW":
                 return "#0b0813";
             case "LOVE2":
                 return "#181614";

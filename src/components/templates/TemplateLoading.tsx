@@ -15,6 +15,7 @@ export function TemplateLoading({ linkType, isDark = false }: TemplateLoadingPro
         case "LOVE2":
             return <Love2Loading isDark={isDark} />;
         case "IDOL":
+        case "IDOL_NEW":
             return <IdolLoading isDark={isDark} />;
         case "GRAD_PERSONAL":
             return <GradPersonalLoading isDark={isDark} />;

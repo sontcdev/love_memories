@@ -39,6 +39,9 @@ export const GAME_REGISTRY: Record<LinkType, GameVariant[]> = {
         { id: "B", label: "Danh sách biểu diễn", description: "Sắp xếp bài hát theo đúng thứ tự concert", status: "ready" },
         { id: "C", label: "Fan chant", description: "Gõ nhịp cổ vũ theo điệu nhạc", status: "ready" },
     ],
+    IDOL_NEW: [
+        { id: "A", label: "Fan Quiz", description: "Trò chơi Idol nguyên bản", status: "ready" },
+    ],
     GRAD_PERSONAL: [
         { id: "A", label: "Quiz tốt nghiệp", description: "Câu hỏi về học sinh từ dữ liệu đã nhập", status: "ready" },
         { id: "B", label: "Mục tiêu tương lai", description: "Ghép mục tiêu với nhóm phù hợp", status: "ready" },

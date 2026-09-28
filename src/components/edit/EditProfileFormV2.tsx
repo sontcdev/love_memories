@@ -111,7 +111,7 @@ export function EditProfileFormV2({ slug, linkType, initialData, isDark = false,
         );
     }
 
-    if (linkType === "IDOL") {
+    if (linkType === "IDOL" || linkType === "IDOL_NEW") {
         return (
             <EditIdolProfileForm
                 slug={slug}

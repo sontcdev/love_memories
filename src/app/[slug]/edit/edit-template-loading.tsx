@@ -14,6 +14,7 @@ export function EditTemplateLoading({ linkType }: EditTemplateLoadingProps) {
         case "LOVE2":
             return <Love2EditLoading />;
         case "IDOL":
+        case "IDOL_NEW":
             return <IdolEditLoading />;
         case "GRAD_PERSONAL":
             return <GradPersonalEditLoading />;

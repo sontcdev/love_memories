@@ -169,6 +169,7 @@ export async function generateMetadata({ params }: PageProps) {
             description = "Một trang kỷ niệm tình yêu đang chờ bạn mở khóa.";
             break;
         case "IDOL":
+        case "IDOL_NEW":
             title = "Fan Page";
             description = "Trang dành cho fan. Nhập mã PIN để xem!";
             break;

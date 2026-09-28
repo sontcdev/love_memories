@@ -38,6 +38,7 @@ function targetsFor(linkType: LinkType) {
         case "TRAVEL":
             return { gallery: 8, timeline: 5, letters: 1 };
         case "IDOL":
+        case "IDOL_NEW":
         case "WEDDING":
         case "FRIENDSHIP":
             return { gallery: 6, timeline: 4, letters: 2 };

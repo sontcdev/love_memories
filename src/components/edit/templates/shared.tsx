@@ -376,7 +376,7 @@ function EditFormPanel({
             }
             : null;
 
-        if (linkData.type === "IDOL") {
+        if (linkData.type === "IDOL" || linkData.type === "IDOL_NEW") {
             return (
                 <EditIdolConfigForm
                     slug={slug}

@@ -16,6 +16,7 @@ export const LINK_TYPE_ORDER: LinkType[] = [
     "LOVE2",
     "EVERY",
     "IDOL",
+    "IDOL_NEW",
     "GRAD_PERSONAL",
     "GRAD_CLASS",
     "GRAD_GROUP",
@@ -31,6 +32,7 @@ export const LINK_TYPE_LABELS: Record<LinkType, string> = {
     LOVE2: "Tình yêu 2 (Lưu bút)",
     EVERY: "Kỷ niệm chung",
     IDOL: "Idol",
+    IDOL_NEW: "IDOL-NEW",
     GRAD_PERSONAL: "Tốt nghiệp cá nhân",
     GRAD_CLASS: "Tốt nghiệp tập thể",
     GRAD_GROUP: "Tốt nghiệp nhóm bạn",
@@ -48,6 +50,7 @@ export function getTypeIcon(type: LinkType, className = "w-4 h-4"): ReactNode {
         case "LOVE2":
             return <Heart className={`${className} text-rose-400`} />;
         case "IDOL":
+        case "IDOL_NEW":
             return <Star className={`${className} text-yellow-400`} />;
         case "EVERY":
             return <Users className={`${className} text-blue-400`} />;
@@ -77,6 +80,7 @@ export function getTypeBadgeColor(type: LinkType): string {
         case "LOVE2":
             return "bg-rose-500/10 text-rose-400 border-rose-500/30";
         case "IDOL":
+        case "IDOL_NEW":
             return "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
         case "EVERY":
             return "bg-blue-500/10 text-blue-400 border-blue-500/30";
