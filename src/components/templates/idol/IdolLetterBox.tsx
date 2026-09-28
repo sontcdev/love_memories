@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Letter, LetterReply } from "@prisma/client";
 import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
 import {
@@ -396,16 +395,6 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                             {letter.content}
                                         </div>
 
-                                        {letter.image_url && (
-                                            <Image
-                                                src={letter.image_url}
-                                                alt="Letter attachment"
-                                                width={400}
-                                                height={300}
-                                                className="max-w-full rounded-xl object-cover"
-                                            />
-                                        )}
-
                                         {letter.video_url && (
                                             <div className="rounded-xl overflow-hidden">
                                                 <VideoPlayer url={letter.video_url} />
@@ -414,7 +403,7 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
 
                                         {letter.audio_url && (
                                             <div className={`rounded-xl p-4 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
-                                                <audio controls className="w-full" src={letter.audio_url} onPlay={() => window.dispatchEvent(new CustomEvent("pause-music"))} />
+                                                <audio controls className="w-full" src={letter.audio_url} />
                                             </div>
                                         )}
 

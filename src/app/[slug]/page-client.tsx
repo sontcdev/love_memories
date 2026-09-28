@@ -12,7 +12,6 @@ import { TemplateLoading } from "@/components/templates/TemplateLoading";
 // the initial HTML is unchanged — only the client chunks are split.
 const LoveTemplate = dynamic(() => import("@/components/templates/love/LoveTemplate").then((m) => m.LoveTemplate));
 const Love2Template = dynamic(() => import("@/components/templates/love2/Love2TemplateV2").then((m) => m.Love2TemplateV2));
-const IdolTemplate = dynamic(() => import("@/components/templates/idol/IdolTemplateV2").then((m) => m.IdolTemplateV2));
 const IdolNewTemplate = dynamic(() => import("@/components/templates/idol-new/IdolNewTemplate").then((m) => m.IdolTemplate));
 const GradPersonalTemplate = dynamic(() => import("@/components/templates/grad-personal/GradPersonalTemplate").then((m) => m.GradPersonalTemplate));
 const GradClassTemplate = dynamic(() => import("@/components/templates/grad-class/GradClassTemplateV2").then((m) => m.GradClassTemplateV2));
@@ -215,7 +214,6 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
             case "LOVE2":
                 return <Love2Template data={linkData} slug={slug} />;
             case "IDOL":
-                return <IdolTemplate data={linkData} slug={slug} />;
             case "IDOL_NEW":
                 return <IdolNewTemplate data={linkData} slug={slug} />;
             case "GRAD_PERSONAL":
