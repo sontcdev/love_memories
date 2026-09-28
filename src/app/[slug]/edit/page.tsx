@@ -8,9 +8,9 @@ interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
-// IDOL dùng cùng edit shell với IDOL_NEW; các type deploy-era khác vẫn dùng
-// EditPageClient để giữ nguyên luồng chỉnh sửa hiện tại của chúng.
-const V2_EDIT_TYPES: LinkType[] = ["IDOL", "IDOL_NEW", "WEDDING", "TRAVEL", "FRIENDSHIP"];
+// Các LinkType chưa tồn tại trên nhánh `deploy`. Chỉ nhóm này dùng edit shell mới;
+// 7 type còn lại dùng `EditPageClient`, là code deploy nguyên bản.
+const V2_EDIT_TYPES: LinkType[] = ["IDOL_NEW", "WEDDING", "TRAVEL", "FRIENDSHIP"];
 
 export default async function EditPage({ params }: PageProps) {
     const { slug } = await params;
