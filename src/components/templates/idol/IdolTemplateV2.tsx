@@ -11,6 +11,7 @@ import { Link as PrismaLink, LinkConfig, Gallery, Timeline, Letter, LetterReply 
 import { Star, Calendar, Image as ImageIcon, Mail, ChevronLeft, ChevronRight, Settings, Sparkles, X, Mic, Trophy, Disc, Zap } from "lucide-react";
 import { IdolLetterBox } from "./IdolLetterBox";
 import { IdolGameSection } from "./IdolGameSection";
+import { GameSection } from "./GameSection";
 import { TemplateVariantGame } from "@/components/templates/TemplateVariantGame";
 import { normalizeGameTemplate } from "@/components/templates/game-registry";
 import { VideoPlayer } from "@/components/media";
@@ -38,6 +39,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
     const [currentAct, setCurrentAct] = useState<StageAct>("intro");
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [gameMode, setGameMode] = useState<"quiz" | "challenge">("quiz");
     const profileData = data.profile_data as Record<string, string> | null;
     const gameTemplateId = normalizeGameTemplate(data.config?.game_template ?? null);
     const [heartsCount, setHeartsCount] = useState(0);
@@ -663,7 +665,22 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                             <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Act IV</span>
                             <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-800"}`} style={{ fontFamily: 'var(--font-display)' }}>Fandom Quiz</h2>
                         </div>
-                        {gameTemplateId === "A" ? (
+                        <div className="flex justify-center gap-2">
+                            {(["quiz", "challenge"] as const).map((mode) => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    onClick={() => setGameMode(mode)}
+                                    className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${gameMode === mode ? "text-white" : isDark ? "bg-white/10 text-gray-200" : "bg-gray-100 text-gray-700"}`}
+                                    style={gameMode === mode ? { background: "var(--accent)" } : undefined}
+                                >
+                                    {mode === "quiz" ? "Fandom Quiz" : "Thử Thách Fandom"}
+                                </button>
+                            ))}
+                        </div>
+                        {gameMode === "challenge" ? (
+                            <GameSection theme="idol" isDark={isDark} />
+                        ) : gameTemplateId === "A" ? (
                             <IdolGameSection
                                 isDark={isDark}
                                 idolName={idolName}
