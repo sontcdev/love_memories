@@ -28,3 +28,11 @@ The screenshot's concert page is `/59c00aed` (`IDOL`); `/2570d319` is `IDOL_NEW`
 The compact compose form was checked locally at 320, 390, 768, and 1440px widths; the portrait viewer was checked at 390px. Editable Figma frames `59:104` (compose) and `59:129` (photo viewer) were synchronized and screenshot-verified. Native iPhone keyboard behavior was not tested; the 16px input rule was verified in the browser.
 
 `src/app/[slug]/page-client.tsx`; `src/app/[slug]/edit/edit-client.tsx`; `src/components/templates/idol/IdolTemplate.tsx`; `src/components/templates/idol/GameSection.tsx`; `src/components/templates/idol/LetterBox.tsx`; `src/components/templates/idol/IdolTemplateV2.tsx`; `src/components/templates/idol/IdolGameSection.tsx`; `src/components/templates/idol/IdolLetterBox.tsx`; `src/components/edit/TimelineManager.tsx`; `src/app/actions/timeline-actions.ts`.
+
+## IDOL_NEW synchronization (2026-10-01)
+
+- New link creation hides legacy `IDOL`; existing IDOL links remain readable. `IDOL_NEW` stays available. No stored link types are migrated.
+- `idol-new/IdolNewTemplate.tsx` keeps its dashboard and in-page menu: Trang chủ, Khoảnh khắc, Sự nghiệp, Fandom Quiz, Gửi Idol. Active buttons expose `aria-current`.
+- Its independent `GameSection.tsx` now generates the personalized quiz with timeline date questions, without difficulty challenges. Its independent `LetterBox.tsx` uses the compact portal compose form, omits recording, preserves saved audio playback, and uses 16px compose/reply fields.
+- The IDOL_NEW gallery viewer uses a `min(65dvh, 720px)` image area with 4px padding and a `90dvh` modal cap. The V2 timeline editor already supports saved video URLs; the server enforces 20 events.
+- Browser verification on `/2570d319`: in-page menu at 320, 390, 768 and 1440px without horizontal overflow; compact letter dialog at 390px with 16px fields and the purple accent. This sample has no gallery images or events, so those data-dependent paths were checked in source only. Native iPhone keyboard behavior remains untested. Figma synchronization is deferred at the user request while deploying production.

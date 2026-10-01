@@ -29,12 +29,11 @@ import { LINK_TYPE_LABELS, getTypeIcon } from "./link-type-meta";
  *
  * Cố tình **không** dùng cả `LinkType`: `EVERY` không có template công khai
  * riêng (nó dùng lại của `LOVE`) nên chưa bao giờ là một lựa chọn khi tạo link.
- * Giữ nguyên danh sách như trước để không đổi hành vi.
+ * Legacy IDOL remains readable but is hidden from new link creation.
  */
 const CREATABLE_TYPES = [
     "LOVE",
     "LOVE2",
-    "IDOL",
     "IDOL_NEW",
     "GRAD_CLASS",
     "GRAD_GROUP",
