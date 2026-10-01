@@ -1,18 +1,43 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { LockScreen } from "@/components/auth/LockScreen";
-import { IdolLockScreen } from "@/components/auth/IdolLockScreen";
+import { Suspense, useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { ThemeWrapper } from "@/components/theme/ThemeWrapper";
-import { MusicPlayerRef, WelcomeOverlay } from "@/components/music";
-import { LoveTemplate } from "@/components/templates/love/LoveTemplate";
-import { Love2Template } from "@/components/templates/love2/Love2Template";
-import { IdolTemplate } from "@/components/templates/idol/IdolTemplate";
-import { GradPersonalTemplate } from "@/components/templates/grad-personal/GradPersonalTemplate";
-import { GradClassTemplate } from "@/components/templates/grad-class/GradClassTemplate";
-import { GradGroupTemplate } from "@/components/templates/grad-group/GradGroupTemplate";
+import { MusicPlayer, MusicPlayerRef, WelcomeOverlay } from "@/components/music";
+import { TemplateLoading } from "@/components/templates/TemplateLoading";
+
+// Templates and lock screens are code-split per LinkType: a visitor only ever needs
+// one of each, and statically importing all 19 modules (~6.5k lines) put every
+// template in the `/[slug]` bundle. SSR stays on (next/dynamic defaults to it), so
+// the initial HTML is unchanged — only the client chunks are split.
+const LoveTemplate = dynamic(() => import("@/components/templates/love/LoveTemplate").then((m) => m.LoveTemplate));
+const Love2Template = dynamic(() => import("@/components/templates/love2/Love2TemplateV2").then((m) => m.Love2TemplateV2));
+const IdolTemplate = dynamic(() => import("@/components/templates/idol/IdolTemplateV2").then((m) => m.IdolTemplateV2));
+const IdolNewTemplate = dynamic(() => import("@/components/templates/idol-new/IdolNewTemplate").then((m) => m.IdolTemplate));
+const GradPersonalTemplate = dynamic(() => import("@/components/templates/grad-personal/GradPersonalTemplate").then((m) => m.GradPersonalTemplate));
+const GradClassTemplate = dynamic(() => import("@/components/templates/grad-class/GradClassTemplateV2").then((m) => m.GradClassTemplateV2));
+const GradGroupTemplate = dynamic(() => import("@/components/templates/grad-group/GradGroupTemplate").then((m) => m.GradGroupTemplate));
+const WeddingTemplate = dynamic(() => import("@/components/templates/wedding/WeddingTemplate").then((m) => m.WeddingTemplate));
+const TravelTemplate = dynamic(() => import("@/components/templates/travel/TravelTemplate").then((m) => m.TravelTemplate));
+const FriendshipTemplate = dynamic(() => import("@/components/templates/friendship/FriendshipTemplate").then((m) => m.FriendshipTemplate));
+const BabyTemplate = dynamic(() => import("@/components/templates/baby/BabyTemplate").then((m) => m.BabyTemplate));
+const FamilyTemplate = dynamic(() => import("@/components/templates/family/FamilyTemplate").then((m) => m.FamilyTemplate));
+
+const LoveLockScreen = dynamic(() => import("@/components/templates/love/LoveLockScreen").then((m) => m.LoveLockScreen));
+const Love2LockScreen = dynamic(() => import("@/components/templates/love2/Love2LockScreen").then((m) => m.Love2LockScreen));
+const IdolLockScreen = dynamic(() => import("@/components/templates/idol/IdolLockScreen").then((m) => m.IdolLockScreen));
+const GradPersonalLockScreen = dynamic(() => import("@/components/templates/grad-personal/GradPersonalLockScreen").then((m) => m.GradPersonalLockScreen));
+const GradClassLockScreen = dynamic(() => import("@/components/templates/grad-class/GradClassLockScreen").then((m) => m.GradClassLockScreen));
+const GradGroupLockScreen = dynamic(() => import("@/components/templates/grad-group/GradGroupLockScreen").then((m) => m.GradGroupLockScreen));
+const WeddingLockScreen = dynamic(() => import("@/components/templates/wedding/WeddingLockScreen").then((m) => m.WeddingLockScreen));
+const TravelLockScreen = dynamic(() => import("@/components/templates/travel/TravelLockScreen").then((m) => m.TravelLockScreen));
+const FriendshipLockScreen = dynamic(() => import("@/components/templates/friendship/FriendshipLockScreen").then((m) => m.FriendshipLockScreen));
+const BabyLockScreen = dynamic(() => import("@/components/templates/baby/BabyLockScreen").then((m) => m.BabyLockScreen));
+const FamilyLockScreen = dynamic(() => import("@/components/templates/family/FamilyLockScreen").then((m) => m.FamilyLockScreen));
+
 import { getLinkData } from "@/app/actions/auth-actions";
 import { Link, LinkConfig, Gallery, Timeline, Letter, LetterReply } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
 
@@ -42,23 +67,25 @@ interface SlugPageClientProps {
 export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkData, publicData }: SlugPageClientProps) {
     const [authenticated, setAuthenticated] = useState(isAuthenticated);
     const [linkData, setLinkData] = useState<LinkWithRelations | null>(initialLinkData);
-    const [isLoadingData, setIsLoadingData] = useState(false);
+    const [isUnlocking, setIsUnlocking] = useState(false);
     const musicPlayerRef = useRef<MusicPlayerRef>(null);
 
     const handleUnlock = useCallback(async () => {
-        setIsLoadingData(true);
+        setIsUnlocking(true);
         try {
             const result = await getLinkData(slug);
             if (result.success && result.data) {
                 setLinkData(result.data as LinkWithRelations);
                 setAuthenticated(true);
+                return;
             } else {
                 window.location.reload();
             }
         } catch {
             window.location.reload();
+        } finally {
+            setIsUnlocking(false);
         }
-        setIsLoadingData(false);
     }, [slug]);
 
     const handleWelcomeOpen = useCallback(() => {
@@ -74,6 +101,38 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
         letters: [],
     } as unknown as LinkWithRelations : null);
 
+    const renderLockScreen = (data: LinkWithRelations) => {
+        const props = { slug, onSuccess: handleUnlock, linkData: data };
+
+        switch (data.type) {
+            case "LOVE2":
+                return <Love2LockScreen {...props} />;
+            case "IDOL":
+            case "IDOL_NEW":
+                return <IdolLockScreen {...props} />;
+            case "GRAD_PERSONAL":
+                return <GradPersonalLockScreen {...props} />;
+            case "GRAD_CLASS":
+                return <GradClassLockScreen {...props} />;
+            case "GRAD_GROUP":
+                return <GradGroupLockScreen {...props} />;
+            case "WEDDING":
+                return <WeddingLockScreen {...props} />;
+            case "TRAVEL":
+                return <TravelLockScreen {...props} />;
+            case "FRIENDSHIP":
+                return <FriendshipLockScreen {...props} />;
+            case "BABY":
+                return <BabyLockScreen {...props} />;
+            case "FAMILY":
+                return <FamilyLockScreen {...props} />;
+            case "EVERY":
+            case "LOVE":
+            default:
+                return <LoveLockScreen {...props} />;
+        }
+    };
+
     if (!authenticated) {
         if (!lockScreenData) {
             return (
@@ -87,20 +146,17 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
         }
 
         return (
-            <ThemeWrapper config={lockScreenData.config} type={lockScreenData.type}>
-                {lockScreenData.type === "IDOL" ? (
-                    <IdolLockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
-                ) : (
-                    <LockScreen slug={slug} onSuccess={handleUnlock} linkData={lockScreenData} />
-                )}
-                {isLoadingData && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl p-6 flex items-center gap-3 shadow-xl">
-                            <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
-                            <span className="text-gray-700 font-medium">Đang tải nội dung...</span>
-                        </div>
-                    </div>
-                )}
+            <ThemeWrapper
+                config={lockScreenData.config}
+                type={lockScreenData.type}
+                subTheme={(lockScreenData.profile_data as { theme?: string } | null)?.theme ?? null}
+            >
+                <>
+                    <Suspense fallback={<TemplateLoading linkType={lockScreenData.type} />}>
+                        {renderLockScreen(lockScreenData)}
+                    </Suspense>
+                    {isUnlocking && <UnlockLoadingOverlay />}
+                </>
             </ThemeWrapper>
         );
     }
@@ -127,6 +183,7 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
             case "EVERY":
                 return profileData?.group_name || "Our Memories";
             case "IDOL":
+            case "IDOL_NEW":
                 return `For ${profileData?.idol_name || "My Idol"}`;
             case "GRAD_PERSONAL":
                 return profileData?.student_name || "Graduation Day";
@@ -134,6 +191,18 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return profileData?.class_name || "Our Class";
             case "GRAD_GROUP":
                 return profileData?.group_name || "Our Group";
+            case "WEDDING":
+                const brideName = profileData?.bride_name || "Bride";
+                const groomName = profileData?.groom_name || "Groom";
+                return `${groomName} & ${brideName}`;
+            case "TRAVEL":
+                return profileData?.trip_name || "Our Journey";
+            case "FRIENDSHIP":
+                return profileData?.group_name || "Best Friends";
+            case "BABY":
+                return profileData?.baby_name || "Em bé của chúng ta";
+            case "FAMILY":
+                return profileData?.family_name || "Gia đình mình";
             default:
                 return "Welcome";
         }
@@ -147,12 +216,28 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                 return <Love2Template data={linkData} slug={slug} />;
             case "IDOL":
                 return <IdolTemplate data={linkData} slug={slug} />;
+            case "IDOL_NEW":
+                return <IdolNewTemplate data={linkData} slug={slug} />;
             case "GRAD_PERSONAL":
                 return <GradPersonalTemplate data={linkData} slug={slug} />;
             case "GRAD_CLASS":
                 return <GradClassTemplate data={linkData} slug={slug} />;
             case "GRAD_GROUP":
                 return <GradGroupTemplate data={linkData} slug={slug} />;
+            case "WEDDING":
+                return <WeddingTemplate data={linkData} slug={slug} />;
+            case "TRAVEL":
+                // Travel is the only template that takes this prop: it gates an
+                // extra "Thêm hành trình" CTA inside the empty itinerary state.
+                // Pass the live `authenticated` state, not the initial server prop,
+                // so the CTA also appears after an in-session PIN unlock.
+                return <TravelTemplate data={linkData} slug={slug} isAuthenticated={authenticated} />;
+            case "FRIENDSHIP":
+                return <FriendshipTemplate data={linkData} slug={slug} />;
+            case "BABY":
+                return <BabyTemplate data={linkData} slug={slug} />;
+            case "FAMILY":
+                return <FamilyTemplate data={linkData} slug={slug} />;
             case "EVERY":
                 return <LoveTemplate data={linkData} slug={slug} />;
             default:
@@ -161,7 +246,11 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
     };
 
     return (
-        <ThemeWrapper config={linkData.config} type={linkData.type}>
+        <ThemeWrapper
+            config={linkData.config}
+            type={linkData.type}
+            subTheme={(linkData.profile_data as { theme?: string } | null)?.theme ?? null}
+        >
             <>
                 <WelcomeOverlay
                     title={getWelcomeTitle()}
@@ -171,17 +260,37 @@ export function SlugPageClient({ slug, isAuthenticated, linkData: initialLinkDat
                     onOpen={handleWelcomeOpen}
                 />
 
-                {renderTemplate()}
+                {/* The template chunk is fetched on demand. This boundary matters most
+                    right after a PIN unlock, when we switch from lock screen to template
+                    on the client and the chunk may not have arrived yet. */}
+                <Suspense fallback={<TemplateLoading linkType={linkData.type} />}>
+                    {renderTemplate()}
+                </Suspense>
 
-                {/* Music Player - temporarily disabled (YouTube/TikTok playback issue) */}
-                {/* {linkData.config?.music_url && (
+                {linkData.config?.music_url && (
                     <MusicPlayer
                         ref={musicPlayerRef}
                         src={linkData.config.music_url}
                         autoPlay={linkData.config.auto_play ?? false}
                     />
-                )} */}
+                )}
             </>
         </ThemeWrapper>
+    );
+}
+
+function UnlockLoadingOverlay() {
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm">
+            <div className="flex w-full max-w-xs flex-col items-center gap-4 rounded-3xl border border-white/20 bg-white/95 p-7 text-center shadow-2xl">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-pink-50">
+                    <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
+                </div>
+                <div>
+                    <p className="text-base font-bold text-gray-900">Đang mở khóa trang...</p>
+                    <p className="mt-1 text-sm text-gray-500">Đang tải kỷ niệm và chuẩn bị giao diện.</p>
+                </div>
+            </div>
+        </div>
     );
 }

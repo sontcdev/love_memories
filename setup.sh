@@ -103,7 +103,7 @@ case $db_choice in
 esac
 
 if [ -n "$ACTIVE_ENV" ]; then
-    if grep -q "project-id" "$ACTIVE_ENV" || grep -q "anon-key-here" "$ACTIVE_ENV"; then
+    if grep -q "\[PROJECT_ID\]" "$ACTIVE_ENV" || grep -q "\[YOUR-PASSWORD\]" "$ACTIVE_ENV" || grep -q "\[YOUR-ANON-KEY\]" "$ACTIVE_ENV"; then
         print_warning "Environment variables in $ACTIVE_ENV are still placeholders."
         echo "Skip database schema migration. Please configure your actual keys in $ACTIVE_ENV, then run:"
         echo "  npx prisma db push"
@@ -125,6 +125,20 @@ if [ -n "$ACTIVE_ENV" ]; then
                     print_success "Database seeded successfully."
                 else
                     print_error "Failed to seed database."
+                fi
+            fi
+            
+            # Offer to reset admin
+            printf "Do you want to reset admin account? (y/n) "
+            read -r response_admin
+            echo ""
+            if [ "$response_admin" = "y" ] || [ "$response_admin" = "Y" ]; then
+                print_status "Resetting admin account..."
+                if npx tsx scripts/reset-admin.ts; then
+                    print_success "Admin account reset successfully."
+                    print_warning "Default credentials: admin / admin123"
+                else
+                    print_error "Failed to reset admin account."
                 fi
             fi
         else

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { GameCard, GameLevel } from "@prisma/client";
 import { deleteGameCard, createGameCard, toggleGameCardStatus } from "@/app/actions/game-card-actions";
-import { Trash2, Loader2, Plus, Eye, EyeOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Trash2, Loader2, Plus, Eye, EyeOff, Layers, SearchX } from "lucide-react";
 
 interface GameCardsTableProps {
     initialCards: GameCard[];
@@ -13,6 +14,13 @@ const levelColors = {
     EASY: "bg-green-500/10 text-green-400 border-green-500/30",
     MEDIUM: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
     HARD: "bg-red-500/10 text-red-400 border-red-500/30",
+};
+
+// Nhãn tiếng Việt của mức độ, dùng cho phần mô tả khi lọc không ra thẻ nào.
+const levelLabels: Record<GameLevel, string> = {
+    EASY: "DỄ",
+    MEDIUM: "TRUNG BÌNH",
+    HARD: "KHÓ",
 };
 
 export function GameCardsTable({ initialCards }: GameCardsTableProps) {
@@ -203,9 +211,46 @@ export function GameCardsTable({ initialCards }: GameCardsTableProps) {
                     </tbody>
                 </table>
 
+                {/* Bọc trong `dark` để EmptyState dùng biến thể dark: trên nền slate của
+                    trang quản trị (trang này không gắn class `dark` lên <html>). */}
                 {filteredCards.length === 0 && (
-                    <div className="text-center py-12 text-slate-400">
-                        Không tìm thấy thẻ nào
+                    <div className="dark p-6">
+                        {cards.length === 0 ? (
+                            <EmptyState
+                                compact
+                                icon={<Layers className="w-5 h-5" />}
+                                title="Chưa có thẻ trò chơi nào"
+                                description="Thêm thẻ đầu tiên để người chơi có câu hỏi. Mỗi thẻ gồm nội dung câu hỏi và mức độ DỄ / TRUNG BÌNH / KHÓ."
+                                action={
+                                    <button
+                                        onClick={() => setShowAddForm(true)}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Thêm thẻ đầu tiên
+                                    </button>
+                                }
+                            />
+                        ) : (
+                            <EmptyState
+                                compact
+                                icon={<SearchX className="w-5 h-5" />}
+                                title="Không tìm thấy thẻ nào"
+                                description={
+                                    filter === "ALL"
+                                        ? "Không có thẻ nào khớp với bộ lọc hiện tại."
+                                        : `Không có thẻ nào ở mức độ ${levelLabels[filter]}. Chọn mức độ khác hoặc xem tất cả ${cards.length} thẻ.`
+                                }
+                                action={
+                                    <button
+                                        onClick={() => setFilter("ALL")}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg transition-colors"
+                                    >
+                                        Xem tất cả thẻ
+                                    </button>
+                                }
+                            />
+                        )}
                     </div>
                 )}
             </div>

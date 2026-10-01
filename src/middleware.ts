@@ -25,7 +25,9 @@ export const config = {
 
 const ADMIN_ROUTES = ["/admin"];
 const ADMIN_PUBLIC_ROUTES = ["/admin/login", "/admin/setup"];
-const PROTECTED_SLUG_SUFFIXES = ["/edit", "/letters", "/timeline"];
+// Only /[slug]/edit exists as a route today. `/letters` and `/timeline` used to be
+// listed here but have no page.tsx in src/app — re-add them if those routes return.
+const PROTECTED_SLUG_SUFFIXES = ["/edit"];
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -40,7 +42,7 @@ function isAdminPublicRoute(pathname: string): boolean {
 }
 
 function isProtectedSlugRoute(pathname: string): boolean {
-    // Check if path matches /[slug]/edit, /[slug]/letters, /[slug]/timeline
+    // Check if path matches /[slug]/edit
     return PROTECTED_SLUG_SUFFIXES.some((suffix) => pathname.endsWith(suffix));
 }
 

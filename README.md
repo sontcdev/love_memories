@@ -1,22 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Chạy dự án
 
-First, run the development server:
+Chỉ cần chạy:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+./start.sh
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Chọn **Development** (mặc định) rồi nhấn Enter. Script tự chuẩn bị cấu hình,
+sinh Prisma Client, đối chiếu/đồng bộ schema trên Supabase và chạy Next.js tại
+[http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Development luôn dùng Supabase Session pooler và đọc 10 link khách hàng hiện có;
+không dùng PostgreSQL local. Supabase Storage dùng publishable/secret API keys
+trong `.env.development`.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

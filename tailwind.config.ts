@@ -70,11 +70,32 @@ const config: Config = {
           "0%": { backgroundPosition: "200% 0" },
           "100%": { backgroundPosition: "-200% 0" },
         },
+        "toast-in": {
+          from: { opacity: "0", transform: "translateY(0.5rem) scale(0.98)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        // Generic utilities that shared (non-template) components were each
+        // re-declaring in styled-jsx. Templates keep their own identity
+        // animations — only primitives live here.
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+        "pulse-ring": {
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(244, 114, 182, 0.7)" },
+          "50%": { boxShadow: "0 0 0 12px rgba(244, 114, 182, 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s infinite linear",
+        "toast-in": "toast-in 0.18s ease-out",
+        // Two speeds over one keyframe, matching the durations the components
+        // used before consolidation (MusicPlayer 3s, IdolTemplate 8s).
+        "spin-slow": "spin-slow 3s linear infinite",
+        "spin-slower": "spin-slow 8s linear infinite",
+        "pulse-ring": "pulse-ring 1.8s ease-out infinite",
       },
     },
   },

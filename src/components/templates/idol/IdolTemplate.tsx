@@ -70,8 +70,17 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
     const idolAvatar = profileData?.idol_avatar;
     const fanAvatar = profileData?.fan_avatar;
     const debutDate = profileData?.debut_date;
+    const idolBirthday = profileData?.idol_birthday;
+    const fanSinceDate = profileData?.fan_since_date;
     const title = profileData?.title || `${idolName} Fan Page`;
     const slogan = profileData?.slogan;
+
+    const formatVietnameseDate = (isoDate?: string) => {
+        if (!isoDate) return null;
+        const d = new Date(isoDate);
+        if (Number.isNaN(d.getTime())) return null;
+        return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    };
 
     // Countdown state
     const [nextAnniversary, setNextAnniversary] = useState<Date | null>(null);
@@ -121,17 +130,18 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [lightboxIndex, nextImage, prevImage]);
 
-    // Calculate days since debut
-    const getDaysSinceDebut = () => {
-        if (!debutDate) return null;
-        const start = new Date(debutDate);
+    // Calculate days since becoming a fan (falls back to debut date for old links without fan_since_date)
+    const getDaysSinceFan = () => {
+        const start_date = fanSinceDate || debutDate;
+        if (!start_date) return null;
+        const start = new Date(start_date);
         const today = new Date();
         const diffTime = Math.abs(today.getTime() - start.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays;
     };
 
-    const daysSinceDebut = getDaysSinceDebut();
+    const daysSinceFan = getDaysSinceFan();
 
     // Helper to detect if background color is dark
     const isDarkBackground = useCallback((hex?: string | null) => {
@@ -420,10 +430,20 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                         &ldquo;{slogan}&rdquo;
                                     </p>
                                 )}
-                                {daysSinceDebut && (
+                                {daysSinceFan && (
                                     <div className="flex items-center justify-center gap-1.5 mt-2">
-                                        <span className={`text-xl font-black ${isDark ? "text-pink-400" : "text-purple-500"}`}>{daysSinceDebut}</span>
-                                        <span className={isDark ? "text-purple-200/80 text-xs" : "text-gray-500 text-xs font-medium"}>ngày cùng {idolName}</span>
+                                        <span className={`text-xl font-black ${isDark ? "text-pink-400" : "text-purple-500"}`}>{daysSinceFan}</span>
+                                        <span className={isDark ? "text-purple-200/80 text-xs" : "text-gray-500 text-xs font-medium"}>ngày là fan của {idolName}</span>
+                                    </div>
+                                )}
+                                {(debutDate || idolBirthday) && (
+                                    <div className={`mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] ${isDark ? "text-purple-200/70" : "text-gray-500"}`}>
+                                        {debutDate && (
+                                            <span>Debut: {formatVietnameseDate(debutDate)}</span>
+                                        )}
+                                        {idolBirthday && (
+                                            <span>Sinh nhật: {formatVietnameseDate(idolBirthday)}</span>
+                                        )}
                                     </div>
                                 )}
                             </div>

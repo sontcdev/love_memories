@@ -10,6 +10,7 @@ import { Save, Loader2, Heart, Camera } from "lucide-react";
 import { EditIdolProfileForm } from "./EditIdolProfileForm";
 import { EditGradProfileForm } from "./EditGradProfileForm";
 import { EditGradGroupProfileForm } from "./EditGradGroupProfileForm";
+import { EditFamilyProfileForm } from "./EditFamilyProfileForm";
 
 
 // ============================================================================
@@ -89,6 +90,17 @@ export function EditProfileForm({ slug, linkType, initialData, isDark = false, o
     if (linkType === "GRAD_GROUP") {
         return (
             <EditGradGroupProfileForm
+                slug={slug}
+                initialData={initialData}
+                isDark={isDark}
+                onSuccess={onSuccess}
+            />
+        );
+    }
+
+    if (linkType === "FAMILY") {
+        return (
+            <EditFamilyProfileForm
                 slug={slug}
                 initialData={initialData}
                 isDark={isDark}

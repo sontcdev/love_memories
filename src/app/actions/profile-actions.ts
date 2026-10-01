@@ -1,13 +1,13 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-
-// ============================================================================
-// PROFILE DATA TYPES
-// ============================================================================
+import { verifyAccess } from "@/lib/auth";
+import {
+    validateTravelUnspokenQuestions,
+    type TravelUnspokenQuestion,
+} from "@/lib/travel-unspoken";
 
 export interface LoveProfileData {
     boy_name?: string;
@@ -17,6 +17,7 @@ export interface LoveProfileData {
     anniversary_date?: string;
     title?: string;
     short_note?: string;
+    slogan?: string;
 }
 
 export interface IdolProfileData {
@@ -25,6 +26,8 @@ export interface IdolProfileData {
     idol_avatar?: string;
     fan_avatar?: string;
     debut_date?: string;
+    idol_birthday?: string;
+    fan_since_date?: string;
     title?: string;
     slogan?: string;
 }
@@ -95,25 +98,211 @@ export interface GradGroupProfileData {
     }[];
 }
 
+export interface ClassMemberLite {
+    id: string;
+    name: string;
+    nickname?: string;
+    avatar?: string;
+}
+
 export interface GradClassProfileData {
     class_name?: string;
     school_name?: string;
     graduation_year?: string;
     slogan?: string;
     members_count?: number;
+    members?: ClassMemberLite[];
     homeroom_teacher_name?: string;
     homeroom_teacher_avatar?: string;
     homeroom_teacher_message?: string;
     class_officers_monitor?: string;
     class_officers_vice_monitor?: string;
     title?: string;
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
 }
 
-export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData;
+export interface WeddingProfileData {
+    bride_name?: string;
+    groom_name?: string;
+    wedding_date?: string;
+    venue?: string;
+    ceremony_time?: string;
+    reception_time?: string;
+    bride_avatar?: string;
+    groom_avatar?: string;
+    title?: string;
+    short_note?: string;
+    love_story?: string;
+    slogan?: string;
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    quiz_badges?: {
+        perfect_title?: string;
+        perfect_desc?: string;
+        good_title?: string;
+        good_desc?: string;
+        average_title?: string;
+        average_desc?: string;
+        low_title?: string;
+        low_desc?: string;
+    };
+}
 
-// ============================================================================
-// CONFIG DATA TYPES
-// ============================================================================
+export interface TravelMilestone {
+    id: string;
+    title: string;
+    date?: string;
+    description?: string;
+    image_url?: string;
+    sort_order: number;
+}
+
+export interface TravelDestination {
+    id: string;
+    name: string;
+    location_note?: string;
+    cover_image_url?: string;
+    milestones: TravelMilestone[]; // max 10 per destination
+    sort_order: number;
+}
+
+export interface TravelProfileData {
+    trip_name?: string;
+    start_date?: string;
+    end_date?: string;
+    owner_name?: string;
+    title?: string;
+    short_note?: string;
+    slogan?: string;
+    owner_avatar?: string;
+    unspoken_questions?: TravelUnspokenQuestion[];
+    destinations?: TravelDestination[];
+    trip_stats?: {
+        days?: number;
+        countries?: number;
+        cities?: number;
+        photos?: number;
+        memories?: number;
+    };
+}
+
+export interface FriendshipMember {
+    id: string;
+    name: string;
+    nickname?: string;
+    avatar?: string;
+    quote?: string;
+}
+
+export interface FriendshipFunFact {
+    id: string;
+    emoji: string;
+    label: string;
+    value: string;
+}
+
+export interface FriendshipProfileData {
+    group_name?: string;
+    owner_name?: string;
+    since_date?: string;
+    motto?: string;
+    title?: string;
+    short_note?: string;
+    owner_avatar?: string;
+    members?: FriendshipMember[];
+    fun_facts?: FriendshipFunFact[];
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    quiz_badges?: {
+        perfect_title?: string;
+        perfect_desc?: string;
+        good_title?: string;
+        good_desc?: string;
+        average_title?: string;
+        average_desc?: string;
+        low_title?: string;
+        low_desc?: string;
+    };
+}
+
+export interface EveryProfileData {
+    group_name?: string;
+    owner_name?: string;
+    title?: string;
+    short_note?: string;
+    slogan?: string;
+}
+
+export interface FamilyMember {
+    id: string;
+    name: string;
+    role?: string;
+    avatar?: string;
+    quote?: string;
+    birthday?: string;
+}
+
+export interface FamilyProfileData {
+    family_name?: string;
+    family_avatar?: string;
+    established_year?: string;
+    slogan?: string;
+    title?: string;
+    theme?: "home" | "album" | "hearth";
+    members?: FamilyMember[];
+    quiz?: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+    }[];
+    quiz_badges?: {
+        perfect_title?: string;
+        perfect_desc?: string;
+        good_title?: string;
+        good_desc?: string;
+        average_title?: string;
+        average_desc?: string;
+        low_title?: string;
+        low_desc?: string;
+    };
+    goals?: {
+        id: string;
+        title: string;
+        description: string;
+        status: "todo" | "done";
+    }[];
+}
+
+export interface BabyMonthEntry {
+    month: number;
+    image_url?: string;
+    weight_kg?: number;
+    note?: string;
+}
+
+export interface BabyProfileData {
+    baby_name?: string;
+    home_name?: string;
+    father_name?: string;
+    mother_name?: string;
+    birth_date?: string;
+    birth_weight_kg?: number;
+    title?: string;
+    slogan?: string;
+    journey?: BabyMonthEntry[];
+}
+
+export type ProfileData = LoveProfileData | IdolProfileData | GradPersonalProfileData | GradClassProfileData | GradGroupProfileData | WeddingProfileData | TravelProfileData | FriendshipProfileData | EveryProfileData | BabyProfileData | FamilyProfileData;
 
 export interface LinkConfigData {
     background_color?: string;
@@ -122,57 +311,55 @@ export interface LinkConfigData {
     font_family?: string;
     music_url?: string;
     auto_play?: boolean;
+    game_template?: string;
 }
-
-// ============================================================================
-// AUTH HELPER
-// ============================================================================
-
-async function verifyAccess(slug: string): Promise<boolean> {
-    const cookieStore = await cookies();
-    const cookieName = `access_token_${slug}`;
-    const accessToken = cookieStore.get(cookieName)?.value;
-
-    if (!accessToken) return false;
-
-    const link = await prisma.link.findUnique({
-        where: { slug },
-        select: { id: true, is_active: true },
-    });
-
-    return link?.id === accessToken && link?.is_active === true;
-}
-
-// ============================================================================
-// UPDATE PROFILE DATA
-// ============================================================================
 
 export async function updateLinkProfile(
     slug: string,
     data: ProfileData
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        // Verify access
-        const hasAccess = await verifyAccess(slug);
-        if (!hasAccess) {
-            return { success: false, error: "Unauthorized" };
+        const access = await verifyAccess(slug);
+        if (!access.success) {
+            return { success: false, error: access.error };
         }
 
-        // Get current link
         const link = await prisma.link.findUnique({
             where: { slug },
-            select: { id: true, profile_data: true },
+            select: { id: true, type: true, profile_data: true },
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
-        // Merge with existing data
+        // GRAD_CLASS members list: cap at 60 rows before writing, to keep the
+        // profile_data JSON blob and the edit/public pages responsive.
+        const incomingMembers = (data as { members?: unknown }).members;
+        if (Array.isArray(incomingMembers) && incomingMembers.length > 60) {
+            return { success: false, error: "Tối đa 60 thành viên" };
+        }
+
+        const incomingQuestions = (data as { unspoken_questions?: unknown }).unspoken_questions;
+        if (incomingQuestions !== undefined) {
+            if (link.type !== "TRAVEL") {
+                return { success: false, error: "Cài đặt câu hỏi chỉ dành cho trang Travel" };
+            }
+
+            const validation = validateTravelUnspokenQuestions(incomingQuestions);
+            if (!validation.success || !validation.questions) {
+                return { success: false, error: validation.error || "Danh sách câu hỏi không hợp lệ" };
+            }
+
+            data = {
+                ...data,
+                unspoken_questions: validation.questions,
+            } as ProfileData;
+        }
+
         const currentData = (link.profile_data as Record<string, unknown>) || {};
         const newData = { ...currentData, ...data };
 
-        // Update
         await prisma.link.update({
             where: { slug },
             data: { profile_data: newData as Prisma.InputJsonValue },
@@ -184,36 +371,29 @@ export async function updateLinkProfile(
         return { success: true };
     } catch (error) {
         console.error("Update profile error:", error);
-        return { success: false, error: "Failed to update profile" };
+        return { success: false, error: "Không thể cập nhật hồ sơ" };
     }
 }
-
-// ============================================================================
-// UPDATE LINK CONFIG
-// ============================================================================
 
 export async function updateLinkConfig(
     slug: string,
     config: LinkConfigData
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        // Verify access
-        const hasAccess = await verifyAccess(slug);
-        if (!hasAccess) {
-            return { success: false, error: "Unauthorized" };
+        const access = await verifyAccess(slug);
+        if (!access.success) {
+            return { success: false, error: access.error };
         }
 
-        // Get link
         const link = await prisma.link.findUnique({
             where: { slug },
             select: { id: true },
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
-        // Upsert config
         await prisma.linkConfig.upsert({
             where: { link_id: link.id },
             create: {
@@ -224,6 +404,7 @@ export async function updateLinkConfig(
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play ?? false,
+                game_template: config.game_template || "A",
             },
             update: {
                 background_color: config.background_color,
@@ -232,6 +413,7 @@ export async function updateLinkConfig(
                 font_family: config.font_family,
                 music_url: config.music_url,
                 auto_play: config.auto_play,
+                game_template: config.game_template,
             },
         });
 
@@ -241,20 +423,15 @@ export async function updateLinkConfig(
         return { success: true };
     } catch (error) {
         console.error("Update config error:", error);
-        return { success: false, error: "Failed to update config" };
+        return { success: false, error: "Không thể cập nhật cài đặt" };
     }
 }
 
-// ============================================================================
-// GET LINK FOR EDIT
-// ============================================================================
-
 export async function getLinkForEdit(slug: string) {
     try {
-        // Verify access
-        const hasAccess = await verifyAccess(slug);
-        if (!hasAccess) {
-            return { success: false, error: "Unauthorized" };
+        const access = await verifyAccess(slug);
+        if (!access.success) {
+            return { success: false, error: access.error };
         }
 
         const link = await prisma.link.findUnique({
@@ -262,18 +439,19 @@ export async function getLinkForEdit(slug: string) {
             include: {
                 config: true,
                 galleries: { orderBy: { sort_order: "asc" } },
-                timelines: { orderBy: { date: "asc" } },
+                // Match the public read: manual drag order first, date as tie-breaker.
+                timelines: { orderBy: [{ sort_order: "asc" }, { date: "asc" }] },
                 letters: { orderBy: { sort_order: "asc" } },
             },
         });
 
         if (!link) {
-            return { success: false, error: "Link not found" };
+            return { success: false, error: "Không tìm thấy liên kết" };
         }
 
         return { success: true, data: link };
     } catch (error) {
         console.error("Get link for edit error:", error);
-        return { success: false, error: "Failed to fetch link" };
+        return { success: false, error: "Không thể tải dữ liệu" };
     }
 }
