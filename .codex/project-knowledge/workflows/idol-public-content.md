@@ -31,7 +31,7 @@ The compact compose form was checked locally at 320, 390, 768, and 1440px widths
 
 ## IDOL_NEW synchronization (2026-10-01)
 
-- New link creation hides legacy `IDOL`; existing IDOL links remain readable. `IDOL_NEW` stays available. No stored link types are migrated.
+- New link creation offers both `IDOL` and `IDOL_NEW` again. Existing links retain their stored types and routes.
 - `idol-new/IdolNewTemplate.tsx` keeps its dashboard and in-page menu: Trang chủ, Khoảnh khắc, Sự nghiệp, Fandom Quiz, Gửi Idol. Active buttons expose `aria-current`.
 - Its independent `GameSection.tsx` now generates the personalized quiz with timeline date questions, without difficulty challenges. Its independent `LetterBox.tsx` uses the compact portal compose form, omits recording, preserves saved audio playback, and uses 16px compose/reply fields.
 - The IDOL_NEW gallery viewer uses a `min(65dvh, 720px)` image area with 4px padding and a `90dvh` modal cap. The V2 timeline editor already supports saved video URLs; the server enforces 20 events.
