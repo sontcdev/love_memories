@@ -701,22 +701,22 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
             {/* Lightbox */}
             {lightboxIndex !== null && data.galleries[lightboxIndex] && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
-                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col border ${isDark ? "bg-slate-900 text-white border-white/10" : "bg-white text-gray-800 border-transparent"}`} onClick={(e) => e.stopPropagation()}>
+                    <div className={`rounded-2xl w-full max-w-2xl max-h-[90dvh] shadow-2xl overflow-hidden flex flex-col border ${isDark ? "bg-slate-900 text-white border-white/10" : "bg-white text-gray-800 border-transparent"}`} onClick={(e) => e.stopPropagation()}>
                         <div className="p-4 text-white flex-shrink-0" style={{ background: 'var(--accent)' }}>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium">{lightboxIndex + 1} / {data.galleries.length}</span>
                                 <button onClick={closeLightbox} className="hover:scale-110 transition-transform"><X className="w-5 h-5" /></button>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
-                            <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                        <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-1">
+                            <div className="relative w-full h-[min(65dvh,720px)]">
                                 <Image src={data.galleries[lightboxIndex].image_url} alt={data.galleries[lightboxIndex].caption || "Photo"} fill className="object-contain" priority />
                             </div>
                         </div>
                         {data.galleries[lightboxIndex].caption && (
                             <div className={`px-4 py-2 text-center text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>{data.galleries[lightboxIndex].caption}</div>
                         )}
-                        <div className={`flex justify-center items-center gap-4 p-4 border-t ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                        <div className={`flex shrink-0 justify-center items-center gap-4 p-3 border-t ${isDark ? "border-white/10" : "border-gray-100"}`}>
                             <button onClick={prevImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-slate-950/40" : "bg-gray-50"}`} style={{ color: 'var(--accent)' }}><ChevronLeft className="w-5 h-5" /></button>
                             <button onClick={nextImage} className={`p-2.5 rounded-full transition-all hover:scale-110 ${isDark ? "bg-slate-950/40" : "bg-gray-50"}`} style={{ color: 'var(--accent)' }}><ChevronRight className="w-5 h-5" /></button>
                         </div>

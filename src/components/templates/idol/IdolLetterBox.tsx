@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Letter, LetterReply } from "@prisma/client";
 import { VideoInput, VideoPlayer } from "@/components/media";
@@ -13,7 +13,6 @@ import {
 import {
     Mail,
     Plus,
-    X,
     Send,
     Trash2,
     Loader2,
@@ -28,6 +27,7 @@ import {
 
 
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -52,6 +52,8 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
     };
     
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const composeTriggerRef = useRef<HTMLButtonElement>(null);
+    const [popupAccent, setPopupAccent] = useState("#ec4899");
     useEffect(() => {
         onPopupOpenChange?.(showCreateForm);
     }, [showCreateForm, onPopupOpenChange]);
@@ -210,7 +212,13 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                     </div>
                 </div>
                 <button
-                    onClick={() => setShowCreateForm(true)}
+                    ref={composeTriggerRef}
+                    onClick={() => {
+                        if (composeTriggerRef.current) {
+                            setPopupAccent(getComputedStyle(composeTriggerRef.current).getPropertyValue("--accent").trim());
+                        }
+                        setShowCreateForm(true);
+                    }}
                     className="flex items-center gap-2 px-4 py-2 rounded-full text-white font-medium shadow-md hover:shadow-xl transition-all hover:scale-105 relative overflow-hidden group"
                     style={{ background: "var(--accent)" }}
                 >
@@ -220,24 +228,22 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                 </button>
             </div>
 
-            {showCreateForm && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div
-                        className={`${isDark ? "bg-slate-900 text-slate-100 border" : "bg-white text-gray-900"} rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col`}
-                        style={isDark ? { borderColor: "color-mix(in oklch, var(--accent) 40%, transparent)" } : undefined}
+            <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+                    <DialogContent
+                        aria-describedby={undefined}
+                        onOpenAutoFocus={(event) => event.preventDefault()}
+                        className={`${isDark ? "bg-slate-900 text-slate-100 border" : "bg-white text-gray-900"} rounded-2xl max-w-lg max-h-[min(80dvh,640px)] shadow-2xl overflow-hidden flex flex-col gap-0 p-0 [&>button]:text-white`}
+                        style={{ "--accent": popupAccent, borderColor: isDark ? "color-mix(in oklch, var(--accent) 40%, transparent)" : undefined } as React.CSSProperties}
                     >
                         <div className="p-4 text-white flex-shrink-0" style={{ background: "var(--accent)" }}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Star className="w-5 h-5 fill-current" />
-                                    <h3 className="text-lg font-semibold" style={{ fontFamily: "var(--font-display)" }}>Send Fan Message</h3>
+                                    <DialogTitle className="text-lg font-semibold">Send Fan Message</DialogTitle>
                                 </div>
-                                <button onClick={() => setShowCreateForm(false)}>
-                                    <X className="w-5 h-5" />
-                                </button>
                             </div>
                         </div>
-                        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                        <div className="p-4 space-y-3 overflow-y-auto min-h-0 flex-1 [&_input]:text-base [&_textarea]:text-base">
                             <div>
                                 <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1`}>
                                     From <span className="text-gray-400 text-xs ml-1">({newSender.length}/50)</span>
@@ -248,7 +254,7 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                     onChange={(e) => setNewSender(e.target.value.slice(0, 50))}
                                     placeholder="Your fan name..."
                                     maxLength={50}
-                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none mb-3`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none`}
                                 />
                             </div>
                             <div>
@@ -273,7 +279,7 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                     onChange={(e) => setNewContent(e.target.value.slice(0, 1000))}
                                     placeholder="Write your message to the idol..."
                                     maxLength={1000}
-                                    rows={6}
+                                    rows={3}
                                     className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none resize-none`}
                                 />
                             </div>
@@ -309,9 +315,8 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                 Send
                             </button>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </DialogContent>
+            </Dialog>
 
             <div className="space-y-4">
                 {sortedLetters.map((letter) => {
@@ -483,7 +488,7 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                                     placeholder="Write a reply..."
                                                     maxLength={300}
                                                     rows={3}
-                                                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none resize-none text-sm`}
+                                                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none resize-none text-base sm:text-sm`}
                                                 />
                                                 <div className="flex items-center justify-between">
                                                     <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
