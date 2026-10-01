@@ -52,7 +52,7 @@ interface FormData {
     audio_url: string;
 }
 
-const MAX_EVENTS = 10;
+const MAX_EVENTS = 20;
 
 const emptyForm: FormData = {
     title: "",

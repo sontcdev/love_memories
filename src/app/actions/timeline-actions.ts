@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { verifyAccess } from "@/lib/auth";
 
-const MAX_TIMELINE_EVENTS = 10;
+const MAX_TIMELINE_EVENTS = 20;
 
 export async function getTimelineEvents(slug: string) {
     try {

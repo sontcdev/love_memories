@@ -10,6 +10,7 @@ interface IdolGameSectionProps {
     debutDate?: string;
     idolBirthday?: string;
     fanSinceDate?: string;
+    events?: { id: string; title: string; date: Date }[];
 }
 
 interface Question {
@@ -28,8 +29,9 @@ function formatVi(isoDate?: string): string | null {
 
 /** Trộn thứ tự và trả về 3 phương án nhiễu cộng với đáp án đúng, đáp án đúng ở vị trí ngẫu nhiên. */
 function buildOptions(correct: string, decoys: string[]): { options: string[]; correctAnswer: number } {
-    const correctIndex = Math.floor(Math.random() * (decoys.length + 1));
-    const options = [...decoys];
+    const distinctDecoys = Array.from(new Set(decoys)).filter(option => option !== correct).slice(0, 3);
+    const correctIndex = Math.floor(Math.random() * (distinctDecoys.length + 1));
+    const options = [...distinctDecoys];
     options.splice(correctIndex, 0, correct);
     return { options, correctAnswer: correctIndex };
 }
@@ -45,12 +47,14 @@ function buildPersonalizedQuestions({
     debutDate,
     idolBirthday,
     fanSinceDate,
+    events = [],
 }: {
     idolName?: string;
     fanName?: string;
     debutDate?: string;
     idolBirthday?: string;
     fanSinceDate?: string;
+    events?: { id: string; title: string; date: Date }[];
 }): Question[] {
     const questions: Question[] = [];
 
@@ -87,6 +91,15 @@ function buildPersonalizedQuestions({
         });
     }
 
+    for (const event of events) {
+        const eventDate = formatVi(event.date.toString());
+        if (!eventDate || !event.title.trim()) continue;
+        const otherDates = events.filter(other => other.id !== event.id).map(other => formatVi(other.date.toString())).filter((date): date is string => !!date);
+        const fallbackDates = ["01/01/2020", "15/06/2021", "20/09/2022", "14/02/2024"];
+        const { options, correctAnswer } = buildOptions(eventDate, [...otherDates, ...fallbackDates]);
+        questions.push({ id: questions.length + 10, question: `Sự kiện “${event.title}” diễn ra vào ngày nào?`, options, correctAnswer });
+    }
+
     questions.push({
         id: 4,
         question: `Fandom của ${idolName} có tên gọi là gì?`,
@@ -104,9 +117,9 @@ function buildPersonalizedQuestions({
     return questions;
 }
 
-export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, idolBirthday, fanSinceDate }: IdolGameSectionProps) {
+export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, idolBirthday, fanSinceDate, events }: IdolGameSectionProps) {
     const [questions] = useState<Question[]>(() =>
-        buildPersonalizedQuestions({ idolName, fanName, debutDate, idolBirthday, fanSinceDate })
+        buildPersonalizedQuestions({ idolName, fanName, debutDate, idolBirthday, fanSinceDate, events })
     );
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -308,7 +321,7 @@ export function IdolGameSection({ isDark = true, idolName, fanName, debutDate, i
                 </div>
             </div>
 
-            <div className="flex justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
                 {questions.map((_, index) => (
                     <div
                         key={index}

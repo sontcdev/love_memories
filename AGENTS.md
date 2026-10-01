@@ -482,16 +482,16 @@ whole project — they are separate signals.
 - Single Vercel project `love-memories` (team `soncodekhongbugs-projects`). There is no
   separate "test" project — test vs. production is just two different domain aliases
   pointing at two different deployments of the same project.
-- Production: branch `deploy` → domains `memorae.me`, `www.memorae.me`,
+- Production: branch `deploy` → domains `memora.io.vn`, `www.memora.io.vn`,
   `love-memories-rust.vercel.app`. Never touch these without an explicit request.
 - Test: domain `test.memora.io.vn` (registrar Tino, subdomain trỏ về Vercel bằng CNAME
-  `cname.vercel-dns.com`; apex `memora.io.vn` intentionally stays at Tino and is NOT on
-  Vercel yet). Points at whichever deployment was last aliased to it — not automatically
+  `cname.vercel-dns.com`; DNS remains managed at Tino). Points at whichever deployment was last aliased to it — not automatically
   tied to a branch, so the alias step below is mandatory every time, even if you already
   aliased it earlier in the same session. (The old `test.memorae.me` alias has been
   retired — do not re-create it.)
-- Planned: production will also move to `memora.io.vn` (apex + `www`) later. Until that
-  cut-over is explicitly requested, production stays on `memorae.me` / `www.memorae.me`.
+- Production domain cut-over completed on 2026-10-01 using the existing production
+  deployment. `memorae.me` / `www.memorae.me` are retired domains; their legacy aliases
+  remain but must not be used as the production address.
 - **Every code change destined for test MUST go through `deploy-test`, and pushes MUST
   target that branch only** — never push a feature branch directly and alias it to the
   test domain, and never leave the alias pointed at an older commit after new work
@@ -507,10 +507,10 @@ whole project — they are separate signals.
      Do this after **every** merge into `deploy-test`, even if `test.memora.io.vn` was
      already aliased to a previous `deploy-test` build — the alias does not move on its
      own when a new commit lands on the branch.
-  4. Verify with `vercel alias ls` that `memorae.me`/`www.memorae.me` still point at their
+  4. Verify with `vercel alias ls` that `memora.io.vn`/`www.memora.io.vn` still point at their
      unchanged production deployment.
-- Never run `vercel --prod`, `vercel promote`, or `vercel alias set ... memorae.me` /
-  `www.memorae.me` unless explicitly asked to deploy to production.
+- Never run `vercel --prod`, `vercel promote`, or `vercel alias set ... memora.io.vn` /
+  `www.memora.io.vn` unless explicitly asked to deploy to production.
 
 ### Test environment variables (`Preview` + `deploy-test` branch scope)
 
@@ -555,8 +555,14 @@ publicly if left in place).
 - Server actions: `src/app/actions/*.ts` (profile-actions.ts has all profile types)
 - Admin panel: `src/app/admin/links/links-table.tsx`
 - Design system reference (admin-only, noindex): `src/app/admin/design-system/`
+- Project UI design (Figma): [memora-love-web](https://www.figma.com/design/W71YdDqpiAPXWRsilUUWEr/memora-love-web?node-id=0-1&p=f&t=Rf4vq5lZW3XtYpVF-0)
 - Schema: `prisma/schema.prisma`
 - Spec: `LOVE_TEMPLATE_REPORT.md` (Vietnamese), `docx/` folder
+
+## Design and flow synchronization
+
+- After changing a user-facing interface, update the corresponding editable frames in the project Figma file and verify them with a screenshot. Check the target file and Desktop Bridge connection before writing. If the bridge is unavailable, report the exact connection step and leave Figma synchronization as an explicit blocker.
+- After changing or tracing a reusable user flow, update the relevant document in `.codex/project-knowledge/` (RAG) when that directory exists. Verify the flow against current source, prefer updating an existing document, and update `index.md` when creating a new one. Do not initialize project knowledge automatically.
 
 ## AI Behavior & Coding Rules
 

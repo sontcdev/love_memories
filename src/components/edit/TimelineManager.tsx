@@ -46,7 +46,7 @@ interface FormData {
     audio_url: string;
 }
 
-const MAX_EVENTS = 10;
+const MAX_EVENTS = 20;
 
 const emptyForm: FormData = {
     title: "",
@@ -411,6 +411,11 @@ export function TimelineManager({ slug, initialTimeline, isDark = false }: Timel
                                         <span className="text-sm font-medium">Thêm ảnh</span>
                                     </button>
                                 )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className={isDark ? "text-purple-200" : "text-gray-700"}>Link YouTube (tùy chọn)</Label>
+                                <Input type="url" value={formData.video_url} onChange={(event) => setFormData((prev) => ({ ...prev, video_url: event.target.value }))} placeholder="https://www.youtube.com/watch?v=..." />
                             </div>
 
                         </div>

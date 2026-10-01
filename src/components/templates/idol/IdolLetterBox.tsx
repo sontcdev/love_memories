@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Letter, LetterReply } from "@prisma/client";
-import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
+import { VideoInput, VideoPlayer } from "@/components/media";
 import {
     createLetter,
     replyToLetter,
@@ -82,7 +82,6 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
     const [newSender, setNewSender] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newVideoUrl, setNewVideoUrl] = useState("");
-    const [newAudioUrl, setNewAudioUrl] = useState("");
     const [newUnlockDate, setNewUnlockDate] = useState<string>("");
 
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -120,7 +119,6 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
             sender: newSender.trim() || undefined,
             content: newContent.trim(),
             video_url: newVideoUrl || undefined,
-            audio_url: newAudioUrl || undefined,
             unlock_date: newUnlockDate ? new Date(newUnlockDate) : null,
         });
 
@@ -130,7 +128,6 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
             setNewSender("");
             setNewContent("");
             setNewVideoUrl("");
-            setNewAudioUrl("");
             setNewUnlockDate("");
             setShowCreateForm(false);
         }
@@ -281,7 +278,6 @@ export function IdolLetterBox({ slug, initialLetters, isDark = true, onPopupOpen
                                 />
                             </div>
                             <VideoInput value={newVideoUrl} onChange={setNewVideoUrl} />
-                            <VoiceRecorder slug={slug} onUploadComplete={setNewAudioUrl} />
                             <div>
                                 <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 flex items-center gap-2`}>
                                     <Calendar className="w-4 h-4" />
