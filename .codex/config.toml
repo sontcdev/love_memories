@@ -1,0 +1,8 @@
+# Web project-local Codex config
+
+[mcp_servers.figma-console]
+command = "npx"
+args = [
+    "-y",
+    "figma-console-mcp@1.40.7",
+]
