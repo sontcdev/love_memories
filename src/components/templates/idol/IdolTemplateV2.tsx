@@ -355,7 +355,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
             </div>
 
             {/* ACT NAVIGATION - Concert Setlist */}
-            <div className="fixed bottom-4 left-4 right-24 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-30">
+            <div className={`fixed left-4 right-4 sm:bottom-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-30 ${data.config?.music_url ? "bottom-24" : "bottom-4"}`}>
                 <div className={`flex items-center justify-between gap-0.5 sm:gap-1 p-1.5 rounded-2xl border backdrop-blur-md ${isDark ? "bg-slate-950/80 border-white/10" : "bg-white/80 border-gray-100 shadow-lg"}`}>
                     {acts.map((act) => {
                         const isActive = currentAct === act.id;
@@ -363,7 +363,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                             <button
                                 key={act.id}
                                 onClick={() => switchAct(act.id)}
-                                className={`relative flex flex-col items-center gap-0.5 px-1.5 sm:px-3 py-2 rounded-xl text-[10px] font-bold transition-all duration-300 ${
+                                className={`relative flex flex-1 flex-col items-center gap-0.5 px-1.5 sm:flex-none sm:px-3 py-2 rounded-xl text-[10px] font-bold transition-all duration-300 ${
                                     isActive
                                         ? "text-white shadow-lg scale-105"
                                         : isDark
