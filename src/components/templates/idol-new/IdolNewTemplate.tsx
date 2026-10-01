@@ -214,7 +214,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
     }, [debutDate]);
 
     return (
-        <div className="min-h-screen relative transition-colors duration-500 overflow-x-hidden" style={{ backgroundColor: 'var(--theme-bg, #fff0f5)' }}>
+        <div className="min-h-screen relative transition-colors duration-500 overflow-x-hidden" style={{ backgroundColor: 'var(--theme-bg, #fff0f5)', '--accent': '#a855f7' } as React.CSSProperties}>
             {/* Holographic Stage Backdrop Elements (concert theme) */}
             {/* Neon grid pattern */}
             <div className={`absolute inset-0 z-0 pointer-events-none opacity-[0.25] ${isDark ? 'cyber-grid' : 'cyber-grid-light'}`} />
@@ -500,7 +500,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                     {/* Right Main Column: Tabs + Tab Content */}
                     <div className="lg:col-span-8 flex flex-col gap-6 pt-4 lg:pt-0">
                         {/* Navigation Tabs (Glassmorphism bar) */}
-                        <div className="flex justify-center lg:justify-start">
+                        <div role="navigation" aria-label="Menu fanpage" className="flex justify-center lg:justify-start">
                             <div className={`inline-flex flex-wrap justify-center gap-1.5 p-1.5 rounded-3xl border transition-all duration-500 ${
                                 isDark
                                     ? "bg-slate-950/40 border-purple-500/15 backdrop-blur-md"
@@ -517,6 +517,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                     return (
                                         <button
                                             key={tab.id}
+                                            aria-current={isActive ? "page" : undefined}
                                             onClick={() => setActiveSection(tab.id)}
                                             className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap hover:scale-[1.03] ${
                                                 isActive
@@ -816,7 +817,7 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                 {/* Gallery Lightbox */}
                 {lightboxIndex !== null && data.galleries[lightboxIndex] && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeLightbox}>
-                        <div className={`rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-slate-900 text-white border border-purple-500/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
+                        <div className={`rounded-2xl w-full max-w-2xl max-h-[90dvh] shadow-2xl overflow-hidden flex flex-col ${isDark ? "bg-slate-900 text-white border border-purple-500/20" : "bg-white text-gray-800"}`} onClick={(e) => e.stopPropagation()}>
                             {/* Header */}
                             <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white flex-shrink-0">
                                 <div className="flex items-center justify-between">
@@ -829,13 +830,14 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                                 </div>
                             </div>
                             {/* Image */}
-                            <div className="flex-1 overflow-hidden flex items-center justify-center p-4 min-h-[300px]">
-                                <div className="relative w-full aspect-[4/3] max-h-[55vh]">
+                            <div className="flex-1 overflow-hidden flex items-center justify-center p-1 min-h-0">
+                                <div className="relative w-full h-[min(65dvh,720px)]">
                                     <Image
                                         src={data.galleries[lightboxIndex].image_url}
                                         alt={data.galleries[lightboxIndex].caption || "Photo"}
                                         fill
                                         className="object-contain"
+                                        sizes="(max-width: 768px) 100vw, 672px"
                                         priority
                                     />
                                 </div>
@@ -1012,14 +1014,14 @@ export function IdolTemplate({ data, slug }: IdolTemplateProps) {
                 {/* Letters Section */}
                 {activeSection === "letters" && (
                     <section className="max-w-2xl mx-auto py-12 relative z-10">
-                        <LetterBox slug={slug} initialLetters={data.letters} theme="idol" isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
+                        <LetterBox slug={slug} initialLetters={data.letters} isDark={isDark} onPopupOpenChange={setIsPopupOpen} />
                     </section>
                 )}
 
                 {/* Game Section */}
                 {activeSection === "game" && (
                     <section className="w-full py-12 relative z-10">
-                        <GameSection theme="idol" isDark={isDark} />
+                        <GameSection isDark={isDark} idolName={idolName} fanName={fanName} debutDate={debutDate} idolBirthday={profileData?.idol_birthday} fanSinceDate={profileData?.fan_since_date} events={data.timelines} />
                     </section>
                 )}
 

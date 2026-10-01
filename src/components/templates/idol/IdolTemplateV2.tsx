@@ -181,7 +181,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
     const daysSinceFan = getDaysSinceFan();
 
     const acts: { id: StageAct; label: string; icon: typeof Star; actNumber: string }[] = [
-        { id: "intro", label: "Opening", icon: Mic, actNumber: "I" },
+        { id: "intro", label: "Giới thiệu", icon: Mic, actNumber: "I" },
         { id: "gallery", label: "Khoảnh Khắc", icon: ImageIcon, actNumber: "II" },
         { id: "timeline", label: "Sự Nghiệp", icon: Trophy, actNumber: "III" },
         { id: "game", label: "Fandom Quiz", icon: Star, actNumber: "IV" },
@@ -354,36 +354,35 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                 </div>
             </div>
 
-            {/* ACT NAVIGATION - Concert Setlist */}
-            <div className={`fixed left-4 right-4 sm:bottom-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-30 ${data.config?.music_url ? "bottom-24" : "bottom-4"}`}>
-                <div className={`flex items-center justify-between gap-0.5 sm:gap-1 p-1.5 rounded-2xl border backdrop-blur-md ${isDark ? "bg-slate-950/80 border-white/10" : "bg-white/80 border-gray-100 shadow-lg"}`}>
+            {/* In-page section menu */}
+            <nav aria-label="Menu fanpage" className="relative z-20 mx-auto max-w-4xl px-4 pt-20 sm:px-8">
+                <div className={`grid grid-cols-3 sm:grid-cols-5 gap-1 p-1.5 rounded-2xl border backdrop-blur-md ${isDark ? "bg-slate-950/80 border-white/10" : "bg-white/80 border-gray-100 shadow-lg"}`}>
                     {acts.map((act) => {
                         const isActive = currentAct === act.id;
                         return (
                             <button
                                 key={act.id}
                                 onClick={() => switchAct(act.id)}
-                                className={`relative flex flex-1 flex-col items-center gap-0.5 px-1.5 sm:flex-none sm:px-3 py-2 rounded-xl text-[10px] font-bold transition-all duration-300 ${
+                                aria-current={isActive ? "page" : undefined}
+                                className={`relative flex flex-col items-center justify-center gap-1 px-1 py-3 rounded-xl text-xs font-bold transition-all duration-300 ${
                                     isActive
-                                        ? "text-white shadow-lg scale-105"
+                                        ? "text-white shadow-lg"
                                         : isDark
                                             ? "text-gray-400 hover:text-gray-200 hover:bg-slate-800/60"
                                             : "text-gray-500 hover:bg-gray-50"
                                 }`}
                                 style={isActive ? { backgroundColor: 'var(--accent)' } : undefined}
                             >
-                                {isActive && <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                                 <act.icon className="w-4 h-4" />
-                                <span className="hidden sm:block">{act.label}</span>
-                                <span className="text-[8px] opacity-60">ACT {act.actNumber}</span>
+                                <span>{act.label}</span>
                             </button>
                         );
                     })}
                 </div>
-            </div>
+            </nav>
 
             {/* STAGE CONTENT */}
-            <div className={`relative z-20 min-h-screen pt-16 pb-40 px-4 sm:px-8 max-w-4xl mx-auto ${isTransitioning ? 'act-exiting' : 'act-entering'}`}>
+            <div className={`relative z-20 min-h-screen pt-8 pb-24 px-4 sm:px-8 max-w-4xl mx-auto ${isTransitioning ? 'act-exiting' : 'act-entering'}`}>
 
                 {/* ACT I - INTRO / OPENING */}
                 {currentAct === "intro" && (

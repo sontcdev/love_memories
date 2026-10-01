@@ -13,7 +13,7 @@ Last Verified: 2026-10-01 (source and test site)
 - `IdolTemplateV2` receives galleries, timelines, and letters from `page-client.tsx`. Its Act III renders `Timeline` records and plays a saved `video_url` through `VideoPlayer`.
 - The legacy edit flow uses `TimelineManager` for IDOL events. `TimelineManager` exposes a YouTube/TikTok video URL. `src/app/actions/timeline-actions.ts` enforces a 20-event cap for new events and stores `video_url`. `CareerPathManager` is a separate event editor and is not mounted by the legacy IDOL edit page.
 - Its Act IV renders `IdolGameSection`, whose quiz includes date questions generated from each valid timeline event and has no separate difficulty challenge. Act V renders `IdolLetterBox`, whose create form omits recording while preserving display of previously saved audio.
-- On phones, the fixed ACT navigation spans the available width. When music is configured, it sits above the fixed music controls so Act V remains visible and tappable; without music, it stays at the bottom. At `sm` and wider widths, the navigation stays centered at the bottom.
+- Section navigation is an in-page menu above the content, with three columns on phones and five at `sm` and wider widths. Its visible labels are Giới thiệu, Khoảnh Khắc, Sự Nghiệp, Fandom Quiz, and Gửi Idol; buttons no longer display ACT numbers. Selecting a section switches content and scrolls to the page top. The menu occupies layout space and scrolls with the page.
 - The compose form uses the shared Radix Dialog portal, above the template's fixed controls. Its height is capped at `min(80dvh, 640px)`; only the fields scroll, while the header and Cancel/Send footer remain visible. Opening it does not autofocus an input. The portal copies the template accent from its trigger.
 - Compose inputs and textareas use 16px text. Reply textareas use 16px on phones to prevent iOS Safari focus zoom without disabling user zoom.
 - The gallery viewer preserves the full image with `object-contain`, uses a `min(65dvh, 720px)` image area with 4px padding, and caps the modal at `90dvh`.
@@ -21,10 +21,18 @@ Last Verified: 2026-10-01 (source and test site)
 
 ## Live verification boundary
 
-The screenshot's ACT-style page is `/59c00aed` (`IDOL`); `/2570d319` is `IDOL_NEW`. On the 2026-10-01 test deployment, the ACT I page showed all five ACT controls at both 390 × 844 px and 320 × 700 px. At 390 px, Act V ended at y=741 px and the music button began at y=753 px, leaving an 11 px gap. The mobile Figma frame `58:2` records this verified layout. Event-based quiz behavior requires timeline records and was not checked in this navigation fix.
+The screenshot's concert page is `/59c00aed` (`IDOL`); `/2570d319` is `IDOL_NEW`. On 2026-10-01, the updated in-page menu was checked locally at 320, 390, 768, and 1440px widths, with five descriptive labels and no horizontal overflow. All five section switches were checked. Editable mobile Figma frame `58:2` was updated and screenshot-verified. Event-based quiz behavior requires timeline records and was not checked in this navigation fix.
 
 ## Source entrypoints
 
 The compact compose form was checked locally at 320, 390, 768, and 1440px widths; the portrait viewer was checked at 390px. Editable Figma frames `59:104` (compose) and `59:129` (photo viewer) were synchronized and screenshot-verified. Native iPhone keyboard behavior was not tested; the 16px input rule was verified in the browser.
 
 `src/app/[slug]/page-client.tsx`; `src/app/[slug]/edit/edit-client.tsx`; `src/components/templates/idol/IdolTemplate.tsx`; `src/components/templates/idol/GameSection.tsx`; `src/components/templates/idol/LetterBox.tsx`; `src/components/templates/idol/IdolTemplateV2.tsx`; `src/components/templates/idol/IdolGameSection.tsx`; `src/components/templates/idol/IdolLetterBox.tsx`; `src/components/edit/TimelineManager.tsx`; `src/app/actions/timeline-actions.ts`.
+
+## IDOL_NEW synchronization (2026-10-01)
+
+- New link creation hides legacy `IDOL`; existing IDOL links remain readable. `IDOL_NEW` stays available. No stored link types are migrated.
+- `idol-new/IdolNewTemplate.tsx` keeps its dashboard and in-page menu: Trang chủ, Khoảnh khắc, Sự nghiệp, Fandom Quiz, Gửi Idol. Active buttons expose `aria-current`.
+- Its independent `GameSection.tsx` now generates the personalized quiz with timeline date questions, without difficulty challenges. Its independent `LetterBox.tsx` uses the compact portal compose form, omits recording, preserves saved audio playback, and uses 16px compose/reply fields.
+- The IDOL_NEW gallery viewer uses a `min(65dvh, 720px)` image area with 4px padding and a `90dvh` modal cap. The V2 timeline editor already supports saved video URLs; the server enforces 20 events.
+- Browser verification on `/2570d319`: in-page menu at 320, 390, 768 and 1440px without horizontal overflow; compact letter dialog at 390px with 16px fields and the purple accent. This sample has no gallery images or events, so those data-dependent paths were checked in source only. Native iPhone keyboard behavior remains untested. Figma synchronization is deferred at the user request while deploying production.

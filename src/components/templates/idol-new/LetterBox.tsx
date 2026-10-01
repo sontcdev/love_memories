@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Letter, LetterReply } from "@prisma/client";
-import { VideoInput, VoiceRecorder, VideoPlayer } from "@/components/media";
+import { VideoInput, VideoPlayer } from "@/components/media";
 import {
     createLetter,
     replyToLetter,
@@ -13,19 +13,21 @@ import {
 import {
     Mail,
     Plus,
-    X,
     Send,
     Trash2,
     Loader2,
-    Heart,
+    Star,
     ChevronDown,
     ChevronUp,
     MessageCircle,
-    Video,
-    Mic,
+
+
     Lock,
     Calendar,
+
+
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type LetterWithReplies = Letter & { replies: LetterReply[] };
@@ -33,18 +35,15 @@ type LetterWithReplies = Letter & { replies: LetterReply[] };
 interface LetterBoxProps {
     slug: string;
     initialLetters: LetterWithReplies[];
-    theme?: "love" | "every" | "idol";
     isDark?: boolean;
     onPopupOpenChange?: (isOpen: boolean) => void;
 }
 
-export function LetterBox({ slug, initialLetters, theme = "love", isDark = false, onPopupOpenChange }: LetterBoxProps) {
+export function LetterBox({ slug, initialLetters, isDark = true, onPopupOpenChange }: LetterBoxProps) {
     const [letters, setLetters] = useState<LetterWithReplies[]>(initialLetters);
 
-    // Helper to check if a letter is currently locked
     const isLocked = (letter: LetterWithReplies): boolean => {
         if (!letter.unlock_date) return false;
-        // Compare dates only (ignore time) - unlock at start of the day
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const unlockDate = new Date(letter.unlock_date);
@@ -53,28 +52,24 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
     };
 
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const composeTriggerRef = useRef<HTMLButtonElement>(null);
+    const [popupAccent, setPopupAccent] = useState("#ec4899");
     useEffect(() => {
         onPopupOpenChange?.(showCreateForm);
     }, [showCreateForm, onPopupOpenChange]);
 
-    // Sort letters:
-    // 1. Unlocked letters (no unlock_date OR unlock_date passed) - sort by created_at ascending
-    // 2. Locked letters (has unlock_date in future) - sort by unlock_date ascending
     const sortedLetters = [...letters].sort((a, b) => {
         const aLocked = isLocked(a);
         const bLocked = isLocked(b);
 
-        // Both unlocked - sort by created_at ascending
         if (!aLocked && !bLocked) {
             return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         }
 
-        // Both locked - sort by unlock_date ascending
         if (aLocked && bLocked) {
             return new Date(a.unlock_date!).getTime() - new Date(b.unlock_date!).getTime();
         }
 
-        // Mixed: unlocked comes first
         return aLocked ? 1 : -1;
     });
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -85,56 +80,23 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ type: "letter" | "reply"; id: string; letterId?: string } | null>(null);
 
-    // Form state
     const [newTitle, setNewTitle] = useState("");
     const [newSender, setNewSender] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newVideoUrl, setNewVideoUrl] = useState("");
-    const [newAudioUrl, setNewAudioUrl] = useState("");
     const [newUnlockDate, setNewUnlockDate] = useState<string>("");
 
-    const themeColors = {
-        love: {
-            primary: "from-rose-400 to-pink-500",
-            secondary: "rose",
-            bg: "bg-rose-50",
-            border: "border-rose-200",
-            text: "text-rose-600",
-        },
-        every: {
-            primary: "from-blue-400 to-indigo-500",
-            secondary: "blue",
-            bg: "bg-blue-50",
-            border: "border-blue-200",
-            text: "text-blue-600",
-        },
-        idol: {
-            primary: "from-amber-400 to-orange-500",
-            secondary: "amber",
-            bg: "bg-amber-50",
-            border: "border-amber-200",
-            text: "text-amber-600",
-        },
-    };
-
-    const colors = themeColors[theme];
-
-    // State for realtime unlock check
     const [currentTime, setCurrentTime] = useState(new Date());
 
-    // Update time every minute for realtime unlock
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentTime(new Date());
-        }, 60000); // Check every minute
+        }, 60000);
         return () => clearInterval(interval);
     }, []);
 
-    // Helper to check if letter is locked
     const isLetterLocked = (letter: LetterWithReplies): boolean => {
         if (!letter.unlock_date) return false;
-        // Compare dates only (ignore time) - unlock at start of the day
-        // Use currentTime state for realtime updates
         const today = new Date(currentTime);
         today.setHours(0, 0, 0, 0);
         const unlockDate = new Date(letter.unlock_date);
@@ -142,7 +104,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
         return today < unlockDate;
     };
 
-    // Helper to format unlock date
     const formatUnlockDate = (date: Date): string => {
         return new Date(date).toLocaleDateString("vi-VN", {
             day: "2-digit",
@@ -160,7 +121,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
             sender: newSender.trim() || undefined,
             content: newContent.trim(),
             video_url: newVideoUrl || undefined,
-            audio_url: newAudioUrl || undefined,
             unlock_date: newUnlockDate ? new Date(newUnlockDate) : null,
         });
 
@@ -170,7 +130,6 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
             setNewSender("");
             setNewContent("");
             setNewVideoUrl("");
-            setNewAudioUrl("");
             setNewUnlockDate("");
             setShowCreateForm(false);
         }
@@ -228,430 +187,368 @@ export function LetterBox({ slug, initialLetters, theme = "love", isDark = false
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Mail className={`w-6 h-6 ${colors.text}`} />
-                    <h2 className={`text-xl font-bold ${isDark ? "text-slate-100" : "text-gray-800"}`}>Thư Tình</h2>
-                    <span className={`text-sm ${isDark ? "text-slate-400" : "text-gray-400"}`}>({letters.length})</span>
+                    <div className="relative">
+                        <div
+                            className="absolute inset-0 rounded-full blur-lg opacity-50 animate-pulse"
+                            style={{ background: "var(--accent)" }}
+                        ></div>
+                        <div
+                            className="relative w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2"
+                            style={{ background: "var(--accent)", borderColor: "color-mix(in oklch, var(--accent) 60%, white 40%)" }}
+                        >
+                            <Mail className="w-5 h-5 text-white" />
+                        </div>
+                    </div>
+                    <div>
+                        <h2
+                            className={`text-xl font-bold ${isDark ? "" : "text-gray-800"}`}
+                            style={{ color: isDark ? "var(--accent)" : undefined, fontFamily: "var(--font-display)" }}
+                        >
+                            Fan Messages
+                        </h2>
+                        <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-400"}`}>({letters.length})</span>
+                    </div>
                 </div>
                 <button
-                    onClick={() => setShowCreateForm(true)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${colors.primary} text-white font-medium shadow-md hover:shadow-lg transition-all`}
+                    ref={composeTriggerRef}
+                    onClick={() => {
+                        if (composeTriggerRef.current) {
+                            setPopupAccent(getComputedStyle(composeTriggerRef.current).getPropertyValue("--accent").trim());
+                        }
+                        setShowCreateForm(true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-white font-medium shadow-md hover:shadow-xl transition-all hover:scale-105 relative overflow-hidden group"
+                    style={{ background: "var(--accent)" }}
                 >
-                    <Plus className="w-4 h-4" />
-                    Viết thư
+                    <Plus className="w-4 h-4 relative z-10" />
+                    <span className="relative z-10">Send Message</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 </button>
             </div>
 
-            {/* Create Form Modal */}
-            {showCreateForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className={`${isDark ? "bg-[#1f1e1c] text-slate-100 border border-slate-800" : "bg-white text-gray-900"} rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl overflow-hidden flex flex-col`}>
-                        <div className={`bg-gradient-to-r ${colors.primary} p-4 text-white flex-shrink-0`}>
+            <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+                    <DialogContent
+                        aria-describedby={undefined}
+                        onOpenAutoFocus={(event) => event.preventDefault()}
+                        className={`${isDark ? "bg-slate-900 text-slate-100 border" : "bg-white text-gray-900"} rounded-2xl max-w-lg max-h-[min(80dvh,640px)] shadow-2xl overflow-hidden flex flex-col gap-0 p-0 [&>button]:text-white`}
+                        style={{ "--accent": popupAccent, borderColor: isDark ? "color-mix(in oklch, var(--accent) 40%, transparent)" : undefined } as React.CSSProperties}
+                    >
+                        <div className="p-4 text-white flex-shrink-0" style={{ background: "var(--accent)" }}>
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold">Viết thư tình</h3>
-                                <button onClick={() => setShowCreateForm(false)}>
-                                    <X className="w-5 h-5" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <Star className="w-5 h-5 fill-current" />
+                                    <DialogTitle className="text-lg font-semibold">Send Fan Message</DialogTitle>
+                                </div>
                             </div>
                         </div>
-                        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                        <div className="p-4 space-y-3 overflow-y-auto min-h-0 flex-1 [&_input]:text-base [&_textarea]:text-base">
                             <div>
-                                <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
-                                    Người gửi <span className="text-gray-400 text-xs ml-1">({newSender.length}/50)</span>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1`}>
+                                    From <span className="text-gray-400 text-xs ml-1">({newSender.length}/50)</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={newSender}
                                     onChange={(e) => setNewSender(e.target.value.slice(0, 50))}
-                                    placeholder="Nhập tên người gửi (tên của bạn hoặc ẩn danh)..."
+                                    placeholder="Your fan name..."
                                     maxLength={50}
-                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white focus:ring-rose-500/20" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none mb-3`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none`}
                                 />
                             </div>
                             <div>
-                                <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
-                                    Tiêu đề <span className="text-gray-400 text-xs">({newTitle.length}/50)</span>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1`}>
+                                    Title <span className="text-gray-400 text-xs">({newTitle.length}/50)</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={newTitle}
                                     onChange={(e) => setNewTitle(e.target.value.slice(0, 50))}
-                                    placeholder="Tiêu đề bức thư..."
+                                    placeholder="Message title..."
                                     maxLength={50}
-                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white focus:ring-rose-500/20" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none`}
                                 />
                             </div>
                             <div>
-                                <label className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
-                                    Nội dung <span className="text-gray-400 text-xs">({newContent.length}/1000)</span>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1`}>
+                                    Message <span className="text-gray-400 text-xs">({newContent.length}/1000)</span>
                                 </label>
                                 <textarea
                                     value={newContent}
                                     onChange={(e) => setNewContent(e.target.value.slice(0, 1000))}
-                                    placeholder="Viết những lời yêu thương..."
-                                    rows={6}
+                                    placeholder="Write your message to the idol..."
                                     maxLength={1000}
-                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white focus:ring-rose-500/20" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none resize-none`}
+                                    rows={3}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none resize-none`}
                                 />
                             </div>
-
-                            {/* Video URL */}
+                            <VideoInput value={newVideoUrl} onChange={setNewVideoUrl} />
                             <div>
-                                <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
-                                    <Video className="w-4 h-4" />
-                                    Video (tùy chọn)
-                                </label>
-                                {newVideoUrl ? (
-                                    <div className="space-y-2">
-                                        <VideoPlayer url={newVideoUrl} className="rounded-lg" />
-                                        <button
-                                            onClick={() => setNewVideoUrl("")}
-                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            Xóa video
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <VideoInput
-                                        value={newVideoUrl}
-                                        onChange={setNewVideoUrl}
-                                        placeholder="Dán link YouTube hoặc TikTok..."
-                                    />
-                                )}
-                            </div>
-
-                            {/* Voice Recording */}
-                            <div>
-                                <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
-                                    <Mic className="w-4 h-4" />
-                                    Ghi âm (tùy chọn)
-                                </label>
-                                {newAudioUrl ? (
-                                    <div className="space-y-2">
-                                        <audio src={newAudioUrl} controls className="w-full h-10" />
-                                        <button
-                                            onClick={() => setNewAudioUrl("")}
-                                            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            Xóa ghi âm
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <VoiceRecorder
-                                        slug={slug}
-                                        onUploadComplete={setNewAudioUrl}
-                                    />
-                                )}
-                            </div>
-
-                            {/* Unlock Date Picker */}
-                            <div>
-                                <label className={`flex items-center gap-1 text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"} mb-1`}>
+                                <label className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 flex items-center gap-2`}>
                                     <Calendar className="w-4 h-4" />
-                                    Ngày mở khóa (tùy chọn)
+                                    Unlock date (optional)
                                 </label>
                                 <input
                                     type="date"
                                     value={newUnlockDate}
-                                    onChange={(e) => {
-                                        const selectedDate = new Date(e.target.value);
-                                        const today = new Date();
-                                        today.setHours(0, 0, 0, 0);
-                                        if (selectedDate > today) {
-                                            setNewUnlockDate(e.target.value);
-                                        }
-                                    }}
-                                    min={(() => {
-                                        const tomorrow = new Date();
-                                        tomorrow.setDate(tomorrow.getDate() + 1);
-                                        const year = tomorrow.getFullYear();
-                                        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-                                        const day = String(tomorrow.getDate()).padStart(2, '0');
-                                        return `${year}-${month}-${day}`;
-                                    })()}
-                                    className={`w-full px-4 py-2 rounded-lg border ${colors.border} ${isDark ? "bg-[#121110] text-white" : "bg-white text-gray-900"} focus:ring-2 focus:ring-${colors.secondary}-300 focus:border-${colors.secondary}-400 outline-none`}
+                                    onChange={(e) => setNewUnlockDate(e.target.value)}
+                                    min={new Date().toISOString().split("T")[0]}
+                                    className={`w-full px-4 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none`}
                                 />
-                                <p className="text-xs text-gray-400 mt-1">
-                                    Thư sẽ bị khóa cho đến ngày này
-                                </p>
                             </div>
-
+                        </div>
+                        <div className={`p-4 border-t ${isDark ? "border-white/10" : "border-gray-200"} flex justify-end gap-2 flex-shrink-0`}>
+                            <button
+                                onClick={() => setShowCreateForm(false)}
+                                className={`px-4 py-2 rounded-lg ${isDark ? "bg-white/10 text-gray-200 hover:bg-white/20" : "bg-gray-100 text-gray-700 hover:bg-gray-200"} transition-colors`}
+                            >
+                                Cancel
+                            </button>
                             <button
                                 onClick={handleCreate}
                                 disabled={isCreating || !newTitle.trim() || !newContent.trim()}
-                                className={`w-full py-3 rounded-xl bg-gradient-to-r ${colors.primary} text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                style={{ background: "var(--accent)" }}
                             >
-                                {isCreating ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <>
-                                        <Send className="w-5 h-5" />
-                                        Gửi thư
-                                    </>
-                                )}
+                                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                Send
                             </button>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </DialogContent>
+            </Dialog>
 
-            {/* Delete Confirmation Dialog */}
-            <ConfirmDialog
-                isOpen={deleteConfirm !== null}
-                title={deleteConfirm?.type === "letter" ? "Xóa thư" : "Xóa trả lời"}
-                message={deleteConfirm?.type === "letter"
-                    ? "Bạn có chắc muốn xóa bức thư này?"
-                    : "Bạn có chắc muốn xóa câu trả lời này?"}
-                confirmText="Xóa"
-                cancelText="Hủy"
-                variant="danger"
-                isLoading={deletingId !== null}
-                onConfirm={() => {
-                    if (deleteConfirm?.type === "letter") {
-                        handleDelete(deleteConfirm.id);
-                    } else if (deleteConfirm) {
-                        handleDeleteReply(deleteConfirm.id, deleteConfirm.letterId!);
-                    }
-                }}
-                onCancel={() => setDeleteConfirm(null)}
-            />
+            <div className="space-y-4">
+                {sortedLetters.map((letter) => {
+                    const locked = isLetterLocked(letter);
+                    const expanded = expandedId === letter.id;
+                    const isReplying = replyingTo === letter.id;
 
-            {/* Letters List */}
-            {letters.length === 0 ? (
-                <div className={`text-center py-16 ${isDark ? "bg-zinc-900/50 border border-zinc-700/80" : colors.bg} rounded-2xl`}>
-                    <Mail className="w-16 h-16 mx-auto mb-4 text-gray-300 opacity-60" />
-                    <p className={isDark ? "text-slate-400" : "text-gray-400"}>Chưa có thư nào...</p>
-                    <p className={`text-sm ${isDark ? "text-slate-500" : "text-gray-400"}`}>Hãy gửi những lời chúc đầu tiên!</p>
-                </div>
-            ) : (
-                <div className={theme === "idol" ? "grid grid-cols-1 sm:grid-cols-2 gap-6 items-start" : "space-y-4"}>
-                    {sortedLetters.map((letter, index) => {
-                        const idolStickyColors = [
-                            { bg: "bg-[#fff9db]", border: "border-[#ffe066]", text: "text-[#f59f00]", pin: "bg-[#f59f00]" }, // Yellow
-                            { bg: "bg-[#fff0f6]", border: "border-[#ffdeeb]", text: "text-[#e64980]", pin: "bg-[#e64980]" }, // Pink
-                            { bg: "bg-[#f3f0ff]", border: "border-[#e5dbff]", text: "text-[#7048e8]", pin: "bg-[#7048e8]" }, // Purple
-                            { bg: "bg-[#e7f5ff]", border: "border-[#d0ebff]", text: "text-[#1c7ed6]", pin: "bg-[#1c7ed6]" }, // Blue
-                            { bg: "bg-[#e6fcf5]", border: "border-[#c3fae8]", text: "text-[#0ca678]", pin: "bg-[#0ca678]" }, // Teal
-                        ];
-                        const stickyColor = theme === "idol"
-                            ? idolStickyColors[index % idolStickyColors.length]
-                            : { bg: isDark ? "bg-zinc-900" : "bg-white", border: isDark ? "border-zinc-800" : colors.border, text: colors.text, pin: "" };
-
-                        const rotationDeg = theme === "idol" ? (index % 4) - 2 : 0;
-
-                        return (
-                            <div
-                                key={letter.id}
-                                className={`rounded-2xl shadow-md border ${stickyColor.border} ${stickyColor.bg} overflow-hidden transition-all relative`}
-                                style={theme === "idol" ? { transform: `rotate(${rotationDeg}deg)` } : {}}
-                            >
-                                {/* Push Pin */}
-                                {theme === "idol" && (
-                                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full shadow-md bg-gradient-to-br from-red-400 to-red-600 z-10" />
-                                )}
-
-                                {/* Letter Header */}
-                                <div
-                                    className={`p-4 cursor-pointer ${theme === "idol" ? "bg-transparent" : (isDark ? "bg-zinc-900/40 hover:bg-zinc-800" : colors.bg + " hover:bg-black/5")} transition-colors`}
-                                    onClick={() =>
-                                        setExpandedId(expandedId === letter.id ? null : letter.id)
-                                    }
-                                >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        {letter.sender && (
-                                            <div className="text-[10px] font-medium uppercase tracking-wider opacity-60 mb-0.5">
-                                                Từ: {letter.sender}
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-2">
-                                            <h3 className={`font-semibold break-words ${isDark ? "text-slate-100" : "text-gray-800"}`}>{letter.title}</h3>
-                                            {isLetterLocked(letter) && (
-                                                <Lock className={`w-4 h-4 ${colors.text} flex-shrink-0`} />
-                                            )}
-                                        </div>
-                                        <p className={`text-sm mt-1 line-clamp-2 break-words overflow-hidden ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                                            {isLetterLocked(letter)
-                                                ? `🔒 Mở khóa vào ${formatUnlockDate(letter.unlock_date!)}`
-                                                : letter.content}
-                                        </p>
-                                        <div className={`flex items-center gap-4 mt-2 text-xs ${isDark ? "text-slate-500" : "text-gray-400"}`}>
-                                            <span>
-                                                {new Date(letter.created_at).toLocaleDateString("vi-VN")}
-                                            </span>
-                                            {letter.replies.length > 0 && (
-                                                <span className="flex items-center gap-1">
-                                                    <MessageCircle className="w-3 h-3" />
-                                                    {letter.replies.length} trả lời
-                                                </span>
-                                            )}
-                                        </div>
+                    return (
+                        <div
+                            key={letter.id}
+                            className={`relative group rounded-2xl overflow-hidden transition-all ${
+                                locked
+                                    ? "bg-gradient-to-br from-gray-800 to-gray-900 opacity-70"
+                                    : isDark
+                                        ? "bg-slate-900/80 border shadow-lg"
+                                        : "bg-white border-2 shadow-lg hover:shadow-xl"
+                            }`}
+                            style={!locked ? { borderColor: "color-mix(in oklch, var(--accent) 30%, transparent)" } : undefined}
+                        >
+                            {locked && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                                    <div
+                                        className="w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-lg border-4"
+                                        style={{ background: "var(--accent)", borderColor: "color-mix(in oklch, var(--accent) 60%, white 40%)" }}
+                                    >
+                                        <Lock className="w-8 h-8 text-white" />
                                     </div>
-                                    <div className="flex items-center gap-2 flex-shrink-0 min-w-[4rem]">
+                                    <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                        Opens on {formatUnlockDate(letter.unlock_date!)}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className={`p-4 sm:p-6 ${locked ? "opacity-30" : ""}`}>
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Star className="w-4 h-4 fill-current" style={{ color: "var(--accent)" }} />
+                                            <h3
+                                                className={`font-bold text-lg ${isDark ? "" : "text-gray-800"}`}
+                                                style={{ color: isDark ? "var(--accent)" : undefined }}
+                                            >
+                                                {letter.title}
+                                            </h3>
+                                        </div>
+                                        {letter.sender && (
+                                            <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"} italic`}>
+                                                From: {letter.sender}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        {letter.replies.length > 0 && (
+                                            <span
+                                                className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                                                style={{ background: "color-mix(in oklch, var(--accent) 20%, transparent)", color: "var(--accent)" }}
+                                            >
+                                                <MessageCircle className="w-3 h-3" />
+                                                {letter.replies.length}
+                                            </span>
+                                        )}
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDeleteConfirm({ type: "letter", id: letter.id });
-                                            }}
-                                            disabled={deletingId === letter.id}
-                                            className={`p-2 rounded-lg transition-colors ${isDark ? "text-slate-400 hover:text-red-400 hover:bg-red-950/20" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
+                                            onClick={() => setExpandedId(expanded ? null : letter.id)}
+                                            className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"} transition-colors`}
                                         >
-                                            {deletingId === letter.id ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            {expanded ? (
+                                                <ChevronUp className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                                             ) : (
-                                                <Trash2 className="w-4 h-4" />
+                                                <ChevronDown className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                                             )}
                                         </button>
-                                        {expandedId === letter.id ? (
-                                            <ChevronUp className={`w-5 h-5 ${isDark ? "text-slate-400" : "text-gray-400"}`} />
-                                        ) : (
-                                            <ChevronDown className={`w-5 h-5 ${isDark ? "text-slate-400" : "text-gray-400"}`} />
-                                        )}
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Expanded Content */}
-                            {expandedId === letter.id && (
-                                <div className={`p-4 border-t ${isDark ? "border-zinc-800" : "border-gray-100"}`}>
-                                    {/* Check if letter is locked */}
-                                    {isLetterLocked(letter) ? (
-                                        <div className={`${isDark ? "bg-zinc-950/40 border border-zinc-700" : colors.bg} rounded-xl p-6 text-center`}>
-                                            <Lock className={`w-12 h-12 mx-auto mb-3 ${colors.text}`} />
-                                            <h4 className={`font-semibold ${isDark ? "text-slate-200" : "text-gray-800"} mb-2`}>Thư đang bị khóa</h4>
-                                            <p className={`${isDark ? "text-slate-400" : "text-gray-600"} text-sm`}>
-                                                Chờ đến ngày <span className="font-semibold">{formatUnlockDate(letter.unlock_date!)}</span> để xem nội dung
-                                            </p>
+                                {expanded && !locked && (
+                                    <div className="space-y-4 mt-4">
+                                        <div className={`prose prose-sm max-w-none ${isDark ? "text-gray-200" : "text-gray-700"} whitespace-pre-wrap leading-relaxed`}>
+                                            {letter.content}
                                         </div>
-                                    ) : (
-                                        <>
-                                            {/* Letter Content */}
-                                            <div className="prose prose-sm max-w-none mb-4 overflow-hidden">
-                                                <p className={`whitespace-pre-wrap break-words ${isDark ? "text-slate-300" : "text-gray-700"}`}>{letter.content}</p>
+
+                                        {letter.image_url && (
+                                            <Image
+                                                src={letter.image_url}
+                                                alt="Letter attachment"
+                                                width={400}
+                                                height={300}
+                                                className="max-w-full rounded-xl object-cover"
+                                            />
+                                        )}
+
+                                        {letter.video_url && (
+                                            <div className="rounded-xl overflow-hidden">
+                                                <VideoPlayer url={letter.video_url} />
                                             </div>
+                                        )}
 
-                                            {/* Image */}
-                                            {letter.image_url && (
-                                                <div className="mb-4">
-                                                    <Image
-                                                        src={letter.image_url}
-                                                        alt="Letter attachment"
-                                                        width={400}
-                                                        height={300}
-                                                        className="rounded-lg object-cover"
-                                                    />
-                                                </div>
-                                            )}
+                                        {letter.audio_url && (
+                                            <div className={`rounded-xl p-4 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                                                <audio controls className="w-full" src={letter.audio_url} onPlay={() => window.dispatchEvent(new CustomEvent("pause-music"))} />
+                                            </div>
+                                        )}
 
-                                            {/* Video */}
-                                            {letter.video_url && (
-                                                <div className="mb-4">
-                                                    <VideoPlayer url={letter.video_url} className="rounded-xl" />
-                                                </div>
-                                            )}
+                                        <div
+                                            className="flex items-center justify-between pt-2 border-t"
+                                            style={{ borderColor: "color-mix(in oklch, var(--accent) 25%, transparent)" }}
+                                        >
+                                            <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                                                {new Date(letter.created_at).toLocaleDateString("vi-VN")}
+                                            </span>
+                                            <button
+                                                onClick={() => setDeleteConfirm({ type: "letter", id: letter.id })}
+                                                className="p-2 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
 
-                                            {/* Audio */}
-                                            {letter.audio_url && (
-                                                <div className="mb-4">
-                                                    <div className={`${isDark ? "bg-zinc-950/50 border border-zinc-700" : colors.bg} p-3 rounded-xl`}>
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <Mic className={`w-4 h-4 ${colors.text}`} />
-                                                            <span className={`text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"}`}>Ghi âm đính kèm</span>
-                                                        </div>
-                                                        <audio
-                                                            src={letter.audio_url}
-                                                            controls
-                                                            className="w-full h-10"
-                                                            onPlay={() => window.dispatchEvent(new CustomEvent('pause-music'))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Replies Thread */}
-                                            {letter.replies.length > 0 && (
-                                                <div className="space-y-3 mb-4">
-                                                    <h4 className={`text-sm font-medium ${isDark ? "text-slate-400" : "text-gray-600"} flex items-center gap-2`}>
-                                                        <MessageCircle className="w-4 h-4" />
-                                                        Câu trả lời
-                                                    </h4>
-                                                    {letter.replies.map((reply) => (
+                                        {letter.replies.length > 0 && (
+                                            <div className="space-y-3 pt-3">
+                                                <h4 className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                                                    Replies ({letter.replies.length})
+                                                </h4>
+                                                {letter.replies.map((reply) => (
+                                                    <div
+                                                        key={reply.id}
+                                                        className={`flex gap-3 ${isDark ? "bg-white/5" : "bg-gray-50"} rounded-xl p-3`}
+                                                    >
                                                         <div
-                                                            key={reply.id}
-                                                            className={`${isDark ? "bg-zinc-950/40 border border-zinc-700/60" : colors.bg} rounded-xl p-3 relative group`}
+                                                            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border-2"
+                                                            style={{ background: "var(--accent)", borderColor: "color-mix(in oklch, var(--accent) 60%, white 40%)" }}
                                                         >
-                                                            <p className={`text-sm pr-10 break-words overflow-hidden ${isDark ? "text-slate-300" : "text-gray-700"}`}>{reply.content}</p>
+                                                            <Star className="w-4 h-4 text-white fill-current" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className={`text-sm ${isDark ? "text-gray-200" : "text-gray-700"}`}>{reply.content}</p>
                                                             <div className="flex items-center justify-between mt-1">
-                                                                <span className="text-xs text-gray-400">
-                                                                    {new Date(reply.created_at).toLocaleDateString("vi-VN", {
-                                                                        hour: "2-digit",
-                                                                        minute: "2-digit",
-                                                                    })}
+                                                                <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                                                                    {new Date(reply.created_at).toLocaleDateString("vi-VN")}
                                                                 </span>
                                                                 <button
                                                                     onClick={() => setDeleteConfirm({ type: "reply", id: reply.id, letterId: letter.id })}
-                                                                    className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs ${isDark ? "text-gray-400 hover:text-red-400 hover:bg-red-950/20" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
-                                                                    title="Xóa trả lời"
+                                                                    className="text-red-400 hover:text-red-300"
                                                                 >
-                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                    <Trash2 className="w-3 h-3" />
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
 
-                                            {/* Reply Input */}
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={replyingTo === letter.id ? replyContent : ""}
-                                                        onChange={(e) => {
-                                                            setReplyingTo(letter.id);
-                                                            const value = e.target.value;
-                                                            setReplyContent(value.length > 300 ? value.slice(0, 300) : value);
-                                                        }}
-                                                        onFocus={() => setReplyingTo(letter.id)}
-                                                        placeholder="Viết câu trả lời..."
-                                                        className={`flex-1 px-4 py-2 rounded-full border ${colors.border} ${isDark ? "bg-[#121110] text-white border-zinc-800" : "bg-white text-gray-900"} text-sm focus:outline-none focus:ring-2 focus:ring-${colors.secondary}-300`}
-                                                    />
-                                                    <button
-                                                        onClick={() => handleReply(letter.id)}
-                                                        disabled={isSendingReply || !replyContent.trim() || replyContent.length > 300}
-                                                        className="p-2 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 hover:brightness-110"
-                                                        style={{ backgroundColor: 'var(--theme-accent, #ec4899)' }}
-                                                    >
-                                                        {isSendingReply ? (
-                                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                                        ) : (
-                                                            <Send className="w-5 h-5" />
-                                                        )}
-                                                    </button>
+                                        {!isReplying ? (
+                                            <button
+                                                onClick={() => setReplyingTo(letter.id)}
+                                                className="w-full py-2 rounded-lg text-white font-medium transition-all"
+                                                style={{ background: "var(--accent)" }}
+                                            >
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <MessageCircle className="w-4 h-4" />
+                                                    Reply
                                                 </div>
-                                                {replyingTo === letter.id && replyContent.length > 0 && (
-                                                    <span className={`text-xs text-right ${replyContent.length >= 280 ? 'text-red-500' : 'text-gray-400'}`}>
+                                            </button>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <textarea
+                                                    value={replyContent}
+                                                    onChange={(e) => setReplyContent(e.target.value.slice(0, 300))}
+                                                    placeholder="Write a reply..."
+                                                    maxLength={300}
+                                                    rows={3}
+                                                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? "border-white/20 bg-white/5 text-white" : "border-gray-300 bg-white text-gray-900"} focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] outline-none resize-none text-base sm:text-sm`}
+                                                />
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                                                         {replyContent.length}/300
                                                     </span>
-                                                )}
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setReplyingTo(null);
+                                                                setReplyContent("");
+                                                            }}
+                                                            className={`px-3 py-1.5 rounded-lg ${isDark ? "bg-white/10 text-gray-200" : "bg-gray-100 text-gray-700"} text-sm`}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleReply(letter.id)}
+                                                            disabled={isSendingReply || !replyContent.trim()}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-sm font-medium disabled:opacity-50"
+                                                            style={{ background: "var(--accent)" }}
+                                                        >
+                                                            {isSendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                                                            Send
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        );
-                    })}
-                </div>
-            )}
-            {/* Decorative */}
-            <div className="text-center py-4">
-                <Heart className={`w-6 h-6 mx-auto ${colors.text} fill-current opacity-30`} />
+                    );
+                })}
+
+                {letters.length === 0 && (
+                    <div className={`text-center py-12 ${isDark ? "text-gray-400" : "text-gray-400"}`}>
+                        <Star className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: "var(--accent)" }} />
+                        <p>No fan messages yet</p>
+                        <p className="text-sm mt-1">Be the first to send a message!</p>
+                    </div>
+                )}
             </div>
+
+            <ConfirmDialog
+                isOpen={!!deleteConfirm}
+                onCancel={() => setDeleteConfirm(null)}
+                title="Confirm Delete"
+                message={deleteConfirm?.type === "letter" ? "Are you sure you want to delete this message?" : "Are you sure you want to delete this reply?"}
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={() => {
+                    if (deleteConfirm?.type === "letter") {
+                        handleDelete(deleteConfirm.id);
+                    } else if (deleteConfirm?.type === "reply" && deleteConfirm.letterId) {
+                        handleDeleteReply(deleteConfirm.id, deleteConfirm.letterId);
+                    }
+                }}
+                isLoading={!!deletingId}
+            />
         </div>
     );
 }
