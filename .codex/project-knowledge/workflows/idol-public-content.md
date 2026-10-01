@@ -18,7 +18,7 @@ Last Verified: 2026-10-01 (source and test site)
 
 ## Live verification boundary
 
-The test page `/2570d319` now serves the ACT-style IDOL UI. Its mobile screenshot on 2026-10-01 showed the bottom music controls covering Act V. The source change above addresses that overlap; runtime verification of the updated deployment remains required. Event-based quiz behavior requires timeline records and has not been verified on this link.
+The screenshot's ACT-style page is `/59c00aed` (`IDOL`); `/2570d319` is `IDOL_NEW`. On the 2026-10-01 test deployment, the ACT I page showed all five ACT controls at both 390 × 844 px and 320 × 700 px. At 390 px, Act V ended at y=741 px and the music button began at y=753 px, leaving an 11 px gap. The mobile Figma frame `58:2` records this verified layout. Event-based quiz behavior requires timeline records and was not checked in this navigation fix.
 
 ## Source entrypoints
 
