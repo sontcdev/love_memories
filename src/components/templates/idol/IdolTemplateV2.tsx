@@ -355,8 +355,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
             </div>
 
             {/* In-page section menu */}
-            <nav aria-label="Menu fanpage" className="relative z-20 mx-auto max-w-4xl px-4 pt-20 sm:px-8">
-                <div className={`grid grid-cols-3 sm:grid-cols-5 gap-1 p-1.5 rounded-2xl border backdrop-blur-md ${isDark ? "bg-slate-950/80 border-white/10" : "bg-white/80 border-gray-100 shadow-lg"}`}>
+            <nav aria-label="Menu fanpage" className="relative z-20 mx-auto max-w-4xl px-2 pt-20 sm:px-8">
+                <div className={`grid grid-cols-5 gap-0.5 p-1 sm:gap-1 sm:p-1.5 rounded-2xl border backdrop-blur-md ${isDark ? "bg-slate-950/80 border-white/10" : "bg-white/80 border-gray-100 shadow-lg"}`}>
                     {acts.map((act) => {
                         const isActive = currentAct === act.id;
                         return (
@@ -364,7 +364,7 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                 key={act.id}
                                 onClick={() => switchAct(act.id)}
                                 aria-current={isActive ? "page" : undefined}
-                                className={`relative flex flex-col items-center justify-center gap-1 px-1 py-3 rounded-xl text-xs font-bold transition-all duration-300 ${
+                                className={`relative flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 px-0 py-1.5 sm:px-1 sm:py-2 rounded-xl text-[9px] min-[375px]:text-[10px] sm:text-xs font-bold transition-all duration-300 ${
                                     isActive
                                         ? "text-white shadow-lg"
                                         : isDark
@@ -373,8 +373,8 @@ export function IdolTemplateV2({ data, slug }: IdolTemplateV2Props) {
                                 }`}
                                 style={isActive ? { backgroundColor: 'var(--accent)' } : undefined}
                             >
-                                <act.icon className="w-4 h-4" />
-                                <span>{act.label}</span>
+                                <act.icon className="w-3.5 h-3.5 shrink-0 sm:w-4 sm:h-4" />
+                                <span className="whitespace-nowrap tracking-[-0.05em] sm:tracking-normal">{act.label}</span>
                             </button>
                         );
                     })}
